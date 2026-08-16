@@ -1,0 +1,229 @@
+[
+  {
+    "id": "cleaver_001",
+    "type": "standard",
+    "name": "Chūkabōchō no Himichi",
+    "source": "default",
+    "isAttuned": false,
+    "images": {
+      "base": "/assets/Melee/Fire-Cleaver.PNG",
+      "attuned": "/assets/Melee/Fire-Cleaver-Attune.PNG"
+    },
+    "stats": {
+      "hit": "+5",
+      "damage": "1d8 fire",
+      "saveDc": "14"
+    },
+    "specs": {
+      "type": "melee weapon (simple, dagger)",
+      "attunement": "requires attunement",
+      "properties": "Finesse, Light, thrown",
+      "ranges": "20/60 ft",
+      "damage": "1d4 + bonus",
+      "damageType": "Slash"
+    },
+    "flavorText": "Chūkabōchō no Himicchi (中華包丁 の 火道) is a weapon used by the Carnibore, a well-known serial killer. The cleaver of the path of fire, imbued with the power of the underworld's fire. Each strike left a burning path to the target, and the sound of souls screaming out from the flame, as if one were in the underworld oneself. The blade is made of normal metal, but the durability is unmatched; no one knows how or when a normal cleaver becomes this virulent.",
+    "attunementRules": "To use the ability slots, you must attune to the weapon. In order to attune to this weapon, you must score a critical hit with it and execute the target.",
+    "weaponStats": {
+      "weaponStat": "You can chose STR or HP to use with this weapon.",
+      "attackBonus": "Proficiency bonus + STR or HP",
+      "damageBonus": "STR or HP",
+      "saveDc": "8 + proficiency bonus + STR or HP"
+    },
+    "abilities": [
+      {
+        "title": "Path of Fire",
+        "description": "twice per long rest, the cleaver creates a straight path erupting with underworld flame that deals 1d8 damage if one touches it."
+      },
+      {
+        "title": "Underworld Blessing",
+        "description": "once per short rest, the bell will ring a clinking sound, like a toast celebrating the beginning of the party, every 30 seconds for 3 minutes, which gives a bonus action and +5 attack damage."
+      },
+      {
+        "title": "Burning Wound",
+        "description": "after each attack, the target must make a Constitution check against your spell save DC. On a fail, the target will receive 1 fire damage each round until the target ends the Constitution check on a success."
+      }
+    ]
+  },
+  {
+    "id": "wand_001",
+    "type": "progressive",
+    "name": "The Crimson Wand",
+    "source": "default",
+    "isAttuned": false,
+    "currentLevel": 1,
+    "images": {
+      "base": "/assets/Magic/Wand-Stage-1.PNG",
+      "attuned": "/assets/Magic/Wand-Stage-1.PNG",
+      "level2": "/assets/Magic/Wand-Stage-2.PNG",
+      "level3": "/assets/Magic/Wand-Stage-3.PNG"
+    },
+    "stats": {
+      "hit": "+0",
+      "damage": "0",
+      "saveDc": "0"
+    },
+    "specs": {
+      "type": "Wand, rare",
+      "attunement": "requires attunement",
+      "properties": "Grants 1 free level 1 spell slot",
+      "ranges": "N/A",
+      "damage": "N/A",
+      "damageType": "N/A"
+    },
+    "flavorText": "10.5 Inches long, made of Mahogany wood, and said to have a phoenix feather core. Wielding the wand grants the user the familiar warmth in summer.",
+    "attunementRules": "To use the ability slots, you must attune to the weapon. In order to attune to this weapon, you must score a critical hit with it.",
+    "weaponStats": {
+      "weaponStat": "You can choose INT/WIS/CHA to use with this weapon.",
+      "attackBonus": "Proficiency bonus + INT/WIS/CHA",
+      "damageBonus": "INT/WIS/CHA",
+      "saveDc": "8 + proficiency bonus + INT/WIS/CHA"
+    },
+    "level1Abilities": [
+      {
+        "title": "Empowered Fire",
+        "description": "While holding this wand, you can use an action to deplete 1 gp of charge to empower any fire properties spell to +1 fire damage."
+      }
+    ],
+    "level2Abilities": [
+      {
+        "title": "Aura of Phoenix",
+        "description": "At night, the wand will illuminate the warm light around 60 ft, slowly heal the debuff the people in the area have."
+      },
+      {
+        "title": "Knowledge of the Phoenix",
+        "description": "The user can cast the following spells, combined a day thrice: detect evil and good, detect magic, dispel magic, shield, and flame strike."
+      }
+    ],
+    "level3Abilities": [
+      {
+        "title": "Remedial Flame",
+        "description": "Once per short rest, the wielder can cast Remedial Flame to instantly cure or heal the wound."
+      },
+      {
+        "title": "Rejuvenation",
+        "description": "If the wielder dies, once per long rest, the phoenix feather will immediately bring the wielder back to life with 5 HP. Only a wish can prevent this trait from functioning."
+      }
+    ]
+  },
+  {
+    "id": "protection_001",
+    "type": "normal",
+    "name": "Protection Talisman I",
+    "source": "default",
+    "isAttuned": false,
+    "images": {
+      "base": "/assets/Normal/rune-1.png"
+    },
+    "stats": {
+      "hit": "N/A",
+      "damage": "N/A",
+      "saveDc": "N/A"
+    },
+    "specs": {
+      "type": "Talisman, common",
+      "attunement": "requires attunement",
+      "properties": "Grants minor resistance to a normal damage type",
+      "ranges": "N/A",
+      "damage": "1d4",
+      "damageType": "Healing"
+    },
+    "flavorText": "A talisman drawed with a rune that grants protection to the user. The talisman is commonly used by everyone to protect themselves from minor accidents.",
+    "abilities": [
+      {
+        "title": "Consume",
+        "description": "You regain 1d4 hit points and ignore the damage that less than 1d4 when you use this talisman as an action."
+      }
+    ]
+  },
+  {
+    "id": "protection_002",
+    "type": "normal",
+    "name": "Protection Talisman II",
+    "source": "default",
+    "isAttuned": false,
+    "images": {
+      "base": "/assets/Normal/rune-2.png"
+    },
+    "stats": {
+      "hit": "N/A",
+      "damage": "N/A",
+      "saveDc": "N/A"
+    },
+    "specs": {
+      "type": "Talisman, common",
+      "attunement": "requires attunement",
+      "properties": "Grants minor resistance to a normal damage type",
+      "ranges": "N/A",
+      "damage": "1d4",
+      "damageType": "Healing"
+    },
+    "flavorText": "A talisman drawed with a rune that grants protection to the user. The talisman is commonly used by adventurers to protect themselves from common encounters.",
+    "abilities": [
+      {
+        "title": "Consume",
+        "description": "You regain 1d4+2 hit points and ignore the damage that less than 1d4 when you use this talisman as an action."
+      }
+    ]
+  },
+  {
+    "id": "protection_003",
+    "type": "normal",
+    "name": "Protection Talisman III",
+    "source": "default",
+    "isAttuned": false,
+    "images": {
+      "base": "/assets/Normal/rune-3.png"
+    },
+    "stats": {
+      "hit": "N/A",
+      "damage": "N/A",
+      "saveDc": "N/A"
+    },
+    "specs": {
+      "type": "Talisman, common",
+      "attunement": "requires attunement",
+      "properties": "Grants minor resistance to a normal damage type",
+      "ranges": "N/A",
+      "damage": "1d4",
+      "damageType": "Healing"
+    },
+    "flavorText": "A talisman drawed with a rune that grants protection to the user. The talisman is rarely used by adventurers to protect themselves from unusual dangers.",
+    "abilities": [
+      {
+        "title": "Consume",
+        "description": "You regain 2d4 hit points and ignore the damage that less than 1d4 when you use this talisman as an action."
+      }
+    ]
+  },
+  {
+    "id": "protection_005",
+    "type": "normal",
+    "name": "Protection Talisman V",
+    "source": "default",
+    "isAttuned": false,
+    "images": {
+      "base": "/assets/Normal/rune-5.png"
+    },
+    "stats": {
+      "hit": "N/A",
+      "damage": "N/A",
+      "saveDc": "N/A"
+    },
+    "specs": {
+      "type": "Talisman, common",
+      "attunement": "requires attunement",
+      "properties": "Grants minor resistance to a normal damage type",
+      "ranges": "N/A",
+      "damage": "1d4",
+      "damageType": "Healing"
+    },
+    "flavorText": "A talisman drawed with runes that grants protection to the user. The talisman is mostly used by the nobles to protect themselves from the lethal dangers.",
+    "abilities": [
+      {
+        "title": "Consume",
+        "description": "You regain 2d4+1 hit points and ignore the damage that less than 1d8+1 when you use this talisman as an action."
+      }
+    ]
+  }
+]
