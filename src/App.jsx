@@ -122,6 +122,19 @@ export default function App() {
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 6 } })
   );
 
+  // Preload Card Images to eliminate drawing lag
+  useEffect(() => {
+    const cardBackImg = new Image();
+    cardBackImg.src = '/assets/card-back.png';
+
+    deck.forEach((card) => {
+      if (card?.image) {
+        const img = new Image();
+        img.src = card.image;
+      }
+    });
+  }, [deck]);
+
   // Auto-dismiss toast after 2.5s
   useEffect(() => {
     if (toastMessage) {
@@ -279,15 +292,15 @@ export default function App() {
         {/* Main Application Layout */}
         <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-12 gap-8 items-start mt-2">
           
-          {/* --- LEFT: CARD DECK & VIEWER (macOS 3D Fixed) --- */}
+          {/* --- LEFT: CARD DECK & VIEWER --- */}
           <div className="md:col-span-7 flex flex-col items-center gap-4">
             <div className="relative w-80 h-[500px] perspective-deck select-none">
               <div
-                className={`w-full h-full transition-transform duration-700 ease-in-out card-preserve-3d relative ${
+                className={`w-full h-full transition-transform duration-300 ease-out card-preserve-3d relative ${
                   isDrawn ? '[transform:rotateY(180deg)]' : ''
                 }`}
               >
-                {/* Deck Stack (Front View of the 3D container) */}
+                {/* Deck Stack (Front Face) */}
                 <div className="absolute inset-0 w-full h-full card-face-front">
                   <div
                     onClick={handleDrawCard}
@@ -308,7 +321,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Active Card (Back View of the 3D container) */}
+                {/* Active Card (Back Face) */}
                 <div className="absolute inset-0 w-full h-full card-face-back">
                   <div className="w-full h-full">
                     {activeCard ? (
