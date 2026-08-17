@@ -122,7 +122,7 @@ export default function App() {
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 6 } })
   );
 
-  // Auto-dismiss toast after 3.5s
+  // Auto-dismiss toast after 2.5s
   useEffect(() => {
     if (toastMessage) {
       const t = setTimeout(clearToast, 2500);
@@ -210,7 +210,7 @@ export default function App() {
         
         {/* Toast Warning Banner */}
         {toastMessage && (
-          <div className="fixed top-15 z-50 bg-amber-950 border-2 border-amber-500 text-amber-200 px-5 py-2.5 rounded-xl shadow-2xl animate-[bounce_0.75s_1_forwards] text-sm font-semibold flex items-center gap-2">
+          <div className="fixed top-16 z-50 bg-amber-950 border-2 border-amber-500 text-amber-200 px-5 py-2.5 rounded-xl shadow-2xl animate-[bounce_0.75s_1_forwards] text-sm font-semibold flex items-center gap-2">
             <span>{toastMessage}</span>
             <button onClick={clearToast} className="text-amber-400 hover:text-white font-bold ml-2 cursor-pointer">✕</button>
           </div>
@@ -279,16 +279,16 @@ export default function App() {
         {/* Main Application Layout */}
         <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-12 gap-8 items-start mt-2">
           
-          {/* --- LEFT: CARD DECK & VIEWER --- */}
+          {/* --- LEFT: CARD DECK & VIEWER (macOS 3D Fixed) --- */}
           <div className="md:col-span-7 flex flex-col items-center gap-4">
-            <div className="relative w-80 h-[500px] [perspective:1000px]">
+            <div className="relative w-80 h-[500px] perspective-deck select-none">
               <div
-                className={`w-full h-full transition-transform duration-700 ease-in-out [transform-style:preserve-3d] relative ${
+                className={`w-full h-full transition-transform duration-700 ease-in-out card-preserve-3d relative ${
                   isDrawn ? '[transform:rotateY(180deg)]' : ''
                 }`}
               >
-                {/* Deck Stack */}
-                <div className="absolute inset-0 w-full h-full [backface-visibility:hidden]">
+                {/* Deck Stack (Front View of the 3D container) */}
+                <div className="absolute inset-0 w-full h-full card-face-front">
                   <div
                     onClick={handleDrawCard}
                     className={`relative w-full h-full cursor-pointer group transition-transform duration-200 ${
@@ -308,8 +308,8 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Active Card Front */}
-                <div className="absolute inset-0 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)]">
+                {/* Active Card (Back View of the 3D container) */}
+                <div className="absolute inset-0 w-full h-full card-face-back">
                   <div className="w-full h-full">
                     {activeCard ? (
                       <Card card={activeCard} onResetDeck={handleReturnToDeck} />
@@ -401,7 +401,6 @@ export default function App() {
           onClose={() => setIsCustomModalOpen(false)}
         />
 
-        
       </div>
     </DndContext>
   );

@@ -225,5 +225,170 @@
         "description": "You regain 2d4+1 hit points and ignore the damage that less than 1d8+1 when you use this talisman as an action."
       }
     ]
+  },
+  {
+    "id": "kunai_01",
+    "type": "normal",
+    "name": "Kunai",
+    "isAttuned": false,
+    "images": {
+      "base": "/assets/Normal/kunai.png"
+    },
+    "stats": {
+      "hit": "N/A",
+      "damage": "1d4",
+      "saveDc": "N/A"
+    },
+    "specs": {
+      "type": "melee weapon (simple, dagger)",
+      "attunement": "None",
+      "properties": "Finesse, Light, thrown",
+      "ranges": "20/60 ft",
+      "damage": "1d4",
+      "damageType": "Piercing"
+    },
+    "flavorText": "A traditional multipurpose weapon crafted with fine steel imported from the north. A renowned weapon used by the people in the East.",
+    "abilities": [
+      {
+        "title": "Slash",
+        "description": "1d4 slashing damage to a target within 20 ft."
+      },
+      {
+        "title": "Thrown",
+        "description": "1d4 piercing damage to a target within 60 ft."
+      }
+    ]
+  },
+  {
+    "id": "kunai_02",
+    "type": "normal",
+    "name": "Aquamarine Kunai",
+    "isAttuned": false,
+    "images": {
+      "base": "/assets/Normal/kunai-aquamarine.png"
+    },
+    "stats": {
+      "hit": "+1",
+      "damage": "1d4 + 1 cold",
+      "saveDc": "12"
+    },
+    "specs": {
+      "type": "melee weapon (simple, dagger)",
+      "attunement": "None",
+      "properties": "Finesse, Light, thrown",
+      "ranges": "20/60 ft",
+      "damage": "1d4 + 1",
+      "damageType": "Cold / Piercing"
+    },
+    "flavorText": "A traditional multipurpose weapon crafted with aquamarine imported from the south. A renowned weapon used by the people in the East.",
+    "abilities": [
+      {
+        "title": "Tidal Edge",
+        "description": "Deals 1d4 slashing + 1 cold damage within 20 ft. Rinses wounds with oceanic chill, extinguishing nonmagical flames on the target."
+      },
+      {
+        "title": "Glacial Shard",
+        "description": "Deals 1d4 piercing + 1 cold damage thrown up to 60 ft. On hit, freezing condensation reduces the target's movement speed by 10 ft until the end of their next turn."
+      }
+    ]
+  },
+  {
+    "id": "kunai_03",
+    "type": "normal",
+    "name": "Obsidian Kunai",
+    "isAttuned": false,
+    "images": {
+      "base": "/assets/Normal/kunai-obsidian.png"
+    },
+    "stats": {
+      "hit": "+1",
+      "damage": "1d4 + 1d4 fire",
+      "saveDc": "12"
+    },
+    "specs": {
+      "type": "melee weapon (simple, dagger)",
+      "attunement": "None",
+      "properties": "Finesse, Light, thrown",
+      "ranges": "20/60 ft",
+      "damage": "1d4 + 1d4",
+      "damageType": "Fire / Slashing"
+    },
+    "flavorText": "A traditional multipurpose weapon crafted with obsidian imported from the west. A renowned weapon used by the people in the East.",
+    "abilities": [
+      {
+        "title": "Glass Razor",
+        "description": "Deals 1d4 slashing + 1d4 fire damage within 20 ft. Crafted from microscopic volcanic razor edges, scoring a critical hit on a roll of 19 or 20."
+      },
+      {
+        "title": "Volcanic Fracture",
+        "description": "Deals 1d4 piercing + 1d4 fire damage thrown up to 60 ft. On hit, volcanic glass shards lodge in the wound, dealing 1 fire damage at the start of the target's next turn."
+      }
+    ]
+  },
+  {
+    "id": "kunai_04",
+    "type": "normal",
+    "name": "Malachite Kunai",
+    "isAttuned": false,
+    "images": {
+      "base": "/assets/Normal/kunai-malachite.png"
+    },
+    "stats": {
+      "hit": "N/A",
+      "damage": "1d4 + 1d4 poison",
+      "saveDc": "12"
+    },
+    "specs": {
+      "type": "melee weapon (simple, dagger)",
+      "attunement": "None",
+      "properties": "Finesse, Light, thrown",
+      "ranges": "20/60 ft",
+      "damage": "1d4 + 1d4",
+      "damageType": "Poison / Acid"
+    },
+    "flavorText": "A traditional multipurpose weapon crafted with malachite imported from the north. A renowned weapon used by the people in the East.",
+    "abilities": [
+      {
+        "title": "Copper Verdigris",
+        "description": "Deals 1d4 slashing + 1d4 poison damage within 20 ft. The toxic copper mineral seeps into cuts, forcing the target to succeed on a DC 12 Constitution saving throw or become poisoned for 1 round."
+      },
+      {
+        "title": "Caustic Dart",
+        "description": "Deals 1d4 piercing + 1d4 acid damage thrown up to 60 ft as the copper carbonate reacts upon impact."
+      }
+    ]
+  },
+  {
+    "id": "kunai_05",
+    "type": "normal",
+    "name": "Ferruginous Kunai",
+    "isAttuned": false,
+    "images": {
+      "base": "/assets/Normal/kunai-ferruginous-quartz.png"
+    },
+    "stats": {
+      "hit": "+1",
+      "damage": "1d6 + 1 lightning",
+      "saveDc": "12"
+    },
+    "specs": {
+      "type": "melee weapon (simple, dagger)",
+      "attunement": "None",
+      "properties": "Finesse, Light, thrown",
+      "ranges": "20/60 ft",
+      "damage": "1d6 + 1",
+      "damageType": "Lightning / Piercing"
+    },
+    "flavorText": "A traditional multipurpose weapon crafted with ferruginous quartz imported from the south. A renowned weapon used by the people in the East.",
+    "abilities": [
+      {
+        "title": "Hematite Magnetism",
+        "description": "Deals 1d6 slashing + 1 lightning damage within 20 ft. The iron-rich mineral gains advantage on attack rolls against targets wearing metal armor."
+      },
+      {
+        "title": "Piezo Resonance",
+        "description": "Deals 1d6 piercing + 1 lightning damage thrown up to 60 ft, discharging the quartz's stored kinetic shockwave upon impact."
+      }
+    ]
   }
 ]
