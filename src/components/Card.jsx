@@ -1,14 +1,25 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useCardStore } from '../store/useCardStore';
+import React, { useState, useEffect, useRef } from "react";
+import { useCardStore } from "../store/useCardStore";
 
 // StatInput component for rendering individual stat input fields
-function StatInput({ id, stats, updateCard, label, statKey, topPosition, textClass = 'text-[12px]' }) {
+function StatInput({
+  id,
+  stats,
+  updateCard,
+  label,
+  statKey,
+  topPosition,
+  textClass = "text-[12px]",
+}) {
   return (
-    <div className="absolute right-[20px] w-[30px] flex flex-col items-center" style={{ top: topPosition }}>
+    <div
+      className="absolute right-[20px] w-[30px] flex flex-col items-center"
+      style={{ top: topPosition }}
+    >
       <div className="h-[25px] w-full flex items-center justify-center px-0.5">
         <input
           type="text"
-          value={stats?.[statKey] || ''}
+          value={stats?.[statKey] || ""}
           onChange={(e) =>
             updateCard(id, {
               stats: { ...(stats || {}), [statKey]: e.target.value },
@@ -31,10 +42,11 @@ function StatInput({ id, stats, updateCard, label, statKey, topPosition, textCla
 export function Card({ card, onResetDeck }) {
   const updateCard = useCardStore((state) => state.updateCard);
   const [isEnhancing, setIsEnhancing] = useState(false);
+  const [popoverText, setPopoverText] = useState(null);
 
   const {
     id,
-    type = 'standard',
+    type = "standard",
     isAttuned = false,
     progress,
     maxProgress = 20,
@@ -54,13 +66,15 @@ export function Card({ card, onResetDeck }) {
     weaponStats,
   } = card || {};
 
-  const isNormal = type === 'normal';
-  const isProgressive = type === 'progressive';
-  const isStandard = type === 'standard';
+  const isNormal = type === "normal";
+  const isProgressive = type === "progressive";
+  const isStandard = type === "standard";
   const isAttunable = !isNormal;
 
   const bgImage =
-    isAttunable && isAttuned ? '/assets/attune-base.png' : '/assets/card-front.png';
+    isAttunable && isAttuned
+      ? "/assets/attune-base.png"
+      : "/assets/card-front.png";
 
   const prevLevelRef = useRef(currentLevel);
   const prevAttunedRef = useRef(isAttuned);
@@ -113,36 +127,50 @@ export function Card({ card, onResetDeck }) {
     return src;
   };
 
-  const getFadeClass = (delayClass = '') => {
+  const getFadeClass = (delayClass = "") => {
     return `transition-opacity ${
       isEnhancing
-        ? 'opacity-0 duration-75 pointer-events-none'
+        ? "opacity-0 duration-75 pointer-events-none"
         : `opacity-100 duration-500 ${delayClass}`
     }`;
   };
 
   const renderCheckboxes = (levelIndex, currentVal, customPosition) => (
-    <div className={`absolute ${customPosition} flex justify-end z-10 origin-bottom-right`}>
+    <div
+      className={`absolute ${customPosition} flex justify-end z-10 origin-bottom-right`}
+    >
       <div className="flex border-y border-1 border-l border-[#AA7826] bg-[#CCAE78] shadow-sm">
-        {Array.from({ length: maxProgress }).map((_, i) => (
-          <div
-            key={i}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleProgress(levelIndex, i + 1 === currentVal ? i : i + 1);
-            }}
-            className={`w-[7px] min-w-[7px] h-[7px] border-r border-[#AA7826] cursor-pointer transition-colors ${
-              i < currentVal ? 'bg-gradient-to-b from-[#3a1d07] to-[#8f5126]' : 'bg-transparent hover:bg-[#AA7826]/30'
-            }`}
-          />
-        ))}
+        {Array.from({ length: maxProgress }).map((_, i) => {
+          const isNextTarget = i === currentVal;
+          return (
+            <div
+              key={i}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleProgress(levelIndex, i + 1 === currentVal ? i : i + 1);
+              }}
+              className={`w-[7px] min-w-[7px] h-[7px] border-r border-[#AA7826] cursor-pointer transition-colors ${
+                i < currentVal
+                  ? "bg-gradient-to-b from-[#3a1d07] to-[#8f5126]"
+                  : "bg-transparent hover:bg-[#AA7826]/30"
+              } ${isNextTarget ? "ring-2 ring-amber-500 ring-offset-1 ring-offset-[#CCAE78] animate-pulse z-20 relative" : ""}`}
+            />
+          );
+        })}
       </div>
     </div>
   );
 
   const renderUnattunedShelf1 = () => (
-    <div className="overflow-y-auto no-scrollbar pb-2">
-      <p className="italic font-serif leading-tight text-justify">{flavorText || description}</p>
+    <div
+      className="overflow-y-auto no-scrollbar pb-2 cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
+      onClick={() =>
+        setPopoverText({ title: "Item Lore", text: flavorText || description })
+      }
+    >
+      <p className="italic font-serif leading-tight text-justify">
+        {flavorText || description}
+      </p>
     </div>
   );
 
@@ -151,7 +179,13 @@ export function Card({ card, onResetDeck }) {
       return (
         <div className="overflow-y-auto no-scrollbar space-y-1 pb-2">
           {abilities?.map((abi, idx) => (
-            <div key={`nml-${idx}`} className="mb-1">
+            <div
+              key={`nml-${idx}`}
+              className="mb-1 cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
+              onClick={() =>
+                setPopoverText({ title: abi.title, text: abi.description })
+              }
+            >
               <span className="font-bold font-serif">{abi.title}: </span>
               <span className="italic">{abi.description}</span>
             </div>
@@ -161,14 +195,39 @@ export function Card({ card, onResetDeck }) {
     }
 
     return (
-      <div className="overflow-y-auto no-scrollbar space-y-1 pb-[35px]">
-        <p><span className="font-bold">Attunement:</span> {attunementRules}</p>
+      <div
+        className="overflow-y-auto no-scrollbar space-y-1 pb-[35px] cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
+        onClick={() => {
+          let statsContent = `Attunement: ${attunementRules || "None"}`;
+          if (weaponStats) {
+            statsContent += `\nWeapon Stat: ${weaponStats.weaponStat || ""}\nAttack Bonus: ${weaponStats.attackBonus || ""}\nDamage Bonus: ${weaponStats.damageBonus || ""}\nSave DC: ${weaponStats.saveDc || ""}`;
+          }
+          setPopoverText({
+            title: "Attunement Criteria & Stats",
+            text: statsContent,
+          });
+        }}
+      >
+        <p>
+          <span className="font-bold">Attunement:</span> {attunementRules}
+        </p>
         {weaponStats && (
           <>
-            <p><span className="font-bold">Weapon Stat:</span> {weaponStats.weaponStat}</p>
-            <p><span className="font-bold">Attack Bonus:</span> {weaponStats.attackBonus}</p>
-            <p><span className="font-bold">Damage Bonus:</span> {weaponStats.damageBonus}</p>
-            <p><span className="font-bold">Save DC:</span> {weaponStats.saveDc}</p>
+            <p>
+              <span className="font-bold">Weapon Stat:</span>{" "}
+              {weaponStats.weaponStat}
+            </p>
+            <p>
+              <span className="font-bold">Attack Bonus:</span>{" "}
+              {weaponStats.attackBonus}
+            </p>
+            <p>
+              <span className="font-bold">Damage Bonus:</span>{" "}
+              {weaponStats.damageBonus}
+            </p>
+            <p>
+              <span className="font-bold">Save DC:</span> {weaponStats.saveDc}
+            </p>
           </>
         )}
       </div>
@@ -178,10 +237,16 @@ export function Card({ card, onResetDeck }) {
   const renderAttunedShelf1 = () => {
     if (isProgressive) {
       return (
-        <div className={`flex flex-col h-full ${getFadeClass('delay-200')}`}>
+        <div className={`flex flex-col h-full ${getFadeClass("delay-200")}`}>
           <div className="overflow-y-auto no-scrollbar pb-3">
             {level1Abilities?.map((abi, idx) => (
-              <div key={`l1-${idx}`} className="mb-1">
+              <div
+                key={`l1-${idx}`}
+                className="mb-1 cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
+                onClick={() =>
+                  setPopoverText({ title: abi.title, text: abi.description })
+                }
+              >
                 <span className="font-bold font-serif">{abi.title}: </span>
                 <span className="italic">{abi.description}</span>
               </div>
@@ -192,9 +257,17 @@ export function Card({ card, onResetDeck }) {
     }
     if (isStandard) {
       return (
-        <div className={`overflow-y-auto no-scrollbar flex flex-col h-full ${getFadeClass('delay-200')}`}>
+        <div
+          className={`overflow-y-auto no-scrollbar flex flex-col h-full ${getFadeClass("delay-200")}`}
+        >
           {abilities?.slice(0, 2).map((abi, idx) => (
-            <div key={`std1-${idx}`} className="mb-1">
+            <div
+              key={`std1-${idx}`}
+              className="mb-1 cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
+              onClick={() =>
+                setPopoverText({ title: abi.title, text: abi.description })
+              }
+            >
               <span className="font-bold font-serif">{abi.title}: </span>
               <span className="italic">{abi.description}</span>
             </div>
@@ -208,23 +281,38 @@ export function Card({ card, onResetDeck }) {
   const renderAttunedShelf2 = () => {
     if (isProgressive) {
       return (
-        <div className={`flex flex-col h-full ${getFadeClass('delay-300')}`}>
+        <div className={`flex flex-col h-full ${getFadeClass("delay-300")}`}>
           <div className="overflow-y-auto no-scrollbar pb-3">
-            {currentLevel >= 2 && level2Abilities?.map((abi, idx) => (
-              <div key={`l2-${idx}`} className="mb-1">
-                <span className="font-bold font-serif">{abi.title}: </span>
-                <span className="italic">{abi.description}</span>
-              </div>
-            ))}
+            {currentLevel >= 2 &&
+              level2Abilities?.map((abi, idx) => (
+                <div
+                  key={`l2-${idx}`}
+                  className="mb-1 cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
+                  onClick={() =>
+                    setPopoverText({ title: abi.title, text: abi.description })
+                  }
+                >
+                  <span className="font-bold font-serif">{abi.title}: </span>
+                  <span className="italic">{abi.description}</span>
+                </div>
+              ))}
           </div>
         </div>
       );
     }
     if (isStandard) {
       return (
-        <div className={`overflow-y-auto no-scrollbar flex flex-col h-full ${getFadeClass('delay-300')}`}>
+        <div
+          className={`overflow-y-auto no-scrollbar flex flex-col h-full ${getFadeClass("delay-300")}`}
+        >
           {abilities?.slice(2, 4).map((abi, idx) => (
-            <div key={`std2-${idx}`} className="mb-1">
+            <div
+              key={`std2-${idx}`}
+              className="mb-1 cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
+              onClick={() =>
+                setPopoverText({ title: abi.title, text: abi.description })
+              }
+            >
               <span className="font-bold font-serif">{abi.title}: </span>
               <span className="italic">{abi.description}</span>
             </div>
@@ -238,23 +326,38 @@ export function Card({ card, onResetDeck }) {
   const renderAttunedShelf3 = () => {
     if (isProgressive) {
       return (
-        <div className={`flex flex-col h-full ${getFadeClass('delay-400')}`}>
+        <div className={`flex flex-col h-full ${getFadeClass("delay-400")}`}>
           <div className="overflow-y-auto no-scrollbar pb-[35px]">
-            {currentLevel >= 3 && level3Abilities?.map((abi, idx) => (
-              <div key={`l3-${idx}`} className="mb-1">
-                <span className="font-bold font-serif">{abi.title}: </span>
-                <span className="italic">{abi.description}</span>
-              </div>
-            ))}
+            {currentLevel >= 3 &&
+              level3Abilities?.map((abi, idx) => (
+                <div
+                  key={`l3-${idx}`}
+                  className="mb-1 cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
+                  onClick={() =>
+                    setPopoverText({ title: abi.title, text: abi.description })
+                  }
+                >
+                  <span className="font-bold font-serif">{abi.title}: </span>
+                  <span className="italic">{abi.description}</span>
+                </div>
+              ))}
           </div>
         </div>
       );
     }
     if (isStandard) {
       return (
-        <div className={`overflow-y-auto no-scrollbar flex flex-col h-full pb-[35px] ${getFadeClass('delay-400')}`}>
+        <div
+          className={`overflow-y-auto no-scrollbar flex flex-col h-full pb-[35px] ${getFadeClass("delay-400")}`}
+        >
           {abilities?.slice(4).map((abi, idx) => (
-            <div key={`std3-${idx}`} className="mb-1">
+            <div
+              key={`std3-${idx}`}
+              className="mb-1 cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
+              onClick={() =>
+                setPopoverText({ title: abi.title, text: abi.description })
+              }
+            >
               <span className="font-bold font-serif">{abi.title}: </span>
               <span className="italic">{abi.description}</span>
             </div>
@@ -272,22 +375,24 @@ export function Card({ card, onResetDeck }) {
       <div
         className={`relative w-full h-full bg-[length:100%_100%] bg-no-repeat bg-center text-amber-950 select-none transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${
           isAttunable && isAttuned
-            ? 'drop-shadow-[0_0_25px_rgba(245,158,11,0.5)] scale-[1.02]'
-            : 'drop-shadow-2xl scale-100'
+            ? "drop-shadow-[0_0_25px_rgba(245,158,11,0.5)] scale-[1.02]"
+            : "drop-shadow-2xl scale-100"
         }`}
         style={{ backgroundImage: `url('${bgImage}')` }}
       >
         {/* Flash Overlay */}
         <div
           className={`absolute inset-0 bg-gradient-to-t from-amber-200 via-white to-amber-100 mix-blend-overlay rounded-2xl pointer-events-none transition-all duration-500 ease-out z-50 ${
-            isEnhancing ? 'opacity-100 scale-105' : 'opacity-0 scale-100'
+            isEnhancing ? "opacity-100 scale-105" : "opacity-0 scale-100"
           }`}
         />
 
         {/* Title Banner */}
-        <div className={`absolute top-[22px] inset-x-0 mx-auto w-[220px] h-[38px] flex items-center justify-center text-center px-2 ${getFadeClass('delay-100')}`}>
+        <div
+          className={`absolute top-[25px] inset-x-0 mx-auto w-[220px] h-[38px] flex items-center justify-center text-center px-2 ${getFadeClass("delay-100")}`}
+        >
           <h2 className="font-serif text-[12px] font-bold tracking-wide text-amber-950 leading-tight">
-            {name || 'Item Name'}
+            {name || "Item Name"}
           </h2>
         </div>
 
@@ -295,15 +400,21 @@ export function Card({ card, onResetDeck }) {
         <div className="absolute top-[50px] inset-x-0 mx-auto w-full h-[175px] flex flex-col items-center justify-start pt-1 transition-all duration-500">
           {artworkSrc ? (
             <div
-              onClick={isAttunable && isAttuned ? handleToggleAttune : undefined}
-              title={isAttunable && isAttuned ? 'Click to Unattune' : ''}
-              className={`w-[174px] h-[174px] mt-1 flex items-center justify-center relative transition-transform duration-300 ${
-                isAttunable && isAttuned ? 'cursor-pointer hover:scale-105 active:scale-95 group' : ''
+              onClick={
+                isAttunable && isAttuned ? handleToggleAttune : undefined
+              }
+              title={isAttunable && isAttuned ? "Click to Unattune" : ""}
+              className={`w-[190px] h-[190px] mt-1 flex items-center justify-center relative transition-transform duration-300 ${
+                isAttunable && isAttuned
+                  ? "cursor-pointer hover:scale-105 active:scale-95 group"
+                  : ""
               }`}
             >
               <div
                 className={`absolute inset-0 bg-amber-400/20 blur-xl rounded-full transition-all duration-500 ${
-                  isAttunable && isAttuned ? 'opacity-100 group-hover:bg-amber-400/50 group-hover:blur-2xl' : 'opacity-0'
+                  isAttunable && isAttuned
+                    ? "opacity-100 group-hover:bg-amber-400/50 group-hover:blur-2xl"
+                    : "opacity-0"
                 }`}
               />
               <img
@@ -314,57 +425,101 @@ export function Card({ card, onResetDeck }) {
             </div>
           ) : (
             <div
-              onClick={isAttunable && isAttuned ? handleToggleAttune : undefined}
-              title={isAttunable && isAttuned ? 'Click to Unattune' : ''}
-              className={`text-[11px] leading-snug text-amber-950 pt-2 px-6 w-full text-justify overflow-y-auto no-scrollbar max-h-[160px] ${getFadeClass('delay-100')} ${
-                isAttunable && isAttuned ? 'cursor-pointer hover:text-amber-700' : ''
+              onClick={
+                isAttunable && isAttuned ? handleToggleAttune : undefined
+              }
+              title={isAttunable && isAttuned ? "Click to Unattune" : ""}
+              className={`text-[11px] leading-snug text-amber-950 pt-2 px-6 w-full text-justify overflow-y-auto no-scrollbar max-h-[160px] ${getFadeClass("delay-100")} ${
+                isAttunable && isAttuned
+                  ? "cursor-pointer hover:text-amber-700"
+                  : ""
               }`}
             >
               <p>{description || flavorText}</p>
             </div>
           )}
 
-          {/* Weapon Specs */}
+          {/* Weapon Specs (Clickable to Pop) */}
           {isAttunable && isAttuned && specs && (
-            <div className={`absolute bottom-[0px] left-[22px] w-[140px] text-[5px] leading-tight text-amber-950 text-left ${getFadeClass('delay-200')}`}>
+            <div
+              onClick={() =>
+                setPopoverText({
+                  title: "Item Specifications",
+                  text: `Type: ${specs.type || ""}\nAttunement: ${specs.attunement || ""}\nProperties: ${specs.properties || ""}\nRanges: ${specs.ranges || ""}\nDamage: ${specs.damage || ""}\nDamage Type: ${specs.damageType || ""}`,
+                })
+              }
+              className={`absolute bottom-[-15px] left-[10px] w-[140px] text-[5px] leading-tight text-amber-950 text-left cursor-pointer hover:bg-amber-900/10 rounded px-1 py-0.5 transition-colors z-20 ${getFadeClass("delay-200")}`}
+            >
               <p className="italic">{specs.type}</p>
               <p className="italic">{specs.attunement}</p>
-              <p><span className="font-bold">Properties:</span> {specs.properties}</p>
-              <p><span className="font-bold">Ranges:</span> {specs.ranges}</p>
-              <p><span className="font-bold">Damage:</span> {specs.damage}</p>
-              <p><span className="font-bold">Damage Type:</span> {specs.damageType}</p>
+              <p>
+                <span className="font-bold">Properties:</span>{" "}
+                {specs.properties}
+              </p>
+              <p>
+                <span className="font-bold">Ranges:</span> {specs.ranges}
+              </p>
+              <p>
+                <span className="font-bold">Damage:</span> {specs.damage}
+              </p>
+              <p>
+                <span className="font-bold">Damage Type:</span>{" "}
+                {specs.damageType}
+              </p>
             </div>
           )}
         </div>
 
-        {/* Stat Inputs: Only rendered when attuned */}
+        {/* Stat Inputs */}
         {isAttunable && isAttuned && (
-          <div className={`${getFadeClass('delay-100')}`}>
-            <StatInput id={id} stats={stats} updateCard={updateCard} label="Hit" statKey="hit" topPosition="85px" />
-            <StatInput id={id} stats={stats} updateCard={updateCard} label="Damage" statKey="damage" topPosition="130px" textClass="text-[6px]" />
-            <StatInput id={id} stats={stats} updateCard={updateCard} label="Save DC" statKey="saveDc" topPosition="173px" />
+          <div className={`${getFadeClass("delay-100")}`}>
+            <StatInput
+              id={id}
+              stats={stats}
+              updateCard={updateCard}
+              label="Hit"
+              statKey="hit"
+              topPosition="91px"
+            />
+            <StatInput
+              id={id}
+              stats={stats}
+              updateCard={updateCard}
+              label="Damage"
+              statKey="damage"
+              topPosition="139px"
+              textClass="text-[6px]"
+            />
+            <StatInput
+              id={id}
+              stats={stats}
+              updateCard={updateCard}
+              label="Save DC"
+              statKey="saveDc"
+              topPosition="185px"
+            />
           </div>
         )}
 
         {/* Shelves */}
         {isAttunable && isAttuned ? (
           <>
-            <div className="absolute top-[230px] left-[22px] right-[22px] h-[62px] flex flex-col text-[7.5px] leading-snug text-amber-950 pr-1">
+            <div className="absolute top-[245px] left-[8px] right-[22px] h-[62px] flex flex-col text-[7.5px] leading-snug text-amber-950 pr-1">
               {renderAttunedShelf1()}
             </div>
-            <div className="absolute top-[305px] left-[22px] right-[22px] h-[62px] flex flex-col text-[7.5px] leading-snug text-amber-950 pr-1">
+            <div className="absolute top-[325px] left-[8px] right-[22px] h-[62px] flex flex-col text-[7.5px] leading-snug text-amber-950 pr-1">
               {renderAttunedShelf2()}
             </div>
-            <div className="absolute top-[382px] left-[22px] right-[22px] h-[60px] flex flex-col text-[7.5px] leading-snug text-amber-950 pr-1">
+            <div className="absolute top-[406px] left-[8px] right-[22px] h-[60px] flex flex-col text-[7.5px] leading-snug text-amber-950 pr-1">
               {renderAttunedShelf3()}
             </div>
           </>
         ) : (
           <>
-            <div className="absolute top-[235px] left-[22px] right-[22px] h-[72px] flex flex-col text-[7.5px] leading-snug text-amber-950 pr-1">
+            <div className="absolute top-[248px] left-[10px] right-[22px] h-[72px] flex flex-col text-[8px] leading-snug text-amber-950 pr-1">
               {renderUnattunedShelf1()}
             </div>
-            <div className="absolute top-[325px] left-[22px] right-[22px] h-[110px] flex flex-col text-[7px] leading-snug text-amber-950 pr-1">
+            <div className="absolute top-[350px] left-[12px] right-[22px] h-[110px] flex flex-col text-[7px] leading-snug text-amber-950 pr-1">
               {renderUnattunedShelf2()}
             </div>
           </>
@@ -372,9 +527,20 @@ export function Card({ card, onResetDeck }) {
 
         {/* Progress Checkboxes */}
         {isAttunable && isAttuned && isProgressive && (
-          <div className={`${getFadeClass('delay-200')}`}>
-            {level2Abilities && renderCheckboxes(1, progress?.level1 || 0, 'top-[284px] right-[7.5px]')}
-            {currentLevel >= 2 && level3Abilities && renderCheckboxes(2, progress?.level2 || 0, 'top-[359.5px] right-[7.5px]')}
+          <div className={`${getFadeClass("delay-200")}`}>
+            {level2Abilities &&
+              renderCheckboxes(
+                1,
+                progress?.level1 || 0,
+                "top-[305px] right-[7.5px]",
+              )}
+            {currentLevel >= 2 &&
+              level3Abilities &&
+              renderCheckboxes(
+                2,
+                progress?.level2 || 0,
+                "top-[385px] right-[7.5px]",
+              )}
           </div>
         )}
 
@@ -394,15 +560,39 @@ export function Card({ card, onResetDeck }) {
         )}
       </div>
 
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onResetDeck();
-        }}
-        className="text-xs text-amber-300/80 hover:text-amber-200 underline transition-colors whitespace-nowrap cursor-pointer"
-      >
-        Return Card to Deck
-      </button>
+      {popoverText && (
+        <div
+          className="absolute inset-0 z-[100] flex items-center justify-center p-4"
+          onClick={(e) => {
+            e.stopPropagation();
+            setPopoverText(null);
+          }}
+        >
+          {/* Feathered Background Layer */}
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px] pointer-events-none [-webkit-mask-image:radial-gradient(circle_at_center,black_65%,transparent_100%)] [mask-image:radial-gradient(circle_at_center,black_65%,transparent_100%)]" />
+
+          {/* Pop-up Box Content (Sits on top, fully opaque) */}
+          <div
+            className="relative bg-[#e8d5b7] p-4 rounded-xl shadow-[0_15px_40px_rgba(0,0,0,0.6)] w-full max-h-full overflow-y-auto border-2 border-[#AA7826]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-3 border-b border-[#AA7826]/30 pb-2">
+              <strong className="font-serif text-amber-950 font-bold">
+                {popoverText.title}
+              </strong>
+              <button
+                onClick={() => setPopoverText(null)}
+                className="text-amber-950 font-bold hover:text-red-700"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="italic text-[12px] text-amber-950 text-justify whitespace-pre-wrap">
+              {popoverText.text}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

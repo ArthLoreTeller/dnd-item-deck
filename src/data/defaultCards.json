@@ -3,6 +3,7 @@
     "id": "cleaver_001",
     "type": "standard",
     "name": "Chūkabōchō no Himichi",
+    "icon": "🔪",
     "source": "default",
     "isAttuned": false,
     "images": {
@@ -49,6 +50,7 @@
     "id": "wand_001",
     "type": "progressive",
     "name": "The Crimson Wand",
+    "icon": "🪄",
     "source": "default",
     "isAttuned": false,
     "currentLevel": 1,
@@ -110,6 +112,7 @@
     "id": "protection_001",
     "type": "normal",
     "name": "Protection Talisman I",
+    "icon": "⸸",
     "source": "default",
     "isAttuned": false,
     "images": {
@@ -140,6 +143,7 @@
     "id": "protection_002",
     "type": "normal",
     "name": "Protection Talisman II",
+    "icon": "⸸",
     "source": "default",
     "isAttuned": false,
     "images": {
@@ -170,6 +174,7 @@
     "id": "protection_003",
     "type": "normal",
     "name": "Protection Talisman III",
+    "icon": "⸸",
     "source": "default",
     "isAttuned": false,
     "images": {
@@ -200,6 +205,7 @@
     "id": "protection_005",
     "type": "normal",
     "name": "Protection Talisman V",
+    "icon": "⸸",
     "source": "default",
     "isAttuned": false,
     "images": {

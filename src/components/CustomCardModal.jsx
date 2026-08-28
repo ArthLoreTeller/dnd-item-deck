@@ -3,20 +3,17 @@ import { useCardStore } from '../store/useCardStore';
 
 export function CustomCardModal({ isOpen, onClose }) {
   const addToInventory = useCardStore((state) => state.addToInventory);
-  const [activeTab, setActiveTab] = useState('general'); // 'general' | 'abilities' | 'specs'
+  const [activeTab, setActiveTab] = useState('general');
 
   const [formData, setFormData] = useState({
     name: '',
+    icon: '💠', 
     type: 'standard',
     itemImage: '',
     flavorText: '',
     description: '',
     attunementRules: 'Requires Attunement by a Spellcaster',
-    stats: {
-      hit: '+0',
-      damage: '1d8',
-      saveDc: '14',
-    },
+    stats: { hit: '+0', damage: '1d8', saveDc: '14' },
     specs: {
       type: 'Weapon (Longsword)',
       attunement: 'Attunement Required',
@@ -25,18 +22,10 @@ export function CustomCardModal({ isOpen, onClose }) {
       damage: '1d8 Slashing',
       damageType: 'Slashing / Radiant',
     },
-    abilities: [
-      { title: 'Passive Aura', description: 'Emits dim light in a 10ft radius.' },
-    ],
-    level1Abilities: [
-      { title: 'Awakened Strike', description: 'Deals an extra 1d4 radiant damage.' },
-    ],
-    level2Abilities: [
-      { title: 'Radiant Flare', description: 'Blinds target on critical hits.' },
-    ],
-    level3Abilities: [
-      { title: 'Solar Cataclysm', description: 'Unleashes a 30ft sunburst burst DC 16.' },
-    ],
+    abilities: [{ title: 'Passive Aura', description: 'Emits dim light in a 10ft radius.' }],
+    level1Abilities: [{ title: 'Awakened Strike', description: 'Deals an extra 1d4 radiant damage.' }],
+    level2Abilities: [{ title: 'Radiant Flare', description: 'Blinds target on critical hits.' }],
+    level3Abilities: [{ title: 'Solar Cataclysm', description: 'Unleashes a 30ft sunburst burst DC 16.' }],
   });
 
   if (!isOpen) return null;
@@ -50,10 +39,7 @@ export function CustomCardModal({ isOpen, onClose }) {
   const handleNestedChange = (category, key, value) => {
     setFormData((prev) => ({
       ...prev,
-      [category]: {
-        ...prev[category],
-        [key]: value,
-      },
+      [category]: { ...prev[category], [key]: value },
     }));
   };
 
@@ -79,7 +65,6 @@ export function CustomCardModal({ isOpen, onClose }) {
     }));
   };
 
-  // Prevent accidental submit when pressing Enter in text inputs
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
       e.preventDefault();
@@ -93,6 +78,7 @@ export function CustomCardModal({ isOpen, onClose }) {
     const newCard = {
       id: `custom-${Date.now()}`,
       name: formData.name.trim(),
+      icon: formData.icon.trim() || '💠',
       type: formData.type,
       itemImage: formData.itemImage.trim() || '',
       flavorText: formData.flavorText.trim(),
@@ -123,18 +109,14 @@ export function CustomCardModal({ isOpen, onClose }) {
         className="bg-slate-900 border border-slate-700 w-full max-w-xl rounded-2xl shadow-2xl p-6 flex flex-col gap-4 text-white animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex justify-between items-center border-b border-slate-800 pb-3">
           <div>
             <h3 className="font-serif font-bold text-amber-200 text-lg">Create Custom Item Card</h3>
             <p className="text-[11px] text-slate-400">Configure item statistics, rules, and ability slots</p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white text-sm font-semibold cursor-pointer">
-            ✕
-          </button>
+          <button onClick={onClose} className="text-slate-400 hover:text-white text-sm font-semibold cursor-pointer">✕</button>
         </div>
 
-        {/* Navigation Tabs */}
         <div className="flex border-b border-slate-800 gap-2 text-xs">
           {['general', 'abilities', 'specs'].map((tab) => (
             <button
@@ -142,9 +124,7 @@ export function CustomCardModal({ isOpen, onClose }) {
               type="button"
               onClick={() => setActiveTab(tab)}
               className={`pb-2 px-3 capitalize font-semibold transition-colors border-b-2 ${
-                activeTab === tab
-                  ? 'border-amber-400 text-amber-300'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                activeTab === tab ? 'border-amber-400 text-amber-300' : 'border-transparent text-slate-400 hover:text-slate-200'
               }`}
             >
               {tab}
@@ -152,10 +132,8 @@ export function CustomCardModal({ isOpen, onClose }) {
           ))}
         </div>
 
-        {/* Scrollable Form Body */}
         <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="flex flex-col flex-1 overflow-hidden gap-4 text-xs">
           <div className="overflow-y-auto no-scrollbar pr-1 space-y-4 max-h-[420px]">
-            {/* TAB 1: GENERAL */}
             {activeTab === 'general' && (
               <div className="space-y-3">
                 <div>
@@ -166,6 +144,18 @@ export function CustomCardModal({ isOpen, onClose }) {
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
                     placeholder="e.g., Sunforged Scimitar"
+                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-amber-100 placeholder:text-slate-600 focus:border-amber-500 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-slate-300 font-semibold mb-1 block">Item Icon (Emoji)</label>
+                  <input
+                    type="text"
+                    maxLength={2}
+                    value={formData.icon}
+                    onChange={(e) => handleInputChange('icon', e.target.value)}
+                    placeholder="e.g., ⚔️"
                     className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-amber-100 placeholder:text-slate-600 focus:border-amber-500 outline-none"
                   />
                 </div>
@@ -195,7 +185,6 @@ export function CustomCardModal({ isOpen, onClose }) {
                   </div>
                 </div>
 
-                {/* Stat Inputs: Hidden for Normal cards */}
                 {!isNormal && (
                   <div className="grid grid-cols-3 gap-3">
                     <div>
@@ -239,7 +228,6 @@ export function CustomCardModal({ isOpen, onClose }) {
                   />
                 </div>
 
-                {/* Attunement Rules: Hidden for Normal cards */}
                 {!isNormal && (
                   <div>
                     <label className="text-slate-300 font-semibold mb-1 block">Attunement Rules</label>
@@ -254,7 +242,6 @@ export function CustomCardModal({ isOpen, onClose }) {
               </div>
             )}
 
-            {/* TAB 2: ABILITIES */}
             {activeTab === 'abilities' && (
               <div className="space-y-4">
                 {formData.type === 'progressive' ? (
@@ -346,9 +333,7 @@ export function CustomCardModal({ isOpen, onClose }) {
                 ) : (
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <label className="text-amber-200 font-semibold">
-                        {isNormal ? 'Item Abilities' : 'Card Abilities (Shelves 1 to 3)'}
-                      </label>
+                      <label className="text-amber-200 font-semibold">{isNormal ? 'Item Abilities' : 'Card Abilities (Shelves 1 to 3)'}</label>
                       <button type="button" onClick={() => addAbilityRow('abilities')} className="text-[11px] text-amber-400 underline">+ Add Ability</button>
                     </div>
                     {formData.abilities.map((ability, idx) => (
@@ -377,7 +362,6 @@ export function CustomCardModal({ isOpen, onClose }) {
               </div>
             )}
 
-            {/* TAB 3: SPECS */}
             {activeTab === 'specs' && (
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
@@ -439,7 +423,6 @@ export function CustomCardModal({ isOpen, onClose }) {
             )}
           </div>
 
-          {/* Footer Controls */}
           <div className="flex justify-between items-center pt-3 border-t border-slate-800">
             <span className="text-[11px] text-slate-500">Ready to append to your inventory</span>
             <div className="flex gap-2">
