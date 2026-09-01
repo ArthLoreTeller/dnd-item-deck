@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
+import { Search } from 'lucide-react';
 import { useCardStore } from '../store/useCardStore';
+import { getLucideIcon } from "../components/Icon";
 
 export function ItemSearchModal({ isOpen, onClose, onCardAdded }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -43,7 +45,7 @@ export function ItemSearchModal({ isOpen, onClose, onCardAdded }) {
         {/* Header */}
         <div className="flex justify-between items-center border-b border-slate-800 pb-3">
           <div className="flex items-center gap-2">
-            <span className="text-xl">🔎︎</span>
+            <Search className="w-5 h-5 text-amber-400 shrink-0" />
             <h3 className="font-serif font-bold text-amber-200 text-lg">
               Search & Add Item
             </h3>
@@ -88,12 +90,17 @@ export function ItemSearchModal({ isOpen, onClose, onCardAdded }) {
                 key={item.id}
                 className="flex items-center justify-between p-3 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/70 hover:border-amber-500/50 rounded-xl transition-all group"
               >
-                <div className="flex flex-col min-w-0 pr-3">
-                  <span className="font-semibold text-amber-100 text-sm truncate">
-                    {item.name}
+                <div className="flex items-center gap-3 min-w-0 pr-3">
+                  <span className="shrink-0 flex items-center justify-center">
+                    {getLucideIcon(item)}
                   </span>
-                  <div className="mt-0.5 text-[11px] text-slate-400 capitalize">
-                    {item.type || 'Standard'}
+                  <div className="flex flex-col min-w-0">
+                    <span className="font-semibold text-amber-100 text-sm truncate">
+                      {item.name}
+                    </span>
+                    <div className="mt-0.5 text-[11px] text-slate-400 capitalize">
+                      {item.type || 'Standard'}
+                    </div>
                   </div>
                 </div>
 
@@ -111,7 +118,7 @@ export function ItemSearchModal({ isOpen, onClose, onCardAdded }) {
 
         {/* Footer info */}
         <div className="text-right border-t border-slate-800/80 pt-2 text-[11px] text-slate-500">
-          Showing {searchResults.length} of {deck.length} remaining cards
+          {deck.length} cards left
         </div>
       </div>
     </div>

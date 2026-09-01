@@ -3,7 +3,7 @@
     "id": "cleaver_001",
     "type": "standard",
     "name": "Chūkabōchō no Himichi",
-    "icon": "🔪",
+    "icon": "sword",
     "source": "default",
     "isAttuned": false,
     "images": {
@@ -50,7 +50,7 @@
     "id": "wand_001",
     "type": "progressive",
     "name": "The Crimson Wand",
-    "icon": "🪄",
+    "icon": "wand",
     "source": "default",
     "isAttuned": false,
     "currentLevel": 1,
@@ -112,7 +112,7 @@
     "id": "protection_001",
     "type": "normal",
     "name": "Protection Talisman I",
-    "icon": "⸸",
+    "icon": "buff",
     "source": "default",
     "isAttuned": false,
     "images": {
@@ -143,7 +143,7 @@
     "id": "protection_002",
     "type": "normal",
     "name": "Protection Talisman II",
-    "icon": "⸸",
+    "icon": "buff",
     "source": "default",
     "isAttuned": false,
     "images": {
@@ -174,7 +174,7 @@
     "id": "protection_003",
     "type": "normal",
     "name": "Protection Talisman III",
-    "icon": "⸸",
+    "icon": "buff",
     "source": "default",
     "isAttuned": false,
     "images": {
@@ -205,7 +205,7 @@
     "id": "protection_005",
     "type": "normal",
     "name": "Protection Talisman V",
-    "icon": "⸸",
+    "icon": "buff",
     "source": "default",
     "isAttuned": false,
     "images": {
@@ -236,6 +236,7 @@
     "id": "kunai_01",
     "type": "normal",
     "name": "Kunai",
+    "icon": "dagger",
     "isAttuned": false,
     "images": {
       "base": "/assets/Normal/kunai.png"
@@ -269,6 +270,7 @@
     "id": "kunai_02",
     "type": "normal",
     "name": "Aquamarine Kunai",
+    "icon": "dagger",
     "isAttuned": false,
     "images": {
       "base": "/assets/Normal/kunai-aquamarine.png"
@@ -302,6 +304,7 @@
     "id": "kunai_03",
     "type": "normal",
     "name": "Obsidian Kunai",
+    "icon": "dagger",
     "isAttuned": false,
     "images": {
       "base": "/assets/Normal/kunai-obsidian.png"
@@ -335,6 +338,7 @@
     "id": "kunai_04",
     "type": "normal",
     "name": "Malachite Kunai",
+    "icon": "dagger",
     "isAttuned": false,
     "images": {
       "base": "/assets/Normal/kunai-malachite.png"
@@ -368,6 +372,7 @@
     "id": "kunai_05",
     "type": "normal",
     "name": "Ferruginous Kunai",
+    "icon": "dagger",
     "isAttuned": false,
     "images": {
       "base": "/assets/Normal/kunai-ferruginous-quartz.png"

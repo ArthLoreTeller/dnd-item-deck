@@ -8,10 +8,12 @@ import {
   MouseSensor,
   TouchSensor,
 } from "@dnd-kit/core";
+import { Search } from "lucide-react";
 import { useCardStore } from "./store/useCardStore";
 import { Card } from "./components/Card";
 import { ItemSearchModal } from "./components/ItemSearchModal";
 import { CustomCardModal } from "./components/CustomCardModal";
+import { getLucideIcon } from "./components/Icon"; // Assumes you created this file
 
 // Draggable Inventory Item
 function DraggableInventoryCard({
@@ -24,11 +26,11 @@ function DraggableInventoryCard({
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: item.id,
-      disabled: disabled, // <-- Disables dragging when true
+      disabled: disabled,
     });
 
   const isAttunable = item.type !== "normal";
-  const itemIcon = item.icon || "💠";
+  const itemIcon = getLucideIcon(item);
 
   const style = {
     touchAction: disabled ? "auto" : "none",
@@ -57,7 +59,7 @@ function DraggableInventoryCard({
     >
       <div className="flex justify-between items-center w-full">
         <div className="font-semibold text-amber-200 text-sm truncate flex items-center gap-2">
-          <span className="w-6 shrink-0 flex justify-center translate-y-[1px]">
+          <span className="shrink-0 flex items-center justify-center">
             {itemIcon}
           </span>
           <span className="truncate">{item.name}</span>
@@ -281,7 +283,7 @@ export default function App() {
             onClick={() => setIsSearchModalOpen(true)}
             className="w-full bg-slate-800/80 hover:bg-slate-700/90 border-2 border-amber-500/50 hover:border-amber-400 text-slate-300 px-6 py-3.5 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.15)] flex items-center gap-3 cursor-pointer transition-all"
           >
-            <span className="text-xl text-amber-400">🔎︎</span>
+            <Search className="w-5 h-5 text-amber-400 shrink-0" />
             <span className="flex-1 text-left text-sm font-medium placeholder:text-slate-500">
               Search for an item, spell, or card...
             </span>
@@ -437,28 +439,20 @@ export default function App() {
               className={`mt-4 w-full max-w-[280px] transition-all duration-300 ${isDrawn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none absolute"}`}
             >
               {isDrawn && (
-                <div
-                  className={`mt-4 w-full max-w-[280px] transition-all duration-300 ${isDrawn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none absolute"}`}
-                >
-                  {isDrawn && (
-                    <div className="bg-slate-800/90 border border-slate-700 p-2 rounded-xl shadow-[0_10px_20px_rgba(0,0,0,0.5)] flex items-center justify-between gap-2 backdrop-blur-sm">
-                      {/* 1. DISCARD BUTTON (Now on the Left) */}
-                      <button
-                        onClick={handleReturnToDeck}
-                        className="flex-1 px-3 py-2.5 bg-red-950/30 hover:bg-red-900/50 text-red-400 border border-red-900/50 hover:border-red-500/60 rounded-lg text-xs font-bold tracking-wide uppercase transition-all cursor-pointer shadow-inner active:scale-95 flex justify-center gap-1.5"
-                      >
-                        Discard
-                      </button>
+                <div className="bg-slate-800/90 border border-slate-700 p-2 rounded-xl shadow-[0_10px_20px_rgba(0,0,0,0.5)] flex items-center justify-between gap-2 backdrop-blur-sm">
+                  <button
+                    onClick={handleReturnToDeck}
+                    className="flex-1 px-3 py-2.5 bg-red-950/30 hover:bg-red-900/50 text-red-400 border border-red-900/50 hover:border-red-500/60 rounded-lg text-xs font-bold tracking-wide uppercase transition-all cursor-pointer shadow-inner active:scale-95 flex justify-center gap-1.5"
+                  >
+                    Discard
+                  </button>
 
-                      {/* 2. FLIP BUTTON (Now on the Right) */}
-                      <button
-                        onClick={() => setIsDrawn(false)}
-                        className="flex-1 px-3 py-2.5 bg-slate-900 hover:bg-slate-950 text-amber-400 border border-amber-500/30 hover:border-amber-400/60 rounded-lg text-xs font-bold tracking-wide uppercase transition-all cursor-pointer shadow-inner active:scale-95 flex justify-center gap-1.5"
-                      >
-                        CONTINUE
-                      </button>
-                    </div>
-                  )}
+                  <button
+                    onClick={() => setIsDrawn(false)}
+                    className="flex-1 px-3 py-2.5 bg-slate-900 hover:bg-slate-950 text-amber-400 border border-amber-500/30 hover:border-amber-400/60 rounded-lg text-xs font-bold tracking-wide uppercase transition-all cursor-pointer shadow-inner active:scale-95 flex justify-center gap-1.5"
+                  >
+                    CONTINUE
+                  </button>
                 </div>
               )}
             </div>
@@ -486,7 +480,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-2.5 max-h-[340px] overflow-y-auto no-scrollbar pr-1">
+            <div className="flex flex-col gap-2.5 max-h-[340px] overflow-y-auto no-scrollbar pr-1">
               {sortedInventory.length === 0 ? (
                 <div className="text-center py-8 text-slate-500 text-sm italic">
                   Your inventory is empty. Tap the deck to draw or create a

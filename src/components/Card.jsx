@@ -558,41 +558,42 @@ export function Card({ card, onResetDeck }) {
             </button>
           </div>
         )}
-      </div>
 
-      {popoverText && (
-        <div
-          className="absolute inset-0 z-[100] flex items-center justify-center p-4"
-          onClick={(e) => {
-            e.stopPropagation();
-            setPopoverText(null);
-          }}
-        >
-          {/* Feathered Background Layer */}
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px] pointer-events-none [-webkit-mask-image:radial-gradient(circle_at_center,black_65%,transparent_100%)] [mask-image:radial-gradient(circle_at_center,black_65%,transparent_100%)]" />
-
-          {/* Pop-up Box Content (Sits on top, fully opaque) */}
+        {/* POPOVER */}
+        {popoverText && (
           <div
-            className="relative bg-[#e8d5b7] p-4 rounded-xl shadow-[0_15px_40px_rgba(0,0,0,0.6)] w-full max-h-full overflow-y-auto border-2 border-[#AA7826]"
-            onClick={(e) => e.stopPropagation()}
+            className="absolute inset-0 z-[100] flex items-center justify-center p-4"
+            onClick={(e) => {
+              e.stopPropagation();
+              setPopoverText(null);
+            }}
           >
-            <div className="flex justify-between items-center mb-3 border-b border-[#AA7826]/30 pb-2">
-              <strong className="font-serif text-amber-950 font-bold">
-                {popoverText.title}
-              </strong>
-              <button
-                onClick={() => setPopoverText(null)}
-                className="text-amber-950 font-bold hover:text-red-700"
-              >
-                ✕
-              </button>
+            {/* Feathered Background Layer */}
+            <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px] pointer-events-none [-webkit-mask-image:radial-gradient(circle_at_center,black_65%,transparent_100%)] [mask-image:radial-gradient(circle_at_center,black_65%,transparent_100%)]" />
+
+            {/* Pop-up Box Content (Sits on top, fully opaque) */}
+            <div
+              className="relative bg-[#e8d5b7] p-4 rounded-xl shadow-[0_15px_40px_rgba(0,0,0,0.6)] w-full max-h-full overflow-y-auto border-2 border-[#AA7826]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-3 border-b border-[#AA7826]/30 pb-2">
+                <strong className="font-serif text-amber-950 font-bold">
+                  {popoverText.title}
+                </strong>
+                <button
+                  onClick={() => setPopoverText(null)}
+                  className="text-amber-950 font-bold hover:text-red-700"
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="italic text-[12px] text-amber-950 text-justify whitespace-pre-wrap">
+                {popoverText.text}
+              </p>
             </div>
-            <p className="italic text-[12px] text-amber-950 text-justify whitespace-pre-wrap">
-              {popoverText.text}
-            </p>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
