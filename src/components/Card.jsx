@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useCardStore } from "../store/useCardStore";
+import { Unlink, RotateCcw } from "lucide-react";
 
 // StatInput component for rendering individual stat input fields
 function StatInput({
@@ -42,7 +43,15 @@ function StatInput({
 export function Card({ card, onResetDeck }) {
   const updateCard = useCardStore((state) => state.updateCard);
   const [isEnhancing, setIsEnhancing] = useState(false);
+  const [isBurningButton, setIsBurningButton] = useState(false);
+  const [isUnlinking, setIsUnlinking] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [flipAnim, setFlipAnim] = useState("");
   const [popoverText, setPopoverText] = useState(null);
+  const [expandedImage, setExpandedImage] = useState(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  const dragStartX = useRef(null);
 
   const {
     id,
@@ -71,8 +80,10 @@ export function Card({ card, onResetDeck }) {
   const isStandard = type === "standard";
   const isAttunable = !isNormal;
 
+  const displayAttuned = isAttuned && !isFlipped;
+
   const bgImage =
-    isAttunable && isAttuned
+    isAttunable && displayAttuned
       ? "/assets/attune-base.png"
       : "/assets/card-front.png";
 
@@ -86,7 +97,6 @@ export function Card({ card, onResetDeck }) {
     if (justAttuned || leveledUp) {
       setIsEnhancing(true);
       const timer = setTimeout(() => setIsEnhancing(false), 600);
-
       prevAttunedRef.current = isAttuned;
       prevLevelRef.current = currentLevel;
       return () => clearTimeout(timer);
@@ -109,15 +119,48 @@ export function Card({ card, onResetDeck }) {
     updateCard(id, { progress: newProgress, currentLevel: newLevel });
   };
 
+  const handleFlip = () => {
+    if (flipAnim || isEnhancing || isUnlinking) return;
+    setFlipAnim("out");
+    setTimeout(() => {
+      setIsFlipped((prev) => !prev);
+      setFlipAnim("in");
+    }, 250);
+    setTimeout(() => {
+      setFlipAnim("");
+    }, 500);
+  };
+
   const handleToggleAttune = (e) => {
     if (e) e.stopPropagation();
-    if (!isAttunable) return;
-    updateCard(id, { isAttuned: !isAttuned });
+    if (
+      !isAttunable ||
+      isEnhancing ||
+      isBurningButton ||
+      isUnlinking ||
+      flipAnim
+    )
+      return;
+
+    if (!isAttuned) {
+      setIsBurningButton(true);
+      updateCard(id, { isAttuned: true });
+      setTimeout(() => {
+        setIsBurningButton(false);
+      }, 900);
+    } else {
+      setIsUnlinking(true);
+      setTimeout(() => {
+        setIsUnlinking(false);
+        setIsFlipped(false);
+        updateCard(id, { isAttuned: false });
+      }, 900);
+    }
   };
 
   const getArtworkSrc = () => {
     let src = images?.base || itemImage;
-    if (isAttunable && isAttuned) {
+    if (isAttunable && displayAttuned) {
       if (isProgressive) {
         if (currentLevel >= 3 && images?.level3) return images.level3;
         if (currentLevel >= 2 && images?.level2) return images.level2;
@@ -153,7 +196,7 @@ export function Card({ card, onResetDeck }) {
                 i < currentVal
                   ? "bg-gradient-to-b from-[#3a1d07] to-[#8f5126]"
                   : "bg-transparent hover:bg-[#AA7826]/30"
-              } ${isNextTarget ? "ring-2 ring-amber-500 ring-offset-1 ring-offset-[#CCAE78] animate-pulse z-20 relative" : ""}`}
+              } ${isNextTarget ? "animate-inner-burn" : ""}`}
             />
           );
         })}
@@ -193,14 +236,17 @@ export function Card({ card, onResetDeck }) {
         </div>
       );
     }
-
     return (
       <div
         className="overflow-y-auto no-scrollbar space-y-1 pb-[35px] cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
         onClick={() => {
           let statsContent = `Attunement: ${attunementRules || "None"}`;
           if (weaponStats) {
-            statsContent += `\nWeapon Stat: ${weaponStats.weaponStat || ""}\nAttack Bonus: ${weaponStats.attackBonus || ""}\nDamage Bonus: ${weaponStats.damageBonus || ""}\nSave DC: ${weaponStats.saveDc || ""}`;
+            statsContent += `\nWeapon Stat: ${
+              weaponStats.weaponStat || ""
+            }\nAttack Bonus: ${weaponStats.attackBonus || ""}\nDamage Bonus: ${
+              weaponStats.damageBonus || ""
+            }\nSave DC: ${weaponStats.saveDc || ""}`;
           }
           setPopoverText({
             title: "Attunement Criteria & Stats",
@@ -258,7 +304,9 @@ export function Card({ card, onResetDeck }) {
     if (isStandard) {
       return (
         <div
-          className={`overflow-y-auto no-scrollbar flex flex-col h-full ${getFadeClass("delay-200")}`}
+          className={`overflow-y-auto no-scrollbar flex flex-col h-full ${getFadeClass(
+            "delay-200"
+          )}`}
         >
           {abilities?.slice(0, 2).map((abi, idx) => (
             <div
@@ -303,7 +351,9 @@ export function Card({ card, onResetDeck }) {
     if (isStandard) {
       return (
         <div
-          className={`overflow-y-auto no-scrollbar flex flex-col h-full ${getFadeClass("delay-300")}`}
+          className={`overflow-y-auto no-scrollbar flex flex-col h-full ${getFadeClass(
+            "delay-300"
+          )}`}
         >
           {abilities?.slice(2, 4).map((abi, idx) => (
             <div
@@ -348,7 +398,9 @@ export function Card({ card, onResetDeck }) {
     if (isStandard) {
       return (
         <div
-          className={`overflow-y-auto no-scrollbar flex flex-col h-full pb-[35px] ${getFadeClass("delay-400")}`}
+          className={`overflow-y-auto no-scrollbar flex flex-col h-full pb-[35px] ${getFadeClass(
+            "delay-400"
+          )}`}
         >
           {abilities?.slice(4).map((abi, idx) => (
             <div
@@ -372,227 +424,409 @@ export function Card({ card, onResetDeck }) {
 
   return (
     <div className="flex flex-col items-center gap-4 w-full h-full">
+      {/* OUTER WRAPPER: Handles drop-shadow transition and maintains a strict 100% scale */}
       <div
-        className={`relative w-full h-full bg-[length:100%_100%] bg-no-repeat bg-center text-amber-950 select-none transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+        className={`relative w-full h-full transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] scale-100 ${
           isAttunable && isAttuned
-            ? "drop-shadow-[0_0_25px_rgba(245,158,11,0.5)] scale-[1.02]"
-            : "drop-shadow-2xl scale-100"
+            ? "drop-shadow-[0_0_25px_rgba(245,158,11,0.5)]"
+            : "drop-shadow-2xl"
         }`}
-        style={{ backgroundImage: `url('${bgImage}')` }}
+        style={{ perspective: "1200px" }}
       >
-        {/* Flash Overlay */}
+        {/* INNER WRAPPER: Handles Background and Flip animations perfectly sized to the parent */}
         <div
-          className={`absolute inset-0 bg-gradient-to-t from-amber-200 via-white to-amber-100 mix-blend-overlay rounded-2xl pointer-events-none transition-all duration-500 ease-out z-50 ${
-            isEnhancing ? "opacity-100 scale-105" : "opacity-0 scale-100"
+          onTouchStart={(e) => {
+            dragStartX.current = e.touches[0].clientX;
+          }}
+          onTouchEnd={(e) => {
+            if (dragStartX.current === null) return;
+            const deltaX = e.changedTouches[0].clientX - dragStartX.current;
+            if (isAttuned && Math.abs(deltaX) > 45) handleFlip();
+            dragStartX.current = null;
+          }}
+          onMouseDown={(e) => {
+            dragStartX.current = e.clientX;
+          }}
+          onMouseUp={(e) => {
+            if (dragStartX.current === null) return;
+            const deltaX = e.clientX - dragStartX.current;
+            if (isAttuned && Math.abs(deltaX) > 45) handleFlip();
+            dragStartX.current = null;
+          }}
+          onMouseLeave={() => {
+            dragStartX.current = null;
+          }}
+          className={`relative w-full h-full bg-[length:100%_100%] bg-no-repeat bg-center text-amber-950 select-none ${
+            isAttunable && isAttuned ? "cursor-grab active:cursor-grabbing" : ""
+          } ${
+            flipAnim === "out"
+              ? "animate-flip-out"
+              : flipAnim === "in"
+              ? "animate-flip-in"
+              : ""
           }`}
-        />
-
-        {/* Title Banner */}
-        <div
-          className={`absolute top-[25px] inset-x-0 mx-auto w-[220px] h-[38px] flex items-center justify-center text-center px-2 ${getFadeClass("delay-100")}`}
+          style={{
+            backgroundImage: `url('${bgImage}')`,
+            transformStyle: "preserve-3d",
+          }}
         >
-          <h2 className="font-serif text-[12px] font-bold tracking-wide text-amber-950 leading-tight">
-            {name || "Item Name"}
-          </h2>
-        </div>
-
-        {/* Artwork Area */}
-        <div className="absolute top-[50px] inset-x-0 mx-auto w-full h-[175px] flex flex-col items-center justify-start pt-1 transition-all duration-500">
-          {artworkSrc ? (
-            <div
-              onClick={
-                isAttunable && isAttuned ? handleToggleAttune : undefined
+          <style>
+            {`
+              @keyframes flip-out {
+                0% { transform: rotateY(0deg); opacity: 1; filter: brightness(1); }
+                100% { transform: rotateY(90deg); opacity: 0.5; filter: brightness(0.5); }
               }
-              title={isAttunable && isAttuned ? "Click to Unattune" : ""}
-              className={`w-[190px] h-[190px] mt-1 flex items-center justify-center relative transition-transform duration-300 ${
-                isAttunable && isAttuned
-                  ? "cursor-pointer hover:scale-105 active:scale-95 group"
-                  : ""
-              }`}
-            >
-              <div
-                className={`absolute inset-0 bg-amber-400/20 blur-xl rounded-full transition-all duration-500 ${
-                  isAttunable && isAttuned
-                    ? "opacity-100 group-hover:bg-amber-400/50 group-hover:blur-2xl"
-                    : "opacity-0"
-                }`}
-              />
-              <img
-                src={artworkSrc}
-                alt={name}
-                className="max-w-full max-h-full object-contain drop-shadow-md relative z-10 pointer-events-none"
-              />
-            </div>
-          ) : (
-            <div
-              onClick={
-                isAttunable && isAttuned ? handleToggleAttune : undefined
+              .animate-flip-out { animation: flip-out 0.25s ease-in forwards; }
+              
+              @keyframes flip-in {
+                0% { transform: rotateY(-90deg); opacity: 0.5; filter: brightness(0.5); }
+                100% { transform: rotateY(0deg); opacity: 1; filter: brightness(1); }
               }
-              title={isAttunable && isAttuned ? "Click to Unattune" : ""}
-              className={`text-[11px] leading-snug text-amber-950 pt-2 px-6 w-full text-justify overflow-y-auto no-scrollbar max-h-[160px] ${getFadeClass("delay-100")} ${
-                isAttunable && isAttuned
-                  ? "cursor-pointer hover:text-amber-700"
-                  : ""
-              }`}
-            >
-              <p>{description || flavorText}</p>
-            </div>
-          )}
+              .animate-flip-in { animation: flip-in 0.25s ease-out forwards; }
 
-          {/* Weapon Specs (Clickable to Pop) */}
-          {isAttunable && isAttuned && specs && (
-            <div
-              onClick={() =>
-                setPopoverText({
-                  title: "Item Specifications",
-                  text: `Type: ${specs.type || ""}\nAttunement: ${specs.attunement || ""}\nProperties: ${specs.properties || ""}\nRanges: ${specs.ranges || ""}\nDamage: ${specs.damage || ""}\nDamage Type: ${specs.damageType || ""}`,
-                })
+              @keyframes hieroglyph-etch {
+                0% { clip-path: inset(0 100% 0 0); filter: drop-shadow(0 0 12px #fbbf24) brightness(2); color: #fef08a; transform: scale(1.1); }
+                40% { clip-path: inset(0 0 0 0); filter: drop-shadow(0 0 15px #f59e0b) brightness(1.5); color: #f59e0b; transform: scale(1.1); }
+                100% { clip-path: inset(0 0 0 0); filter: drop-shadow(0 0 0px transparent) brightness(1); color: rgb(69 26 3 / 0.4); transform: scale(1); }
               }
-              className={`absolute bottom-[-15px] left-[10px] w-[140px] text-[5px] leading-tight text-amber-950 text-left cursor-pointer hover:bg-amber-900/10 rounded px-1 py-0.5 transition-colors z-20 ${getFadeClass("delay-200")}`}
-            >
-              <p className="italic">{specs.type}</p>
-              <p className="italic">{specs.attunement}</p>
-              <p>
-                <span className="font-bold">Properties:</span>{" "}
-                {specs.properties}
-              </p>
-              <p>
-                <span className="font-bold">Ranges:</span> {specs.ranges}
-              </p>
-              <p>
-                <span className="font-bold">Damage:</span> {specs.damage}
-              </p>
-              <p>
-                <span className="font-bold">Damage Type:</span>{" "}
-                {specs.damageType}
-              </p>
-            </div>
-          )}
-        </div>
+              .animate-hieroglyph { animation: hieroglyph-etch 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
 
-        {/* Stat Inputs */}
-        {isAttunable && isAttuned && (
-          <div className={`${getFadeClass("delay-100")}`}>
-            <StatInput
-              id={id}
-              stats={stats}
-              updateCard={updateCard}
-              label="Hit"
-              statKey="hit"
-              topPosition="91px"
-            />
-            <StatInput
-              id={id}
-              stats={stats}
-              updateCard={updateCard}
-              label="Damage"
-              statKey="damage"
-              topPosition="139px"
-              textClass="text-[6px]"
-            />
-            <StatInput
-              id={id}
-              stats={stats}
-              updateCard={updateCard}
-              label="Save DC"
-              statKey="saveDc"
-              topPosition="185px"
-            />
-          </div>
-        )}
+              @keyframes unlink-glow-burn {
+                0% { color: rgb(69 26 3); filter: drop-shadow(0 0 0px transparent); transform: scale(1); opacity: 1; }
+                40% { color: #fef08a; filter: drop-shadow(0 0 12px #fbbf24) brightness(1.5); transform: scale(1.2); opacity: 1; }
+                100% { color: #ea580c; filter: drop-shadow(0 0 20px #ea580c) brightness(2); transform: scale(0); opacity: 0; }
+              }
+              .animate-unlink-burn { animation: unlink-glow-burn 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
 
-        {/* Shelves */}
-        {isAttunable && isAttuned ? (
-          <>
-            <div className="absolute top-[245px] left-[8px] right-[22px] h-[62px] flex flex-col text-[7.5px] leading-snug text-amber-950 pr-1">
-              {renderAttunedShelf1()}
-            </div>
-            <div className="absolute top-[325px] left-[8px] right-[22px] h-[62px] flex flex-col text-[7.5px] leading-snug text-amber-950 pr-1">
-              {renderAttunedShelf2()}
-            </div>
-            <div className="absolute top-[406px] left-[8px] right-[22px] h-[60px] flex flex-col text-[7.5px] leading-snug text-amber-950 pr-1">
-              {renderAttunedShelf3()}
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="absolute top-[248px] left-[10px] right-[22px] h-[72px] flex flex-col text-[8px] leading-snug text-amber-950 pr-1">
-              {renderUnattunedShelf1()}
-            </div>
-            <div className="absolute top-[350px] left-[12px] right-[22px] h-[110px] flex flex-col text-[7px] leading-snug text-amber-950 pr-1">
-              {renderUnattunedShelf2()}
-            </div>
-          </>
-        )}
+              @keyframes button-consume {
+                0% { transform: scale(1.1); opacity: 1; }
+                100% { transform: scale(0); opacity: 0; }
+              }
+              .animate-button-consume { animation: button-consume 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards; transform-origin: center; }
 
-        {/* Progress Checkboxes */}
-        {isAttunable && isAttuned && isProgressive && (
-          <div className={`${getFadeClass("delay-200")}`}>
-            {level2Abilities &&
-              renderCheckboxes(
-                1,
-                progress?.level1 || 0,
-                "top-[305px] right-[7.5px]",
-              )}
-            {currentLevel >= 2 &&
-              level3Abilities &&
-              renderCheckboxes(
-                2,
-                progress?.level2 || 0,
-                "top-[385px] right-[7.5px]",
-              )}
-          </div>
-        )}
+              @keyframes inner-burn {
+                0% { background-color:rgb(252, 192, 108); box-shadow: inset 0 0 3px #eab308; }
+                30% { background-color:#fef08a; box-shadow: inset 0 0 2px #d97706; }
+                100% { background-color: transparent; box-shadow: inset 0 0 0px transparent; }
+              }
+              .animate-inner-burn { animation: inner-burn 2.5s cubic-bezier(0.25, 1, 0.5, 1); }
+            `}
+          </style>
 
-        {/* Attune Button */}
-        {isAttunable && !isAttuned && (
-          <div className="absolute bottom-[30px] right-[14px] z-20">
-            <button
-              onClick={handleToggleAttune}
-              className="group relative overflow-hidden px-3 py-1.5 rounded border-[1px] border-[rgb(170,120,38)] bg-[#e8d5b7] hover:bg-[rgb(170,120,38)] hover:border-[rgb(170,120,38)] font-bold text-[8px] tracking-wider uppercase shadow-sm hover:shadow-[0_0_15px_rgba(170,120,38,0.7)] transition-all duration-300 active:scale-95 cursor-pointer"
-            >
-              <div className="absolute top-0 left-[-100%] w-full h-full bg-gradient-to-r from-transparent via-amber-100/80 to-transparent skew-x-[-25deg] group-hover:translate-x-[250%] transition-transform duration-700 ease-in-out pointer-events-none" />
-              <span className="relative z-10 transition-colors duration-300 text-amber-950 group-hover:text-[#e8d5b7]">
-                Attune
-              </span>
-            </button>
-          </div>
-        )}
-
-        {/* POPOVER */}
-        {popoverText && (
           <div
-            className="absolute inset-0 z-[100] flex items-center justify-center p-4"
-            onClick={(e) => {
-              e.stopPropagation();
-              setPopoverText(null);
-            }}
-          >
-            {/* Feathered Background Layer */}
-            <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px] pointer-events-none [-webkit-mask-image:radial-gradient(circle_at_center,black_65%,transparent_100%)] [mask-image:radial-gradient(circle_at_center,black_65%,transparent_100%)]" />
+            className={`absolute inset-0 bg-gradient-to-t from-amber-200 via-white to-amber-100 mix-blend-overlay rounded-2xl pointer-events-none transition-all duration-500 ease-out z-50 ${
+              isEnhancing ? "opacity-100 scale-105" : "opacity-0 scale-100"
+            }`}
+          />
 
-            {/* Pop-up Box Content (Sits on top, fully opaque) */}
-            <div
-              className="relative bg-[#e8d5b7] p-4 rounded-xl shadow-[0_15px_40px_rgba(0,0,0,0.6)] w-full max-h-full overflow-y-auto border-2 border-[#AA7826]"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-center mb-3 border-b border-[#AA7826]/30 pb-2">
-                <strong className="font-serif text-amber-950 font-bold">
-                  {popoverText.title}
-                </strong>
-                <button
-                  onClick={() => setPopoverText(null)}
-                  className="text-amber-950 font-bold hover:text-red-700"
-                >
-                  ✕
-                </button>
-              </div>
-              <p className="italic text-[12px] text-amber-950 text-justify whitespace-pre-wrap">
-                {popoverText.text}
-              </p>
+          {isAttunable && isAttuned && (
+            <div className="absolute top-[25px] left-[20px] z-30">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleFlip();
+                }}
+                title={isFlipped ? "View Attuned Stats" : "View Base Stats"}
+                className="relative p-1.5 rounded-full cursor-pointer flex items-center justify-center animate-hieroglyph group transition-all duration-300 ease-out hover:text-amber-500 hover:drop-shadow-[0_0_12px_rgba(245,158,11,0.6)] hover:scale-110 text-amber-950/40"
+              >
+                <div className="absolute inset-0 rounded-full border border-amber-400/0 group-hover:border-amber-400/60 group-hover:scale-[1.5] group-hover:opacity-0 transition-all duration-500 ease-out pointer-events-none" />
+                <RotateCcw
+                  className={`w-4 h-4 relative z-10 transition-transform duration-500 ${
+                    isFlipped ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
             </div>
+          )}
+
+          {isAttunable && isAttuned && (
+            <div className="absolute top-[25px] right-[20px] z-30">
+              <button
+                onClick={handleToggleAttune}
+                title="Unattune Item"
+                className={`relative p-1.5 rounded-full cursor-pointer flex items-center justify-center group ${
+                  isUnlinking
+                    ? "animate-unlink-burn pointer-events-none"
+                    : "animate-hieroglyph transition-all duration-300 ease-out hover:text-amber-500 hover:drop-shadow-[0_0_12px_rgba(245,158,11,0.6)] hover:scale-110"
+                }`}
+              >
+                {!isUnlinking && (
+                  <div className="absolute inset-0 rounded-full border border-amber-400/0 group-hover:border-amber-400/60 group-hover:scale-[1.5] group-hover:opacity-0 transition-all duration-500 ease-out pointer-events-none" />
+                )}
+                <Unlink className="w-4 h-4 relative z-10 transition-colors duration-300" />
+              </button>
+            </div>
+          )}
+
+          <div
+            className={`absolute top-[25px] inset-x-0 mx-auto w-[220px] h-[38px] flex items-center justify-center text-center px-2 ${getFadeClass(
+              "delay-100"
+            )}`}
+          >
+            <h2 className="font-serif text-[12px] font-bold tracking-wide text-amber-950 leading-tight">
+              {name || "Item Name"}
+            </h2>
           </div>
-        )}
+
+          <div className="absolute top-[50px] inset-x-0 mx-auto w-full h-[175px] flex flex-col items-center justify-start pt-1 transition-all duration-500">
+            {artworkSrc ? (
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setExpandedImage(artworkSrc);
+                }}
+                title="Click to expand artwork"
+                className={`w-[190px] h-[190px] mt-1 flex items-center justify-center relative transition-transform duration-300 ${
+                  isAttunable && displayAttuned
+                    ? "cursor-pointer hover:scale-105 active:scale-95 group"
+                    : "cursor-pointer hover:scale-105"
+                }`}
+              >
+                <div
+                  className={`absolute inset-0 bg-amber-400/20 blur-xl rounded-full transition-all duration-500 ${
+                    isAttunable && displayAttuned
+                      ? "opacity-100 group-hover:bg-amber-400/50 group-hover:blur-2xl"
+                      : "opacity-0"
+                  }`}
+                />
+                <img
+                  src={artworkSrc}
+                  alt={name}
+                  className="max-w-full max-h-full object-contain drop-shadow-md relative z-10 pointer-events-none"
+                />
+              </div>
+            ) : (
+              <div
+                onClick={
+                  isAttunable && displayAttuned ? handleToggleAttune : undefined
+                }
+                title={isAttunable && displayAttuned ? "Click to Unattune" : ""}
+                className={`text-[11px] leading-snug text-amber-950 pt-2 px-6 w-full text-justify overflow-y-auto no-scrollbar max-h-[160px] ${getFadeClass(
+                  "delay-100"
+                )} ${
+                  isAttunable && displayAttuned
+                    ? "cursor-pointer hover:text-amber-700"
+                    : ""
+                }`}
+              >
+                <p>{description || flavorText}</p>
+              </div>
+            )}
+            {isAttunable && displayAttuned && specs && (
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPopoverText({
+                    title: "Item Specifications",
+                    text: `Type: ${specs.type || ""}\nAttunement: ${
+                      specs.attunement || ""
+                    }\nProperties: ${specs.properties || ""}\nRanges: ${
+                      specs.ranges || ""
+                    }\nDamage: ${specs.damage || ""}\nDamage Type: ${
+                      specs.damageType || ""
+                    }`,
+                  });
+                }}
+                className={`absolute bottom-[-15px] left-[10px] w-[140px] text-[5px] leading-tight text-amber-950 text-left cursor-pointer hover:bg-amber-900/10 rounded px-1 py-0.5 transition-colors z-20 ${getFadeClass(
+                  "delay-200"
+                )}`}
+              >
+                <p className="italic">{specs.type}</p>
+                <p className="italic">{specs.attunement}</p>
+                <p>
+                  <span className="font-bold">Properties:</span>{" "}
+                  {specs.properties}
+                </p>
+                <p>
+                  <span className="font-bold">Ranges:</span> {specs.ranges}
+                </p>
+                <p>
+                  <span className="font-bold">Damage:</span> {specs.damage}
+                </p>
+                <p>
+                  <span className="font-bold">Damage Type:</span>{" "}
+                  {specs.damageType}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {isAttunable && displayAttuned && (
+            <div className={`${getFadeClass("delay-100")}`}>
+              <StatInput
+                id={id}
+                stats={stats}
+                updateCard={updateCard}
+                label="Hit"
+                statKey="hit"
+                topPosition="91px"
+              />
+              <StatInput
+                id={id}
+                stats={stats}
+                updateCard={updateCard}
+                label="Damage"
+                statKey="damage"
+                topPosition="139px"
+                textClass="text-[6px]"
+              />
+              <StatInput
+                id={id}
+                stats={stats}
+                updateCard={updateCard}
+                label="Save DC"
+                statKey="saveDc"
+                topPosition="185px"
+              />
+            </div>
+          )}
+
+          {isAttunable && displayAttuned ? (
+            <>
+              <div
+                className="absolute top-[245px] left-[8px] right-[22px] h-[62px] flex flex-col text-[7.5px] leading-snug text-amber-950 pr-1"
+                onMouseDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+              >
+                {renderAttunedShelf1()}
+              </div>
+              <div
+                className="absolute top-[325px] left-[8px] right-[22px] h-[62px] flex flex-col text-[7.5px] leading-snug text-amber-950 pr-1"
+                onMouseDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+              >
+                {renderAttunedShelf2()}
+              </div>
+              <div
+                className="absolute top-[406px] left-[8px] right-[22px] h-[60px] flex flex-col text-[7.5px] leading-snug text-amber-950 pr-1"
+                onMouseDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+              >
+                {renderAttunedShelf3()}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="absolute top-[248px] left-[10px] right-[22px] h-[72px] flex flex-col text-[8px] leading-snug text-amber-950 pr-1">
+                {renderUnattunedShelf1()}
+              </div>
+              <div className="absolute top-[350px] left-[12px] right-[22px] h-[110px] flex flex-col text-[7px] leading-snug text-amber-950 pr-1">
+                {renderUnattunedShelf2()}
+              </div>
+            </>
+          )}
+
+          {isAttunable && displayAttuned && isProgressive && (
+            <div className={`${getFadeClass("delay-200")}`}>
+              {level2Abilities &&
+                renderCheckboxes(
+                  1,
+                  progress?.level1 || 0,
+                  "top-[304px] right-[7.5px]"
+                )}
+              {currentLevel >= 2 &&
+                level3Abilities &&
+                renderCheckboxes(
+                  2,
+                  progress?.level2 || 0,
+                  "top-[385px] right-[7.5px]"
+                )}
+            </div>
+          )}
+
+          {isAttunable && (!isAttuned || isBurningButton) && (
+            <div className="absolute bottom-[30px] right-[14px] z-20 flex items-center justify-center">
+              {isBurningButton && (
+                <svg width="0" height="0" className="absolute">
+                  <filter
+                    id="button-noise"
+                    x="-20%"
+                    y="-20%"
+                    width="140%"
+                    height="140%"
+                  >
+                    <feTurbulence
+                      type="fractalNoise"
+                      baseFrequency="0.1"
+                      numOctaves="3"
+                      result="noise"
+                    />
+                    <feDisplacementMap
+                      in="SourceGraphic"
+                      in2="noise"
+                      scale="10"
+                      xChannelSelector="R"
+                      yChannelSelector="G"
+                    />
+                  </filter>
+                </svg>
+              )}
+              {isBurningButton && (
+                <div className="absolute inset-0 z-30 pointer-events-none flex items-center justify-center">
+                  <div
+                    className="absolute w-full h-full animate-button-consume rounded bg-[#e8d5b7]"
+                    style={{
+                      filter: "url(#button-noise)",
+                      border: "2px solid #fef08a",
+                      boxShadow:
+                        "inset 0 0 10px 4px rgba(234, 88, 12, 0.8), 0 0 15px 5px rgba(245, 158, 11, 0.6)",
+                    }}
+                  >
+                    <div className="absolute inset-0 opacity-40 mix-blend-multiply bg-slate-900" />
+                  </div>
+                  <div className="absolute animate-button-consume w-full h-full flex items-center justify-center mix-blend-color-dodge opacity-90">
+                    <div className="absolute -top-2 -left-2 w-2 h-2 bg-amber-200 rounded-full blur-[1px] animate-[ping_0.3s_ease-out_infinite]" />
+                    <div className="absolute -bottom-2 -right-2 w-3 h-3 bg-orange-500 rounded-full blur-[2px] animate-[ping_0.5s_ease-out_infinite]" />
+                  </div>
+                </div>
+              )}
+              <button
+                onClick={handleToggleAttune}
+                className={`group relative overflow-hidden px-3 py-1.5 rounded border-[1px] border-[rgb(170,120,38)] bg-[#e8d5b7] hover:bg-[rgb(170,120,38)] hover:border-[rgb(170,120,38)] font-bold text-[8px] tracking-wider uppercase shadow-sm transition-all duration-500 transform origin-center cursor-pointer ${
+                  isBurningButton
+                    ? "opacity-0 scale-0"
+                    : "opacity-100 scale-100 hover:shadow-[0_0_15px_rgba(170,120,38,0.7)] active:scale-95"
+                }`}
+              >
+                <div className="absolute top-0 left-[-100%] w-full h-full bg-gradient-to-r from-transparent via-amber-100/80 to-transparent skew-x-[-25deg] group-hover:translate-x-[250%] transition-transform duration-700 ease-in-out pointer-events-none" />
+                <span className="relative z-10 transition-colors duration-300 text-amber-950 group-hover:text-[#e8d5b7]">
+                  Attune
+                </span>
+              </button>
+            </div>
+          )}
+
+          {popoverText && (
+            <div
+              className="absolute inset-0 z-[100] flex items-center justify-center p-4"
+              onClick={(e) => {
+                e.stopPropagation();
+                setPopoverText(null);
+              }}
+            >
+              <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px] pointer-events-none [-webkit-mask-image:radial-gradient(circle_at_center,black_65%,transparent_100%)] [mask-image:radial-gradient(circle_at_center,black_65%,transparent_100%)]" />
+              <div
+                className="relative bg-[#e8d5b7] p-4 rounded-xl shadow-[0_15px_40px_rgba(0,0,0,0.6)] w-full max-h-full overflow-y-auto border-2 border-[#AA7826]"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex justify-between items-center mb-3 border-b border-[#AA7826]/30 pb-2">
+                  <strong className="font-serif text-amber-950 font-bold">
+                    {popoverText.title}
+                  </strong>
+                  <button
+                    onClick={() => setPopoverText(null)}
+                    className="text-amber-950 font-bold hover:text-red-700"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <p className="italic text-[12px] text-amber-950 text-justify whitespace-pre-wrap">
+                  {popoverText.text}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
