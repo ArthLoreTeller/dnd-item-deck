@@ -44,7 +44,11 @@
         "title": "Burning Wound",
         "description": "after each attack, the target must make a Constitution check against your spell save DC. On a fail, the target will receive 1 fire damage each round until the target ends the Constitution check on a success."
       }
-    ]
+    ],
+    "effects": {
+      "burnOrigin": "bottom",
+      "theme": "underworld-fire"
+    }
   },
   {
     "id": "wand_001",
@@ -54,6 +58,10 @@
     "source": "default",
     "isAttuned": false,
     "currentLevel": 1,
+    "effects": {
+      "burnOrigin": "center",
+      "theme": "phoenix-flame"
+    },
     "images": {
       "base": "/assets/Magic/Wand-Stage-1.PNG",
       "attuned": "/assets/Magic/Wand-Stage-1.PNG",

@@ -5,6 +5,15 @@ export function CustomCardModal({ isOpen, onClose }) {
   const addToInventory = useCardStore((state) => state.addToInventory);
   const [activeTab, setActiveTab] = useState('general');
 
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   const [formData, setFormData] = useState({
     name: '',
     icon: '💠', 

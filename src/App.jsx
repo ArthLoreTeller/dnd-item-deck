@@ -141,10 +141,11 @@ export default function App() {
 
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
 
   const activeCard = useCardStore((state) => state.activeCard);
-  const inventory = useCardStore((state) => state.inventory) || [];
-  const deck = useCardStore((state) => state.deck) || [];
+  const inventory = useCardStore((state) => state.inventory);
+  const deck = useCardStore((state) => state.deck);
   const drawRandomCard = useCardStore((state) => state.drawRandomCard);
   const discardCard = useCardStore((state) => state.discardCard);
   const setActiveCard = useCardStore((state) => state.setActiveCard);
@@ -159,15 +160,27 @@ export default function App() {
     }),
   );
 
+  // Preload Card Images to eliminate lag across all card states
   useEffect(() => {
-    const cardBackImg = new Image();
-    cardBackImg.src = "/assets/card-back.png";
+    const urls = [
+      "/assets/card-back.png",
+      "/assets/card-front.png",
+      "/assets/attune-base.png",
+    ];
 
-    deck.forEach((card) => {
-      if (card?.image) {
-        const img = new Image();
-        img.src = card.image;
+    (deck || []).forEach((card) => {
+      if (card?.itemImage) urls.push(card.itemImage);
+      if (card?.images) {
+        if (card.images.base) urls.push(card.images.base);
+        if (card.images.attuned) urls.push(card.images.attuned);
+        if (card.images.level2) urls.push(card.images.level2);
+        if (card.images.level3) urls.push(card.images.level3);
       }
+    });
+
+    urls.forEach((url) => {
+      const img = new Image();
+      img.src = url;
     });
   }, [deck]);
 
@@ -267,11 +280,12 @@ export default function App() {
     >
       <div className="min-h-screen bg-slate-900 text-white flex flex-col items-center p-4 sm:p-6 gap-6 relative">
         {toastMessage && (
-          <div className="fixed top-16 z-50 bg-amber-950 border-2 border-amber-500 text-amber-200 px-5 py-2.5 rounded-xl shadow-2xl animate-[bounce_0.75s_1_forwards] text-sm font-semibold flex items-center gap-2">
+          <div className="fixed top-16 z-50 bg-amber-950/95 border border-amber-500/80 text-amber-200 px-5 py-2.5 rounded-full shadow-[0_0_25px_rgba(245,158,11,0.35)] backdrop-blur-md text-xs font-semibold flex items-center gap-2.5 tracking-wide">
+            <span className="text-amber-400">✦</span>
             <span>{toastMessage}</span>
             <button
               onClick={clearToast}
-              className="text-amber-400 hover:text-white font-bold ml-2 cursor-pointer"
+              className="text-amber-400/80 hover:text-amber-200 font-bold ml-1.5 cursor-pointer"
             >
               ✕
             </button>
@@ -313,7 +327,7 @@ export default function App() {
               <span>
                 Deck:{" "}
                 <strong className="text-amber-400 font-semibold">
-                  {deck.length}
+                  {deck?.length || 0}
                 </strong>
               </span>
               <span className="text-slate-600">|</span>
@@ -325,7 +339,7 @@ export default function App() {
               </button>
               <span className="text-slate-600">|</span>
               <button
-                onClick={resetDeck}
+                onClick={() => setIsResetConfirmOpen(true)}
                 className="text-amber-500/80 hover:text-amber-300 underline cursor-pointer text-[11px]"
               >
                 Reset Deck
@@ -358,7 +372,7 @@ export default function App() {
                 <div className="flex-1 py-3 px-2 flex items-center justify-center gap-2 text-xs">
                   <span className="text-slate-300">Deck Count:</span>
                   <strong className="text-amber-400 font-bold text-sm">
-                    {deck.length}
+                    {deck?.length || 0}
                   </strong>
                 </div>
               </div>
@@ -375,7 +389,7 @@ export default function App() {
 
                 <div className="flex-1 py-2 px-2 flex items-center justify-center">
                   <button
-                    onClick={resetDeck}
+                    onClick={() => setIsResetConfirmOpen(true)}
                     className="text-amber-500/80 hover:text-amber-300 underline cursor-pointer text-xs flex items-center gap-1.5 transition-colors"
                   >
                     <span className="text-sm leading-none"></span> ↺ Reset Deck
@@ -398,7 +412,7 @@ export default function App() {
                   <div
                     onClick={handleDrawCard}
                     className={`relative w-full h-full cursor-pointer group transition-transform duration-200 ${
-                      deck.length === 0
+                      (deck?.length || 0) === 0
                         ? "opacity-50 cursor-not-allowed"
                         : "active:scale-95"
                     }`}
@@ -409,7 +423,7 @@ export default function App() {
                         backgroundImage: "url('/assets/card-back.png')",
                       }}
                     >
-                      {deck.length === 0 && (
+                      {(deck?.length || 0) === 0 && (
                         <span className="bg-slate-950/80 text-amber-200 px-3 py-1 rounded border border-amber-500/50 text-sm font-semibold">
                           Deck Empty
                         </span>
@@ -423,7 +437,6 @@ export default function App() {
                     {activeCard ? (
                       <Card
                         card={activeCard}
-                        onResetDeck={handleReturnToDeck}
                       />
                     ) : (
                       <div className="w-full h-full border border-slate-700 bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 p-4 text-center">
@@ -519,6 +532,49 @@ export default function App() {
           isOpen={isCustomModalOpen}
           onClose={() => setIsCustomModalOpen(false)}
         />
+
+        {isResetConfirmOpen && (
+          <div
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+            onClick={() => setIsResetConfirmOpen(false)}
+          >
+            <div
+              className="bg-slate-900 border-2 border-amber-600/60 w-full max-w-sm rounded-2xl shadow-2xl p-6 flex flex-col gap-4 text-white text-center animate-in zoom-in-95 duration-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-12 h-12 mx-auto rounded-full bg-amber-950/80 border border-amber-500/50 flex items-center justify-center text-amber-400 text-xl font-bold">
+                ↺
+              </div>
+              <div>
+                <h3 className="font-serif font-bold text-amber-200 text-lg">
+                  Reset Standard Deck?
+                </h3>
+                <p className="text-xs text-slate-300 leading-relaxed mt-1">
+                  All standard items in your inventory will be returned to the deck with their levels reset. Your custom cards will remain safe.
+                </p>
+              </div>
+              <div className="flex gap-3 justify-center mt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsResetConfirmOpen(false)}
+                  className="flex-1 py-2 px-4 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold cursor-pointer transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetDeck();
+                    setIsResetConfirmOpen(false);
+                  }}
+                  className="flex-1 py-2 px-4 rounded-lg bg-red-900/80 hover:bg-red-800 border border-red-500/60 text-red-200 text-xs font-bold uppercase tracking-wider cursor-pointer shadow active:scale-95 transition-all"
+                >
+                  Reset Deck
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </DndContext>
   );

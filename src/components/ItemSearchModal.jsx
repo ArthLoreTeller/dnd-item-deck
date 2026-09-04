@@ -5,17 +5,27 @@ import { getLucideIcon } from "../components/Icon";
 
 export function ItemSearchModal({ isOpen, onClose, onCardAdded }) {
   const [searchTerm, setSearchTerm] = useState('');
-  const deck = useCardStore((state) => state.deck) || [];
+  const deck = useCardStore((state) => state.deck);
   const drawCardById = useCardStore((state) => state.drawCardById);
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   // Filter and sort cards alphabetically (A-Z)
   const searchResults = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
+    const currentDeck = deck || [];
     
     // Filter matching cards
     const filtered = !query
-      ? [...deck]
-      : deck.filter(
+      ? [...currentDeck]
+      : currentDeck.filter(
           (item) =>
             (item.name && item.name.toLowerCase().includes(query)) ||
             (item.type && item.type.toLowerCase().includes(query))
