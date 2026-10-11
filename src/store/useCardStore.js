@@ -31,7 +31,7 @@ export const useCardStore = create(
       addToInventory: (newCard) => {
         const { inventory } = get();
         if (inventory.some((c) => c.id === newCard.id)) {
-          set({ toastMessage: `"${newCard.name}" is already in inventory` });
+          set({ toastMessage: `"${newCard.name}" is already in inventory!` });
           return;
         }
 
@@ -79,7 +79,7 @@ export const useCardStore = create(
         if (updates.isAttuned === true && currentCard && !currentCard.isAttuned) {
           const currentlyAttunedCount = inventory.filter((c) => c.isAttuned).length;
           if (currentlyAttunedCount >= 3) {
-            set({ toastMessage: 'Attunement limit reached (3/3). Unattune an item first.' });
+            set({ toastMessage: 'Attunement limit reached (3/3)! Unattune an item first.' });
             return;
           }
         }

@@ -280,12 +280,11 @@ export default function App() {
     >
       <div className="min-h-screen bg-slate-900 text-white flex flex-col items-center p-4 sm:p-6 gap-6 relative">
         {toastMessage && (
-          <div className="fixed top-16 z-50 bg-amber-950/95 border border-amber-500/80 text-amber-200 px-5 py-2.5 rounded-full shadow-[0_0_25px_rgba(245,158,11,0.35)] backdrop-blur-md text-xs font-semibold flex items-center gap-2.5 tracking-wide">
-            <span className="text-amber-400">✦</span>
+          <div className="fixed top-16 z-50 bg-amber-950 border-2 border-amber-500 text-amber-200 px-5 py-2.5 rounded-xl shadow-2xl animate-[bounce_0.75s_1_forwards] text-sm font-semibold flex items-center gap-2">
             <span>{toastMessage}</span>
             <button
               onClick={clearToast}
-              className="text-amber-400/80 hover:text-amber-200 font-bold ml-1.5 cursor-pointer"
+              className="text-amber-400 hover:text-white font-bold ml-2 cursor-pointer"
             >
               ✕
             </button>

@@ -307,7 +307,7 @@ export function Card({ card }) {
                 e.stopPropagation();
                 handleProgress(levelIndex, i + 1 === currentVal ? i : i + 1);
               }}
-              className={`w-[8px] min-w-[8px] h-[8px] border-r border-[#AA7826] cursor-pointer transition-colors ${
+              className={`w-[7px] min-w-[7px] h-[7px] border-r border-[#AA7826] cursor-pointer transition-colors ${
                 i < currentVal
                   ? "bg-gradient-to-b from-[#3a1d07] to-[#8f5126]"
                   : "bg-transparent hover:bg-[#AA7826]/40"
@@ -677,7 +677,7 @@ export function Card({ card }) {
 
           {/* Card Title */}
           <div
-            className={`absolute top-[25px] inset-x-0 mx-auto w-[200px] h-[38px] flex items-center justify-center text-center px-2 pointer-events-none ${getFadeClass(
+            className={`absolute top-[25px] inset-x-0 mx-auto w-[220px] h-[38px] flex items-center justify-center text-center px-2 pointer-events-none ${getFadeClass(
               "delay-100"
             )}`}
           >
@@ -750,19 +750,25 @@ export function Card({ card }) {
                     }`,
                   });
                 }}
-                className={`absolute bottom-[-15px] left-[10px] w-[145px] text-[7px] leading-tight text-amber-950 text-left cursor-pointer hover:bg-amber-900/10 rounded px-1 py-0.5 transition-colors z-20 no-flip-drag ${getFadeClass(
+                className={`absolute bottom-[-15px] left-[10px] w-[140px] text-[5px] leading-tight text-amber-950 text-left cursor-pointer hover:bg-amber-900/10 rounded px-1 py-0.5 transition-colors z-20 no-flip-drag ${getFadeClass(
                   "delay-200"
                 )}`}
               >
-                <p className="italic font-semibold">{specs.type}</p>
+                <p className="italic">{specs.type}</p>
                 <p className="italic">{specs.attunement}</p>
                 <p>
                   <span className="font-bold">Properties:</span>{" "}
                   {specs.properties}
                 </p>
                 <p>
-                  <span className="font-bold">Damage:</span> {specs.damage}{" "}
-                  {specs.damageType && `(${specs.damageType})`}
+                  <span className="font-bold">Ranges:</span> {specs.ranges}
+                </p>
+                <p>
+                  <span className="font-bold">Damage:</span> {specs.damage}
+                </p>
+                <p>
+                  <span className="font-bold">Damage Type:</span>{" "}
+                  {specs.damageType}
                 </p>
               </div>
             )}
@@ -786,7 +792,7 @@ export function Card({ card }) {
                 label="Damage"
                 statKey="damage"
                 topPosition="139px"
-                textClass="text-[6.5px]"
+                textClass="text-[6px]"
               />
               <StatInput
                 id={id}
@@ -891,7 +897,7 @@ export function Card({ card }) {
               )}
               <button
                 onClick={handleToggleAttune}
-                className={`group relative overflow-hidden px-3.5 py-1.5 rounded-md border border-[#AA7826] bg-[#e8d5b7] hover:bg-[rgb(170,120,38)] hover:border-[rgb(170,120,38)] font-serif font-bold text-[9px] tracking-wider uppercase shadow-sm transition-all duration-300 transform cursor-pointer ${
+                className={`group relative overflow-hidden px-3 py-1.5 rounded border-[1px] border-[rgb(170,120,38)] bg-[#e8d5b7] hover:bg-[rgb(170,120,38)] hover:border-[rgb(170,120,38)] font-bold text-[8px] tracking-wider uppercase shadow-sm transition-all duration-300 transform cursor-pointer ${
                   isShakeButton ? "animate-button-shake border-red-500 text-red-900" : ""
                 } ${
                   isBurningButton
@@ -932,7 +938,7 @@ export function Card({ card }) {
                     ✕
                   </button>
                 </div>
-                <p className="italic text-[12px] text-amber-950 text-justify whitespace-pre-wrap font-serif">
+                <p className="italic text-[12px] text-amber-950 text-justify whitespace-pre-wrap">
                   {popoverText.text}
                 </p>
               </div>
