@@ -50,9 +50,10 @@ export function Card({ card }) {
   const [isShakeButton, setIsShakeButton] = useState(false);
   const [isUnlinking, setIsUnlinking] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
-  const [isFlipping, setIsFlipping] = useState(false);
-  const [dragRotation, setDragRotation] = useState(0);
-  const [isDraggingFlip, setIsDraggingFlip] = useState(false);
+  const [flipState, setFlipState] = useState(""); // "" | "out" | "in"
+  const [flipDir, setFlipDir] = useState(1); // 1 = right, -1 = left
+  const [dragTilt, setDragTilt] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   const [popoverText, setPopoverText] = useState(null);
   const [expandedImage, setExpandedImage] = useState(null);
 
@@ -87,10 +88,7 @@ export function Card({ card }) {
   const isStandard = type === "standard";
   const isAttunable = !isNormal;
 
-  // Mid-drag face calculation: smoothly swap texture and content when passed 90deg
-  const isPastMidway = Math.abs(dragRotation) >= 90;
-  const effectiveFlipped = isPastMidway ? !isFlipped : isFlipped;
-  const displayAttuned = isAttuned && !effectiveFlipped;
+  const displayAttuned = isAttuned && !isFlipped;
 
   const bgImage =
     isAttunable && displayAttuned
@@ -143,21 +141,26 @@ export function Card({ card }) {
     updateCard(id, { progress: newProgress, currentLevel: newLevel });
   };
 
-  // Button flip handler
-  const triggerFlip = () => {
-    if (isFlipping || isEnhancing || isUnlinking || isDraggingFlip) return;
-    setIsFlipping(true);
-    setDragRotation(180);
+  // Seamless 2-phase Front-to-Back flip animation
+  const triggerFlip = (direction = 1) => {
+    if (flipState || isEnhancing || isUnlinking) return;
+    setDragTilt(0);
+    setIsDragging(false);
+    setFlipDir(direction);
+    setFlipState("out");
     setTimeout(() => {
       setIsFlipped((prev) => !prev);
-      setDragRotation(0);
-      setIsFlipping(false);
-    }, 280);
+      setFlipState("in");
+    }, 200);
+    setTimeout(() => {
+      setFlipState("");
+    }, 400);
   };
 
-  // Pointer drag flip handlers (Physical Touch/Mouse Drag Interaction)
+  // Pointer drag gesture handlers (tactile 3D tilt & swipe flip)
   const handlePointerDown = (e) => {
     if (
+      flipState ||
       e.target.closest("input") ||
       e.target.closest("button") ||
       e.target.closest("select") ||
@@ -176,21 +179,21 @@ export function Card({ card }) {
   };
 
   const handlePointerMove = (e) => {
-    if (!isPointerDownRef.current) return;
+    if (!isPointerDownRef.current || flipState) return;
     const deltaX = e.clientX - pointerStartRef.current.x;
     const deltaY = e.clientY - pointerStartRef.current.y;
 
-    if (!isDraggingFlip && Math.abs(deltaX) > 8 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2) {
-      setIsDraggingFlip(true);
+    if (!isDragging && Math.abs(deltaX) > 8 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2) {
+      setIsDragging(true);
       try {
         e.currentTarget.setPointerCapture(e.pointerId);
       } catch {}
     }
 
-    if (isDraggingFlip) {
-      // 220px drag rotates full 180 degrees
-      const angle = (deltaX / 220) * 180;
-      setDragRotation(Math.max(-180, Math.min(180, angle)));
+    if (isDragging) {
+      // Direct tactile tilt up to ±30 degrees
+      const tilt = (deltaX / 140) * 30;
+      setDragTilt(Math.max(-30, Math.min(30, tilt)));
     }
   };
 
@@ -198,52 +201,36 @@ export function Card({ card }) {
     if (!isPointerDownRef.current) return;
     isPointerDownRef.current = false;
 
-    if (isDraggingFlip) {
+    if (isDragging) {
       const deltaX = e.clientX - pointerStartRef.current.x;
       const deltaTime = Date.now() - pointerStartRef.current.time;
       const velocity = Math.abs(deltaX) / (deltaTime || 1);
 
-      // Flip threshold: >= 80px drag distance OR swift swipe velocity
-      const shouldFlip = Math.abs(deltaX) > 80 || velocity > 0.45;
-
-      setIsDraggingFlip(false);
-      setIsFlipping(true);
-
-      if (shouldFlip) {
-        const targetAngle = deltaX < 0 ? -180 : 180;
-        setDragRotation(targetAngle);
-        setTimeout(() => {
-          setIsFlipped((prev) => !prev);
-          setDragRotation(0);
-          setIsFlipping(false);
-        }, 280);
+      // Trigger flip if dragged past 45px or swift swipe velocity
+      if (Math.abs(deltaX) > 45 || velocity > 0.4) {
+        triggerFlip(deltaX < 0 ? -1 : 1);
       } else {
-        // Snap smoothly back to starting orientation
-        setDragRotation(0);
-        setTimeout(() => {
-          setIsFlipping(false);
-        }, 280);
+        // Snap back to 0
+        setDragTilt(0);
+        setIsDragging(false);
       }
     }
   };
 
   const handlePointerCancel = () => {
     isPointerDownRef.current = false;
-    if (isDraggingFlip) {
-      setIsDraggingFlip(false);
-      setDragRotation(0);
-    }
+    setDragTilt(0);
+    setIsDragging(false);
   };
 
   const handleToggleAttune = (e) => {
-    if (e) e.stopPropagation();
+    e.stopPropagation();
     if (
-      !isAttunable ||
       isEnhancing ||
       isBurningButton ||
       isUnlinking ||
-      isFlipping ||
-      isDraggingFlip
+      flipState ||
+      isDragging
     )
       return;
 
@@ -260,38 +247,35 @@ export function Card({ card }) {
       updateCard(id, { isAttuned: true });
       setTimeout(() => {
         setIsBurningButton(false);
-      }, 900);
+      }, 700);
     } else {
       setIsUnlinking(true);
       setTimeout(() => {
-        setIsUnlinking(false);
         setIsFlipped(false);
         updateCard(id, { isAttuned: false });
-      }, 900);
+        setIsUnlinking(false);
+      }, 700);
     }
   };
 
   const getArtworkSrc = () => {
-    let src = images?.base || itemImage;
-    if (isAttunable && displayAttuned) {
-      if (isProgressive) {
-        if (currentLevel >= 3 && images?.level3) return images.level3;
-        if (currentLevel >= 2 && images?.level2) return images.level2;
-      }
-      return images?.attuned || src;
+    if (!images) return itemImage || null;
+    if (isProgressive && displayAttuned) {
+      if (currentLevel === 3 && images.level3) return images.level3;
+      if (currentLevel >= 2 && images.level2) return images.level2;
+      return images.attuned || images.base || null;
     }
-    return src;
+    if (displayAttuned && images.attuned) return images.attuned;
+    return images.base || itemImage || null;
   };
 
-  const getFadeClass = (delayClass = "") => {
-    return `transition-opacity ${
-      isEnhancing
-        ? "opacity-0 duration-75 pointer-events-none"
-        : `opacity-100 duration-500 ${delayClass}`
-    }`;
+  const getFadeClass = (delay = "delay-100") => {
+    return `transition-opacity duration-300 ease-in-out ${
+      isEnhancing ? "opacity-30" : "opacity-100"
+    } ${delay}`;
   };
 
-  const isInteracting = isDraggingFlip || isFlipping || isUnlinking || isBurningButton;
+  const isInteracting = isDragging || !!flipState || isUnlinking || isBurningButton;
 
   const renderCheckboxes = (levelIndex, currentVal, customPosition) => (
     <div
@@ -560,25 +544,64 @@ export function Card({ card }) {
         }`}
         style={{ perspective: "1200px" }}
       >
-        {/* INNER WRAPPER: Handles 3D gesture drag rotation */}
+        {/* INNER WRAPPER: Handles 3D gesture drag rotation & flip */}
         <div
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerCancel}
           className={`relative w-full h-full bg-[length:100%_100%] bg-no-repeat bg-center text-amber-950 select-none ${
-            isDraggingFlip ? "cursor-grabbing" : "cursor-grab"
+            isDragging ? "cursor-grabbing" : isAttunable ? "cursor-grab" : ""
+          } ${
+            flipState === "out"
+              ? flipDir > 0
+                ? "animate-flip-out-right"
+                : "animate-flip-out-left"
+              : flipState === "in"
+              ? flipDir > 0
+                ? "animate-flip-in-right"
+                : "animate-flip-in-left"
+              : ""
           }`}
           style={{
             backgroundImage: `url('${bgImage}')`,
-            transform: `rotateY(${dragRotation}deg)`,
-            transition: isDraggingFlip ? "none" : "transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)",
+            transform:
+              !flipState && isDragging
+                ? `rotateY(${dragTilt}deg)`
+                : !flipState && dragTilt !== 0
+                ? `rotateY(${dragTilt}deg)`
+                : undefined,
+            transition: isDragging ? "none" : dragTilt !== 0 ? "transform 0.25s ease-out" : undefined,
             transformStyle: "preserve-3d",
             touchAction: "pan-y",
           }}
         >
           <style>
             {`
+              @keyframes flip-out-right {
+                0% { transform: rotateY(0deg); filter: brightness(1); }
+                100% { transform: rotateY(90deg); filter: brightness(0.7); }
+              }
+              .animate-flip-out-right { animation: flip-out-right 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+
+              @keyframes flip-in-right {
+                0% { transform: rotateY(-90deg); filter: brightness(0.7); }
+                100% { transform: rotateY(0deg); filter: brightness(1); }
+              }
+              .animate-flip-in-right { animation: flip-in-right 0.2s cubic-bezier(0.2, 0, 0.4, 1) forwards; }
+
+              @keyframes flip-out-left {
+                0% { transform: rotateY(0deg); filter: brightness(1); }
+                100% { transform: rotateY(-90deg); filter: brightness(0.7); }
+              }
+              .animate-flip-out-left { animation: flip-out-left 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+
+              @keyframes flip-in-left {
+                0% { transform: rotateY(90deg); filter: brightness(0.7); }
+                100% { transform: rotateY(0deg); filter: brightness(1); }
+              }
+              .animate-flip-in-left { animation: flip-in-left 0.2s cubic-bezier(0.2, 0, 0.4, 1) forwards; }
+
               @keyframes hieroglyph-etch {
                 0% { clip-path: inset(0 100% 0 0); filter: drop-shadow(0 0 12px #fbbf24) brightness(2); color: #fef08a; transform: scale(1.1); }
                 40% { clip-path: inset(0 0 0 0); filter: drop-shadow(0 0 15px #f59e0b) brightness(1.5); color: #f59e0b; transform: scale(1.1); }
@@ -628,15 +651,15 @@ export function Card({ card }) {
             }`}
           />
 
-          {/* ITEM 4 & 5: Flip Icon (Enlarged to match Unattune & Smooth Fade Animation) */}
-          {isAttunable && (
+          {/* ITEM 4 & 5: Flip Icon */}
+          {isAttunable && isAttuned && (
             <div className="absolute top-[22px] left-[18px] z-30">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  triggerFlip();
+                  triggerFlip(1);
                 }}
-                title={effectiveFlipped ? "View Attuned Stats" : "View Base Stats"}
+                title={isFlipped ? "View Attuned Stats" : "View Base Stats"}
                 className={`relative p-2 rounded-full cursor-pointer flex items-center justify-center group transition-all duration-300 ease-out text-amber-950/70 hover:text-amber-600 hover:drop-shadow-[0_0_12px_rgba(245,158,11,0.6)] hover:scale-110 active:scale-95 ${
                   isInteracting
                     ? "opacity-0 scale-75 pointer-events-none transition-all duration-300 ease-out"
@@ -646,7 +669,7 @@ export function Card({ card }) {
                 <div className="absolute inset-0 rounded-full border border-amber-400/0 group-hover:border-amber-400/60 group-hover:scale-[1.4] group-hover:opacity-0 transition-all duration-500 ease-out pointer-events-none" />
                 <RotateCcw
                   className={`w-5 h-5 relative z-10 transition-transform duration-500 ${
-                    effectiveFlipped ? "rotate-180" : ""
+                    isFlipped ? "rotate-180" : ""
                   }`}
                 />
               </button>
@@ -869,7 +892,7 @@ export function Card({ card }) {
                     <feDisplacementMap
                       in="SourceGraphic"
                       in2="noise"
-                      scale="10"
+                      scale="15"
                       xChannelSelector="R"
                       yChannelSelector="G"
                     />
@@ -997,4 +1020,3 @@ export function Card({ card }) {
     </div>
   );
 }
-
