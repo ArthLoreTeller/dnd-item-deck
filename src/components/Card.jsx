@@ -16,13 +16,14 @@ function StatInput({
 }) {
   return (
     <div
-      className="absolute right-[20px] w-[30px] flex flex-col items-center"
+      className="card-stat-field absolute right-[20px] w-[30px] flex flex-col items-center"
       style={{ top: topPosition }}
     >
-      <div className="h-[25px] w-full flex items-center justify-center px-0.5">
+      <div className="h-[27px] w-full flex items-center justify-center px-0.5">
         <input
           type="text"
           aria-label={label}
+          title={`${label}: ${stats?.[statKey] || '0'}`}
           value={stats?.[statKey] || ""}
           onChange={(e) =>
             updateCard(id, {
@@ -49,6 +50,14 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [isFlipped, setIsFlipped] = useState(initialFlipped);
   const [flipAnim, setFlipAnim] = useState("");
+  const flipTimers = useRef([]);
+  useEffect(() => {
+    setFlipAnim("");
+    return () => {
+      flipTimers.current.forEach(clearTimeout);
+      flipTimers.current = [];
+    };
+  }, [card?.id, card?.isAttuned]);
   const [popoverText, setPopoverText] = useState(null);
   const [expandedImage, setExpandedImage] = useState(null);
   const closeArtwork = useCallback(() => setExpandedImage(null), []);
@@ -123,13 +132,14 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
   const handleFlip = () => {
     if (flipAnim || isEnhancing) return;
     setFlipAnim("out");
-    setTimeout(() => {
+    flipTimers.current.push(setTimeout(() => {
       setIsFlipped((prev) => !prev);
       setFlipAnim("in");
-    }, 250);
-    setTimeout(() => {
+    }, 250));
+    flipTimers.current.push(setTimeout(() => {
       setFlipAnim("");
-    }, 500);
+      flipTimers.current = [];
+    }, 500));
   };
 
   const handleToggleAttune = (e) => {
@@ -185,7 +195,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
 
   const renderUnattunedShelf1 = () => (
     <div role="button" tabIndex={snapshot ? -1 : 0} onKeyDown={activateText}
-      className="overflow-y-auto no-scrollbar pb-2 cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
+      className="overflow-y-auto no-scrollbar h-full cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
       onClick={() =>
         setPopoverText({ title: "Item Lore", text: flavorText || description })
       }
@@ -217,7 +227,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
     }
     return (
       <div role="button" tabIndex={snapshot ? -1 : 0} onKeyDown={activateText}
-        className="overflow-y-auto no-scrollbar space-y-1 pb-[35px] cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
+        className="overflow-y-auto no-scrollbar space-y-1 h-full cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
         onClick={() => {
           let statsContent = `Attunement: ${attunementRules || "None"}`;
           if (weaponStats) {
@@ -263,7 +273,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
     if (isProgressive) {
       return (
         <div className={`flex flex-col h-full ${getFadeClass("delay-200")}`}>
-          <div className="overflow-y-auto no-scrollbar pb-3">
+          <div className="overflow-y-auto no-scrollbar h-full">
             {level1Abilities?.map((abi, idx) => (
               <div role="button" tabIndex={snapshot ? -1 : 0} onKeyDown={activateText}
                 key={`l1-${idx}`}
@@ -309,7 +319,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
     if (isProgressive) {
       return (
         <div className={`flex flex-col h-full ${getFadeClass("delay-300")}`}>
-          <div className="overflow-y-auto no-scrollbar pb-3">
+          <div className="overflow-y-auto no-scrollbar h-full">
             {currentLevel >= 2 &&
               level2Abilities?.map((abi, idx) => (
                 <div role="button" tabIndex={snapshot ? -1 : 0} onKeyDown={activateText}
@@ -356,7 +366,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
     if (isProgressive) {
       return (
         <div className={`flex flex-col h-full ${getFadeClass("delay-400")}`}>
-          <div className="overflow-y-auto no-scrollbar pb-[35px]">
+          <div className="overflow-y-auto no-scrollbar h-full">
             {currentLevel >= 3 &&
               level3Abilities?.map((abi, idx) => (
                 <div role="button" tabIndex={snapshot ? -1 : 0} onKeyDown={activateText}
@@ -377,7 +387,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
     if (isStandard) {
       return (
         <div
-          className={`overflow-y-auto no-scrollbar flex flex-col h-full pb-[35px] ${getFadeClass(
+          className={`overflow-y-auto no-scrollbar flex flex-col h-full ${getFadeClass(
             "delay-400"
           )}`}
         >
@@ -617,7 +627,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
                 updateCard={updateCard}
                 label="Hit"
                 statKey="hit"
-                topPosition="91px"
+                topPosition="94px"
               />
               <StatInput
                 id={id}
@@ -625,8 +635,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
                 updateCard={updateCard}
                 label="Damage"
                 statKey="damage"
-                topPosition="139px"
-                textClass="text-[6px]"
+                topPosition="142px"
               />
               <StatInput
                 id={id}
@@ -634,7 +643,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
                 updateCard={updateCard}
                 label="Save DC"
                 statKey="saveDc"
-                topPosition="185px"
+                topPosition="188px"
               />
             </div>
           )}
@@ -642,21 +651,21 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
           {isAttunable && displayAttuned ? (
             <>
               <div
-                className="absolute top-[245px] left-[8px] right-[22px] h-[62px] flex flex-col text-[7.5px] leading-snug text-amber-950 pr-1"
+                className={`card-shelf card-shelf-1 ${isProgressive ? 'card-shelf-with-progress' : ''}`}
                 onMouseDown={(e) => e.stopPropagation()}
                 onTouchStart={(e) => e.stopPropagation()}
               >
                 {renderAttunedShelf1()}
               </div>
               <div
-                className="absolute top-[325px] left-[8px] right-[22px] h-[62px] flex flex-col text-[7.5px] leading-snug text-amber-950 pr-1"
+                className={`card-shelf card-shelf-2 ${isProgressive ? 'card-shelf-with-progress' : ''}`}
                 onMouseDown={(e) => e.stopPropagation()}
                 onTouchStart={(e) => e.stopPropagation()}
               >
                 {renderAttunedShelf2()}
               </div>
               <div
-                className="absolute top-[406px] left-[8px] right-[22px] h-[60px] flex flex-col text-[7.5px] leading-snug text-amber-950 pr-1"
+                className="card-shelf card-shelf-3"
                 onMouseDown={(e) => e.stopPropagation()}
                 onTouchStart={(e) => e.stopPropagation()}
               >
@@ -665,10 +674,10 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
             </>
           ) : (
             <>
-              <div className="absolute top-[248px] left-[10px] right-[22px] h-[72px] flex flex-col text-[8px] leading-snug text-amber-950 pr-1">
+              <div className="card-shelf card-lore-shelf">
                 {renderUnattunedShelf1()}
               </div>
-              <div className="absolute top-[350px] left-[12px] right-[22px] h-[110px] flex flex-col text-[7px] leading-snug text-amber-950 pr-1">
+              <div className="card-shelf card-rules-shelf">
                 {renderUnattunedShelf2()}
               </div>
             </>
@@ -689,16 +698,6 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
                   progress?.level2 || 0,
                   "top-[385px] right-[7.5px]"
                 )}
-            </div>
-          )}
-
-          {isAttunable && (
-            <div className="absolute bottom-[30px] right-[14px] z-20">
-              <button data-silent disabled={isEnhancing || Boolean(flipAnim)} onClick={handleToggleAttune}
-                title={isAttuned ? "Unattune Item" : "Attune Item"}
-                className="attune-control px-3 py-1.5 rounded border border-[#AA7826] bg-[#e8d5b7] text-amber-950 font-bold text-[9px] uppercase tracking-wide cursor-pointer disabled:cursor-wait">
-                {isAttuned ? "Unattune" : "Attune"}
-              </button>
             </div>
           )}
 

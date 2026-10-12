@@ -90,19 +90,15 @@ function DraggableInventoryCard({
         </button>
       </div>
 
-      <RarityBadge card={item} />
-      {(isAttunable || item.type === "progressive") && (
-        <div className="text-xs text-slate-400 flex justify-between items-center">
-          <span>
-            {isAttunable ? (item.isAttuned ? "✦ Attuned" : "✧ Unattuned") : ""}
-          </span>
+      <div className="inventory-meta">
+        <RarityBadge card={item} />
+        {isAttunable && <span className="inventory-attunement">{item.isAttuned ? "✦ Attuned" : "✧ Unattuned"}</span>}
           {item.type === "progressive" && (
-            <span className="text-amber-400 font-mono text-[11px]">
+            <span className="inventory-level">
               Lv. {item.currentLevel || 1}
             </span>
           )}
-        </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -181,6 +177,7 @@ export default function App() {
   const resetDeck = useCardStore((state) => state.resetDeck);
   const toastMessage = useCardStore((state) => state.toastMessage);
   const clearToast = useCardStore((state) => state.clearToast);
+  const updateCard = useCardStore((state) => state.updateCard);
   const lastDiscard = useCardStore((state) => state.lastDiscard);
   const undoDiscard = useCardStore((state) => state.undoDiscard);
 
@@ -297,6 +294,14 @@ export default function App() {
   const handleContinue = () => {
     playSound("continue");
     returnToDeck();
+  };
+
+  const handleToggleAttunement = () => {
+    if (!displayedCard || isRevealing || displayedCard.type === 'normal') return;
+    const next = !displayedCard.isAttuned;
+    updateCard(displayedCard.id, { isAttuned: next });
+    const updated = useCardStore.getState().inventory.find(card => card.id === displayedCard.id);
+    if (updated?.isAttuned === next) playSound(next ? 'attune' : 'discard');
   };
 
   const handleReturnToDeck = () => {
@@ -512,12 +517,15 @@ export default function App() {
                 </div>
               ) : (
                 <div className="controls-enter w-full">
-                  <button className="journal-button read-details-button" onClick={() => setDetailsOpen(true)}><BookOpen size={18} /> Read item details</button>
+                  <div className="relic-actions">
+                    <button className="journal-button read-details-button" onClick={() => setDetailsOpen(true)}><BookOpen size={18} /> Read item details</button>
+                    {displayedCard?.type !== 'normal' && <button data-silent className="attune-control" aria-pressed={Boolean(displayedCard?.isAttuned)} disabled={isRevealing} onClick={handleToggleAttunement}>{displayedCard?.isAttuned ? 'Unattune' : 'Attune'}</button>}
+                  </div>
                   <div className="bg-slate-800/90 border border-slate-700 p-2 rounded-xl shadow-lg flex items-center justify-between gap-2 mt-3">
                     <button data-silent disabled={isRevealing} onClick={handleReturnToDeck} className="discard-action flex-1 px-3 py-2.5 bg-red-950/30 hover:bg-red-900/50 text-red-400 border border-red-900/50 rounded-lg text-xs font-bold uppercase transition-colors cursor-pointer">Discard</button>
-                    <button data-silent disabled={isRevealing} onClick={handleContinue} className="continue-action flex-1 px-3 py-2.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-200 border border-amber-500/40 rounded-lg text-xs font-bold transition-colors cursor-pointer">Keep & return to deck</button>
+                    <button data-silent disabled={isRevealing} onClick={handleContinue} className="continue-action flex-1 px-3 py-2.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-200 border border-amber-500/40 rounded-lg text-xs font-bold transition-colors cursor-pointer">Keep</button>
                   </div>
-                  <p className="inspection-tip text-center">This relic is in your inventory. Discard can be undone.</p>
+                  <p className="inspection-tip text-center">Keep saves this relic in inventory and shows the deck.</p>
                 </div>
               )}
             </div>

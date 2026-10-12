@@ -22,8 +22,8 @@ npm run preview
 
 ## Version 1.2
 
-- Read item details opens a journal with readable lore, specifications, abilities, editable stats, and larger progression controls. The original card artwork and attune button remain intact.
-- Keep & return to deck retains the relic in inventory and shows the card back. Discard offers undo; custom cards move into persistent recovery instead of being deleted.
+- Read item details opens a journal with readable lore, specifications, abilities, editable stats, and larger progression controls. The original card artwork remains intact, with attunement controls below the card to keep descriptions unobstructed.
+- Keep retains the relic in inventory and shows the card back. Discard offers undo; custom cards move into persistent recovery instead of being deleted.
 - Backup & recovery downloads a JSON copy of the deck, inventory, and recovery collection. Import validates the whole file before merging, preserves current edits across collections, and respects the three-item attunement limit. Images are referenced by URL rather than embedded.
 - Reset Deck explains that standard relic edits and progression reset, while custom cards and recovery remain. Download a backup first to preserve those edits.
 - Mobile navigation provides quick access to drawing, inventory, and item details. Search and custom-card fields have explicit labels, dialog focus stays inside the dialog, and dice effect test buttons are removed.

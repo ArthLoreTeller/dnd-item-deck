@@ -170,7 +170,7 @@ html:is([data-theme="love"], [data-theme="warm"], [data-theme="woody"]) .reliqua
   .reliquary :is(button, [role="button"], select, summary):not(.item-surface *):not([disabled]):not(.item-surface, .item-surface *) {
     transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
   }
-  .reliquary :is(button, [role="button"], select):not(.item-surface *):not([disabled]):hover:not(.item-surface, .item-surface *) {
+  .reliquary :is(button, [role="button"], select):not(.item-surface *):not([disabled]):hover:not(.item-surface, .item-surface *, .inventory-select, .attune-control) {
     --env-text: var(--env-hover-text);
     --env-muted: var(--env-hover-text);
     --env-accent: var(--env-hover-text);
@@ -453,6 +453,28 @@ html[data-theme="woody"] .reliquary {
 .notification-toast { flex-wrap: wrap; }
 .notification-toast .journal-button { font-size: 13px; }
 .mobile-journal-nav { display: none; }
+
+/* Keep content inset from the painted card dividers and away from actions. */
+.card-shelf { position: absolute; left: 16px; right: 16px; height: 55px; display: flex; flex-direction: column; font-size: 7.5px; line-height: 1.45; color: #451a03; overflow: hidden; }
+.card-shelf-1 { top: 252px; }
+.card-shelf-2 { top: 332px; }
+.card-shelf-3 { top: 413px; }
+.card-shelf-with-progress { height: 48px; }
+.card-lore-shelf { top: 254px; height: 60px; font-size: 8px; }
+.card-rules-shelf { top: 356px; height: 104px; }
+.card-shelf > div { min-height: 0; max-height: 100%; }
+.card-shelf [role="button"] { padding-inline: 0; }
+.card-stat-field input { text-overflow: ellipsis; }
+.relic-actions { display: flex; align-items: stretch; gap: 10px; }
+.relic-actions .read-details-button { flex: 1; width: auto; min-width: 0; }
+.reliquary .deck-footer button.attune-control.attune-control { padding: 10px 12px; min-height: 44px; border: 1px solid #aa7826; border-radius: 8px; background: #e8d5b7; color: #451a03; font-size: 12px; font-weight: bold; cursor: pointer; }
+.reliquary .deck-footer button.attune-control.attune-control:hover { background: #d8bb84; color: #451a03; }
+.reliquary .inventory-panel button.inventory-select.inventory-select { background: transparent; border: 0; box-shadow: none; padding: 6px 8px 6px 0; min-height: 38px; gap: 10px; }
+.reliquary .inventory-panel button.inventory-select.inventory-select:hover { background: transparent; color: var(--env-panel-text); }
+.inventory-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; min-height: 24px; }
+.inventory-attunement { font-size: 12px; color: var(--env-panel-muted); white-space: nowrap; }
+.inventory-level { margin-left: auto; font: 11px ui-monospace, monospace; color: var(--env-panel-accent); white-space: nowrap; }
+.inventory-panel [role="group"] { gap: 8px; padding: 14px; }
 @media (max-width: 767px) {
   .reliquary { padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
   .reading-overlay { padding: 12px; }
