@@ -1,5 +1,7 @@
 # Player inventory and character foundation
 
+**Approved scope update during implementation:** The user removed character-link importing and requested PDF import only. Link adapters and backend endpoints below are superseded; local PDF parsing and reviewed save remain required.
+
 ## Approved purpose
 
 Expand the Reliquary into a player companion for 2024 D&D 5e. Inventory navigation opens a dedicated page displaying item artwork and cards. Equipment weight is tied to player information. Characters can be imported from a D&D Beyond character link or an exported character-sheet PDF, with a review step before saving.

@@ -19,7 +19,7 @@ export function useDialogFocus(ref, open, onClose) {
     }
     document.body.style.overflow = 'hidden';
     const focusable = () => Array.from(overlay.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]')).filter(e => e.tabIndex >= 0 && e.getClientRects().length);
-    (overlay.querySelector('[data-initial-focus]') || overlay.querySelector('input:not([type="file"])') || focusable()[0])?.focus();
+    (overlay.querySelector('[data-initial-focus]:not([disabled])') || overlay.querySelector('input:not([disabled]):not([type="file"])') || focusable()[0])?.focus();
     const key = e => {
       if (e.key === 'Escape') { e.preventDefault(); close.current(); }
       if (e.key !== 'Tab') return;
@@ -33,7 +33,8 @@ export function useDialogFocus(ref, open, onClose) {
       document.removeEventListener('keydown', key);
       inertBranches.forEach(([element, original]) => { element.inert = original; });
       document.body.style.overflow = overflow;
-      previous?.focus();
+      if (previous?.isConnected && !previous.disabled) previous.focus();
+      else document.querySelector('.orbit-toggle')?.focus();
     };
   }, [ref, open]);
 }

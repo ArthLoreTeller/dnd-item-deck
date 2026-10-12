@@ -526,7 +526,8 @@ html[data-theme="woody"] .reliquary {
 .load-status p { color: var(--env-muted); margin-top: 5px; }
 .load-note { grid-column: 1 / -1; border-top: 1px solid var(--env-border); padding-top: 12px; }
 .player-form label { display: flex; flex-direction: column; gap: 8px; color: var(--env-muted); font-size: 13px; }
-.player-form input, .player-form select, .player-form textarea { width: 100%; min-width: 0; border: 1px solid var(--env-border); border-radius: 8px; padding: 11px 12px; background: var(--env-deep); color: var(--env-text); }
+.player-form input, .player-form select, .player-form textarea { width: 100%; min-width: 0; border: 1px solid var(--env-border); border-radius: 8px; padding: 11px 12px; background: var(--env-deep); color: var(--env-panel-text); }
+.reliquary .player-form input::placeholder { color: var(--env-panel-muted); }
 .player-form input:disabled { opacity: .65; }
 .player-form .check-label { flex-direction: row; align-items: center; gap: 8px; }
 .player-form input[type=checkbox] { width: 17px; height: 17px; accent-color: var(--env-accent); }

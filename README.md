@@ -91,4 +91,4 @@ Environment themes and their hover colors are isolated from the item cards. Card
 
 Optic adds a black-and-white atmosphere. Rarity badges and item-type icons use surface-specific contrast colors for all six themes; rarity hues and weapon/material shapes retain their original meaning.
 
-Click the atmosphere circles to switch themes directly. The header D20 button opens a numbered 3D die with unbiased 1–20 rolls, a matching forward-facing result, roll/landing chimes, and natural 1/20 accents. Keyboard focus stays in the tray; Escape closes it. Reduced motion shows the result immediately. Dice rolls are independent of card drawing.
+Click the atmosphere circles to switch themes directly. Roll a D20 in the circular menu opens a numbered 3D die with unbiased 1–20 rolls, a matching forward-facing result, roll/landing chimes, and natural 1/20 accents. Keyboard focus stays in the tray; Escape closes it. Reduced motion shows the result immediately. Dice rolls are independent of card drawing.

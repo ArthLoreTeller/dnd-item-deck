@@ -44,3 +44,12 @@ test('discarding a different inventory item does not disturb the inspected item'
   const front = { face: 'front', phase: 'idle', card: { id: 'a' }, celebrate: false };
   assert.deepEqual(deckMotionReducer(front, { type: 'discard', id: 'b' }), front);
 });
+
+test('inventory reconciliation closes removed inspection even when another relic remains', () => {
+  const front = { face: 'front', phase: 'idle', card: { id: 'a' }, celebrate: false };
+  const reconciled = deckMotionReducer(front, { type: 'reconcile-inventory', inventory: [{ id: 'b' }] });
+  assert.equal(reconciled.face, 'back');
+  assert.equal(reconciled.phase, 'returning');
+  assert.equal(deckMotionReducer(reconciled, { type: 'settle' }).card, null);
+  assert.deepEqual(deckMotionReducer(front, { type: 'reconcile-inventory', inventory: [{ id: 'a' }, { id: 'b' }] }), front);
+});

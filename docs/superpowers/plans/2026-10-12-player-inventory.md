@@ -1,5 +1,7 @@
 # Player Inventory and Character Import Implementation Plan
 
+**Execution update:** The user explicitly changed imports to PDF only. Omit D&D Beyond link adapters, endpoint middleware, and link-specific acceptance tests. Source PDF acceptance is verified against synthetic AcroForm/labeled-text fixtures; a genuine user export remains needed to verify its exact layout. Tasks 3–6 share one integration commit to keep page/dialog module dependencies coherent.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans for native execution, or superpowers:subagent-driven-development if the user selects delegation. Implement task by task and check off completed steps.
 
 **Goal:** Deliver a dedicated illustrated inventory, 2024 D&D weight tracking, an editable player profile, and reviewed D&D Beyond link/PDF imports.

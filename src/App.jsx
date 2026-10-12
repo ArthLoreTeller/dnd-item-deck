@@ -22,7 +22,7 @@ import { InventoryTools } from "./components/InventoryTools";
 import { CollectionNavigation } from "./components/CollectionNavigation";
 
 export default function App() {
-  const { motion, reveal, select, returnToDeck } = useDeckMotion();
+  const { motion, reveal, select, returnToDeck, reconcileInventory } = useDeckMotion();
   const isDrawn = motion.face === "front";
   const isRevealing = motion.phase !== "idle";
   const [diceOpen, setDiceOpen] = useState(false);
@@ -77,6 +77,11 @@ export default function App() {
   );
 
   const displayedCard = inventory.find(card => card.id === motion.card?.id) || motion.card;
+
+  useEffect(() => {
+    reconcileInventory(inventory);
+    if (motion.card && !inventory.some(card => card.id === motion.card.id)) setDetailsOpen(false);
+  }, [inventory, motion.card, reconcileInventory]);
 
   useEffect(() => {
     if (!activeCard && motion.face === "front") returnToDeck();

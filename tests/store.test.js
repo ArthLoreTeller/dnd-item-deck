@@ -46,6 +46,19 @@ test('old backups preserve player data; new backups fill missing values and equi
   assert.equal(store.getState().equipment.length, 1);
 });
 
+test('importing an older backup cannot overwrite current dormant relic weight edits', () => {
+  store.setState({ inventory: [], deck: [defaults[0]], equipment: [], discardedCustom: [], relicEquipmentCache: {} });
+  store.getState().drawCardById(defaults[0].id);
+  const id = store.getState().equipment[0].id;
+  store.getState().updateEquipment(id, { unitWeightLb: 2, carried: true });
+  const oldBackup = store.getState().exportBackup();
+  store.getState().updateEquipment(id, { unitWeightLb: 7, carried: false });
+  store.getState().discardCard(defaults[0].id);
+  store.getState().importBackup(oldBackup);
+  assert.equal(store.getState().equipment[0].unitWeightLb, 7);
+  assert.equal(store.getState().equipment[0].carried, false);
+});
+
 test('draw removes exactly the selected weighted card and keeps previous inventory', (t) => {
   t.mock.method(Math, 'random', () => 0.9);
   store.setState({ deck: [{ id: 'a', rarity: 'common' }, { id: 'b', rarity: 'legendary' }], inventory: [{ id: 'owned' }] });

@@ -243,7 +243,10 @@ export const useCardStore = create(
           }
           player.profile = validateProfile(merged);
           player.equipment = [...state.equipment];
-          for (const entry of backup.equipment) if (!player.equipment.some(item => item.id === entry.id || (entry.relicCardId && item.relicCardId === entry.relicCardId))) player.equipment.push({ ...entry, characterId: player.profile.id });
+          for (const entry of backup.equipment) if (!player.equipment.some(item => item.id === entry.id || (entry.relicCardId && item.relicCardId === entry.relicCardId))) {
+            const current = entry.relicCardId ? state.relicEquipmentCache[entry.relicCardId] : null;
+            player.equipment.push({ ...(current ?? entry), characterId: player.profile.id });
+          }
           player.relicEquipmentCache = { ...backup.relicEquipmentCache, ...state.relicEquipmentCache };
         }
         set({ ...player, inventory, deck: deck.filter(card => !owned.has(card.id)), discardedCustom, lastDiscard: null, toastMessage: `Backup imported. ${added} ${added === 1 ? 'card' : 'cards'} added; your current edits were kept.` });

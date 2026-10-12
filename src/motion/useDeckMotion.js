@@ -18,5 +18,6 @@ export function useDeckMotion() {
     return () => clearTimeout(timer);
   }, [motion]);
   const returnToDeck = useCallback(() => dispatch({ type: 'return' }), []);
-  return { motion, reveal: (card) => dispatch({ type: 'reveal', card, celebrate: true }), select: (card) => dispatch({ type: 'select', card }), returnToDeck, discard: (id) => dispatch({ type: 'discard', id }) };
+  const reconcileInventory = useCallback(inventory => dispatch({ type: 'reconcile-inventory', inventory }), []);
+  return { motion, reveal: (card) => dispatch({ type: 'reveal', card, celebrate: true }), select: (card) => dispatch({ type: 'select', card }), returnToDeck, reconcileInventory, discard: (id) => dispatch({ type: 'discard', id }) };
 }
