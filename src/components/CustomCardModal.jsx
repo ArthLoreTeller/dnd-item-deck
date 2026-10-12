@@ -8,6 +8,7 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
   useDialogFocus(overlayRef, isOpen, onClose);
   const addToInventory = useCardStore((state) => state.addToInventory);
   const [activeTab, setActiveTab] = useState('general');
+  const [formError, setFormError] = useState('');
 
   const [formData, setFormData] = useState({
     name: '',
@@ -78,10 +79,11 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.name.trim()) return;
+    if (!formData.name.trim()) { setActiveTab('general'); setFormError('Enter an item name before creating a card.'); return; }
+    setFormError('');
 
     const newCard = {
-      id: `custom-${Date.now()}`,
+      id: `custom-${globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`}`,
       name: formData.name.trim(),
       icon: formData.icon.trim() || '💠',
       type: formData.type,
@@ -123,13 +125,14 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
             <h3 id="custom-card-title" className="font-serif font-bold text-amber-200 text-lg">Create Custom Item Card</h3>
             <p className="text-[11px] text-slate-400">Configure item statistics, rules, and ability slots</p>
           </div>
-          <button onClick={onClose} className="close-control text-slate-400 hover:text-white text-sm font-semibold cursor-pointer">✕</button>
+          <button aria-label="Close custom card form" onClick={onClose} className="close-control text-slate-400 hover:text-white text-sm font-semibold cursor-pointer">✕</button>
         </div>
 
         <div className="flex border-b border-slate-800 gap-2 text-xs">
           {['general', 'abilities', 'specs'].map((tab) => (
             <button
               key={tab}
+              aria-pressed={activeTab === tab}
               type="button"
               onClick={() => setActiveTab(tab)}
               className={`pb-2 px-3 capitalize font-semibold transition-colors border-b-2 ${
@@ -146,8 +149,8 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
             {activeTab === 'general' && (
               <div className="space-y-3">
                 <div>
-                  <label className="text-slate-300 font-semibold mb-1 block">Item Name *</label>
-                  <input
+                  <label className="text-slate-300 font-semibold mb-1 block" htmlFor="custom-item-name">Item Name *</label>
+                  <input id="custom-item-name"
                     type="text"
                     required
                     value={formData.name}
@@ -162,10 +165,10 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                   <select id="custom-rarity" value={formData.rarity} onChange={(e) => handleInputChange("rarity", e.target.value)} className="w-full bg-slate-950 border border-slate-600 rounded-lg px-3 py-2 text-amber-100 mb-3">
                     {Object.entries(RARITIES).map(([key, rarity]) => <option key={key} value={key}>{rarity.label}</option>)}
                   </select>
-                  <label className="text-slate-300 font-semibold mb-1 block">Item Icon (Emoji)</label>
-                  <input
+                  <label className="text-slate-300 font-semibold mb-1 block" htmlFor="custom-item-icon-emoji">Item Icon (Emoji)</label>
+                  <input id="custom-item-icon-emoji"
                     type="text"
-                    maxLength={2}
+                    maxLength={16}
                     value={formData.icon}
                     onChange={(e) => handleInputChange('icon', e.target.value)}
                     placeholder="e.g., ⚔️"
@@ -175,8 +178,8 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-slate-300 font-semibold mb-1 block">Card Type</label>
-                    <select
+                    <label className="text-slate-300 font-semibold mb-1 block" htmlFor="custom-card-type">Card Type</label>
+                    <select id="custom-card-type"
                       value={formData.type}
                       onChange={(e) => handleInputChange('type', e.target.value)}
                       className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-amber-100 focus:border-amber-500 outline-none"
@@ -187,8 +190,8 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                     </select>
                   </div>
                   <div>
-                    <label className="text-slate-300 font-semibold mb-1 block">Artwork Image URL</label>
-                    <input
+                    <label className="text-slate-300 font-semibold mb-1 block" htmlFor="custom-artwork-image-url">Artwork Image URL</label>
+                    <input id="custom-artwork-image-url"
                       type="url"
                       value={formData.itemImage}
                       onChange={(e) => handleInputChange('itemImage', e.target.value)}
@@ -201,8 +204,8 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                 {!isNormal && (
                   <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <label className="text-slate-300 font-semibold mb-1 block">Hit Stat</label>
-                      <input
+                      <label className="text-slate-300 font-semibold mb-1 block" htmlFor="custom-hit-stat">Hit Stat</label>
+                      <input id="custom-hit-stat"
                         type="text"
                         value={formData.stats.hit}
                         onChange={(e) => handleNestedChange('stats', 'hit', e.target.value)}
@@ -210,8 +213,8 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                       />
                     </div>
                     <div>
-                      <label className="text-slate-300 font-semibold mb-1 block">Damage Stat</label>
-                      <input
+                      <label className="text-slate-300 font-semibold mb-1 block" htmlFor="custom-damage-stat">Damage Stat</label>
+                      <input id="custom-damage-stat"
                         type="text"
                         value={formData.stats.damage}
                         onChange={(e) => handleNestedChange('stats', 'damage', e.target.value)}
@@ -219,8 +222,8 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                       />
                     </div>
                     <div>
-                      <label className="text-slate-300 font-semibold mb-1 block">Save DC</label>
-                      <input
+                      <label className="text-slate-300 font-semibold mb-1 block" htmlFor="custom-save-dc">Save DC</label>
+                      <input id="custom-save-dc"
                         type="text"
                         value={formData.stats.saveDc}
                         onChange={(e) => handleNestedChange('stats', 'saveDc', e.target.value)}
@@ -231,8 +234,8 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                 )}
 
                 <div>
-                  <label className="text-slate-300 font-semibold mb-1 block">Flavor / Lore Text</label>
-                  <textarea
+                  <label className="text-slate-300 font-semibold mb-1 block" htmlFor="custom-flavor-lore-text">Flavor / Lore Text</label>
+                  <textarea id="custom-flavor-lore-text"
                     rows={2}
                     value={formData.flavorText}
                     onChange={(e) => handleInputChange('flavorText', e.target.value)}
@@ -243,8 +246,8 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
 
                 {!isNormal && (
                   <div>
-                    <label className="text-slate-300 font-semibold mb-1 block">Attunement Rules</label>
-                    <input
+                    <label className="text-slate-300 font-semibold mb-1 block" htmlFor="custom-attunement-rules">Attunement Rules</label>
+                    <input id="custom-attunement-rules"
                       type="text"
                       value={formData.attunementRules}
                       onChange={(e) => handleInputChange('attunementRules', e.target.value)}
@@ -268,6 +271,7 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                         <div key={idx} className="flex gap-2 items-start bg-slate-950/60 p-2 rounded-lg border border-slate-800">
                           <div className="flex-1 space-y-1">
                             <input
+                              aria-label={`Level 1 ability ${idx + 1} title`}
                               type="text"
                               placeholder="Ability Title"
                               value={ability.title}
@@ -275,6 +279,7 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                               className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-amber-100 text-xs"
                             />
                             <textarea
+                              aria-label={`Level 1 ability ${idx + 1} description`}
                               rows={2}
                               placeholder="Ability Description"
                               value={ability.description}
@@ -282,7 +287,7 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                               className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 text-xs no-scrollbar"
                             />
                           </div>
-                          <button type="button" onClick={() => removeAbilityRow('level1Abilities', idx)} className="close-control text-red-400 font-bold px-1.5 py-1">✕</button>
+                          <button type="button" aria-label={`Remove ability ${idx + 1}`} onClick={() => removeAbilityRow('level1Abilities', idx)} className="close-control text-red-400 font-bold px-1.5 py-1">✕</button>
                         </div>
                       ))}
                     </div>
@@ -296,6 +301,7 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                         <div key={idx} className="flex gap-2 items-start bg-slate-950/60 p-2 rounded-lg border border-slate-800">
                           <div className="flex-1 space-y-1">
                             <input
+                              aria-label={`Level 2 ability ${idx + 1} title`}
                               type="text"
                               placeholder="Ability Title"
                               value={ability.title}
@@ -303,6 +309,7 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                               className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-amber-100 text-xs"
                             />
                             <textarea
+                              aria-label={`Level 2 ability ${idx + 1} description`}
                               rows={2}
                               placeholder="Ability Description"
                               value={ability.description}
@@ -310,7 +317,7 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                               className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 text-xs no-scrollbar"
                             />
                           </div>
-                          <button type="button" onClick={() => removeAbilityRow('level2Abilities', idx)} className="close-control text-red-400 font-bold px-1.5 py-1">✕</button>
+                          <button type="button" aria-label={`Remove ability ${idx + 1}`} onClick={() => removeAbilityRow('level2Abilities', idx)} className="close-control text-red-400 font-bold px-1.5 py-1">✕</button>
                         </div>
                       ))}
                     </div>
@@ -324,6 +331,7 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                         <div key={idx} className="flex gap-2 items-start bg-slate-950/60 p-2 rounded-lg border border-slate-800">
                           <div className="flex-1 space-y-1">
                             <input
+                              aria-label={`Level 3 ability ${idx + 1} title`}
                               type="text"
                               placeholder="Ability Title"
                               value={ability.title}
@@ -331,6 +339,7 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                               className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-amber-100 text-xs"
                             />
                             <textarea
+                              aria-label={`Level 3 ability ${idx + 1} description`}
                               rows={2}
                               placeholder="Ability Description"
                               value={ability.description}
@@ -338,7 +347,7 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                               className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 text-xs no-scrollbar"
                             />
                           </div>
-                          <button type="button" onClick={() => removeAbilityRow('level3Abilities', idx)} className="close-control text-red-400 font-bold px-1.5 py-1">✕</button>
+                          <button type="button" aria-label={`Remove ability ${idx + 1}`} onClick={() => removeAbilityRow('level3Abilities', idx)} className="close-control text-red-400 font-bold px-1.5 py-1">✕</button>
                         </div>
                       ))}
                     </div>
@@ -353,6 +362,7 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                       <div key={idx} className="flex gap-2 items-start bg-slate-950/60 p-2 rounded-lg border border-slate-800">
                         <div className="flex-1 space-y-1">
                           <input
+                              aria-label={`Ability ${idx + 1} title`}
                             type="text"
                             placeholder="Ability Title (e.g. Searing Light)"
                             value={ability.title}
@@ -360,6 +370,7 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                             className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-amber-100 text-xs"
                           />
                           <textarea
+                              aria-label={`Ability ${idx + 1} description`}
                             rows={2}
                             placeholder="Ability Description"
                             value={ability.description}
@@ -367,7 +378,7 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                             className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 text-xs no-scrollbar"
                           />
                         </div>
-                        <button type="button" onClick={() => removeAbilityRow('abilities', idx)} className="close-control text-red-400 font-bold px-1.5 py-1">✕</button>
+                        <button type="button" aria-label={`Remove ability ${idx + 1}`} onClick={() => removeAbilityRow('abilities', idx)} className="close-control text-red-400 font-bold px-1.5 py-1">✕</button>
                       </div>
                     ))}
                   </div>
@@ -379,8 +390,8 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-slate-300 font-semibold mb-1 block">Item Category</label>
-                    <input
+                    <label className="text-slate-300 font-semibold mb-1 block" htmlFor="custom-item-category">Item Category</label>
+                    <input id="custom-item-category"
                       type="text"
                       value={formData.specs.type}
                       onChange={(e) => handleNestedChange('specs', 'type', e.target.value)}
@@ -389,8 +400,8 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                     />
                   </div>
                   <div>
-                    <label className="text-slate-300 font-semibold mb-1 block">Properties</label>
-                    <input
+                    <label className="text-slate-300 font-semibold mb-1 block" htmlFor="custom-properties">Properties</label>
+                    <input id="custom-properties"
                       type="text"
                       value={formData.specs.properties}
                       onChange={(e) => handleNestedChange('specs', 'properties', e.target.value)}
@@ -402,8 +413,8 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
 
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="text-slate-300 font-semibold mb-1 block">Ranges</label>
-                    <input
+                    <label className="text-slate-300 font-semibold mb-1 block" htmlFor="custom-ranges">Ranges</label>
+                    <input id="custom-ranges"
                       type="text"
                       value={formData.specs.ranges}
                       onChange={(e) => handleNestedChange('specs', 'ranges', e.target.value)}
@@ -412,8 +423,8 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                     />
                   </div>
                   <div>
-                    <label className="text-slate-300 font-semibold mb-1 block">Base Damage</label>
-                    <input
+                    <label className="text-slate-300 font-semibold mb-1 block" htmlFor="custom-base-damage">Base Damage</label>
+                    <input id="custom-base-damage"
                       type="text"
                       value={formData.specs.damage}
                       onChange={(e) => handleNestedChange('specs', 'damage', e.target.value)}
@@ -422,8 +433,8 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                     />
                   </div>
                   <div>
-                    <label className="text-slate-300 font-semibold mb-1 block">Damage Type</label>
-                    <input
+                    <label className="text-slate-300 font-semibold mb-1 block" htmlFor="custom-damage-type">Damage Type</label>
+                    <input id="custom-damage-type"
                       type="text"
                       value={formData.specs.damageType}
                       onChange={(e) => handleNestedChange('specs', 'damageType', e.target.value)}
@@ -436,8 +447,9 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
             )}
           </div>
 
+          {formError && <p role="alert" className="backup-error">{formError}</p>}
           <div className="flex justify-between items-center pt-3 border-t border-slate-800">
-            <span className="text-[11px] text-slate-500">Ready to append to your inventory</span>
+            <span className="text-[11px] text-slate-500">Saved to this browser’s inventory</span>
             <div className="flex gap-2">
               <button
                 type="button"

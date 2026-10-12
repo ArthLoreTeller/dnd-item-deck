@@ -45,6 +45,7 @@ function StatInput({
 // Main Card component
 export function Card({ card, snapshot = false, initialFlipped = false }) {
   const updateCard = useCardStore((state) => state.updateCard);
+  const updateProgress = useCardStore((state) => state.updateProgress);
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [isFlipped, setIsFlipped] = useState(initialFlipped);
   const [flipAnim, setFlipAnim] = useState("");
@@ -111,15 +112,12 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
 
   if (!card) return null;
 
+  const activateText = event => {
+    if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); event.currentTarget.click(); }
+  };
+
   const handleProgress = (levelIndex, val) => {
-    const currentProgress = progress || { level1: 0, level2: 0 };
-    const newProgress = { ...currentProgress, [`level${levelIndex}`]: val };
-
-    let newLevel = 1;
-    if (newProgress.level1 >= 20) newLevel = 2;
-    if (newProgress.level1 >= 20 && newProgress.level2 >= 20) newLevel = 3;
-
-    updateCard(id, { progress: newProgress, currentLevel: newLevel });
+    updateProgress(id, levelIndex, val);
   };
 
   const handleFlip = () => {
@@ -186,7 +184,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
   );
 
   const renderUnattunedShelf1 = () => (
-    <div
+    <div role="button" tabIndex={snapshot ? -1 : 0} onKeyDown={activateText}
       className="overflow-y-auto no-scrollbar pb-2 cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
       onClick={() =>
         setPopoverText({ title: "Item Lore", text: flavorText || description })
@@ -203,7 +201,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
       return (
         <div className="overflow-y-auto no-scrollbar space-y-1 pb-2">
           {abilities?.map((abi, idx) => (
-            <div
+            <div role="button" tabIndex={snapshot ? -1 : 0} onKeyDown={activateText}
               key={`nml-${idx}`}
               className="mb-1 cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
               onClick={() =>
@@ -218,7 +216,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
       );
     }
     return (
-      <div
+      <div role="button" tabIndex={snapshot ? -1 : 0} onKeyDown={activateText}
         className="overflow-y-auto no-scrollbar space-y-1 pb-[35px] cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
         onClick={() => {
           let statsContent = `Attunement: ${attunementRules || "None"}`;
@@ -267,7 +265,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
         <div className={`flex flex-col h-full ${getFadeClass("delay-200")}`}>
           <div className="overflow-y-auto no-scrollbar pb-3">
             {level1Abilities?.map((abi, idx) => (
-              <div
+              <div role="button" tabIndex={snapshot ? -1 : 0} onKeyDown={activateText}
                 key={`l1-${idx}`}
                 className="mb-1 cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
                 onClick={() =>
@@ -290,7 +288,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
           )}`}
         >
           {abilities?.slice(0, 2).map((abi, idx) => (
-            <div
+            <div role="button" tabIndex={snapshot ? -1 : 0} onKeyDown={activateText}
               key={`std1-${idx}`}
               className="mb-1 cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
               onClick={() =>
@@ -314,7 +312,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
           <div className="overflow-y-auto no-scrollbar pb-3">
             {currentLevel >= 2 &&
               level2Abilities?.map((abi, idx) => (
-                <div
+                <div role="button" tabIndex={snapshot ? -1 : 0} onKeyDown={activateText}
                   key={`l2-${idx}`}
                   className="mb-1 cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
                   onClick={() =>
@@ -337,7 +335,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
           )}`}
         >
           {abilities?.slice(2, 4).map((abi, idx) => (
-            <div
+            <div role="button" tabIndex={snapshot ? -1 : 0} onKeyDown={activateText}
               key={`std2-${idx}`}
               className="mb-1 cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
               onClick={() =>
@@ -361,7 +359,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
           <div className="overflow-y-auto no-scrollbar pb-[35px]">
             {currentLevel >= 3 &&
               level3Abilities?.map((abi, idx) => (
-                <div
+                <div role="button" tabIndex={snapshot ? -1 : 0} onKeyDown={activateText}
                   key={`l3-${idx}`}
                   className="mb-1 cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
                   onClick={() =>
@@ -384,7 +382,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
           )}`}
         >
           {abilities?.slice(4).map((abi, idx) => (
-            <div
+            <div role="button" tabIndex={snapshot ? -1 : 0} onKeyDown={activateText}
               key={`std3-${idx}`}
               className="mb-1 cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
               onClick={() =>
@@ -573,7 +571,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
               </div>
             )}
             {isAttunable && displayAttuned && specs && (
-              <div
+              <div role="button" tabIndex={snapshot ? -1 : 0} onKeyDown={activateText}
                 onClick={(e) => {
                   e.stopPropagation();
                   setPopoverText({
@@ -722,6 +720,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
                     {popoverText.title}
                   </strong>
                   <button
+                    aria-label="Close expanded card text"
                     onClick={() => setPopoverText(null)}
                     className="text-amber-950 font-bold hover:text-red-700"
                   >

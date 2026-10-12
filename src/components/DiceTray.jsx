@@ -67,7 +67,6 @@ export function DiceTray({ onClose }) {
         </div>
         <div className={'dice-result '+(result===1?'dice-fumble':'')} role="status" aria-live="polite">{rolling?'Rolling…':result?<>You rolled <strong>{result}</strong><small>{doubleImpact?(result===20?'Double natural 20 · Fate ascends!':'Double natural 1 · Fate fractures!'):result===20?'Natural 20 · Critical!':result===1?'Natural 1 · Bad luck!':'The die has spoken.'}</small></>:'A little chance. A new possibility.'}</div>
         <button ref={rollButton} className="dice-roll-button" aria-disabled={rolling} onClick={() => roll()}>{rolling?'Rolling…':result?'Roll again':'Roll D20'}</button>
-        {import.meta.env.DEV && <div className="dice-test-controls"><small>Effect previews · click twice for double impact</small><div><button disabled={rolling} className="dice-test-one" onClick={() => roll(1)}>Test Nat 1</button><button disabled={rolling} className="dice-test-twenty" onClick={() => roll(20)}>Test Nat 20</button></div></div>}
       </section>
     </div>,document.body);
 }

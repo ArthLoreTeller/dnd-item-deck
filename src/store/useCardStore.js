@@ -2,7 +2,19 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import rawDefaultCards from '../data/defaultCards.json' with { type: 'json' };
 import { normalizeCard, chooseWeightedCard } from '../data/rarity.js';
+import { parseBackup, serializeBackup } from '../data/backup.js';
 const defaultCards = rawDefaultCards.map(normalizeCard);
+
+function safeRestore(card, inventory) {
+  return { ...card, isAttuned: Boolean(card.isAttuned) && inventory.filter(item => item.isAttuned).length < 3 };
+}
+
+function hasDeckEdits(card) {
+  const original = defaultCards.find(item => item.id === card.id);
+  if (!original) return true;
+  const fields = ['name', 'type', 'stats', 'specs', 'weaponStats', 'images', 'itemImage', 'description', 'flavorText', 'attunementRules', 'abilities', 'level1Abilities', 'level2Abilities', 'level3Abilities'];
+  return fields.some(key => JSON.stringify(card[key]) !== JSON.stringify(original[key])) || (card.currentLevel || 1) !== (original.currentLevel || 1) || (card.progress?.level1 || 0) !== (original.progress?.level1 || 0) || (card.progress?.level2 || 0) !== (original.progress?.level2 || 0);
+}
 
 export const useCardStore = create(
   persist(
@@ -12,12 +24,23 @@ export const useCardStore = create(
       inventory: [],
       activeCard: null,
       toastMessage: null,
+      discardedCustom: [],
+      lastDiscard: null,
 
       // Set general state update functions
       setActiveCard: (card) => set({ activeCard: card }),
 
       setToastMessage: (msg) => set({ toastMessage: msg }),
       clearToast: () => set({ toastMessage: null }),
+
+      updateProgress: (id, level, value) => {
+        const card = get().inventory.find(item => item.id === id);
+        if (!card || card.type !== 'progressive' || ![1, 2].includes(level) || !Number.isFinite(value)) return;
+        const max = card.maxProgress || 20;
+        const progress = { level1: 0, level2: 0, ...card.progress, [`level${level}`]: Math.min(max, Math.max(0, Math.trunc(value))) };
+        const currentLevel = progress.level1 >= max ? (progress.level2 >= max ? 3 : 2) : 1;
+        get().updateCard(id, { progress, currentLevel });
+      },
 
       // Add a new card to the inventory, ensuring no duplicates
       addToInventory: (newCard) => {
@@ -96,7 +119,7 @@ export const useCardStore = create(
         });
       },
 
-      // Discard a card from the inventory. Custom cards (id starting with "custom-") are deleted permanently, while standard cards are returned to the deck.
+      // Custom cards go to recovery; built-in cards return to the deck.
       discardCard: (id) => {
         set((state) => {
           const cardToDiscard = state.inventory.find((c) => c.id === id);
@@ -124,11 +147,58 @@ export const useCardStore = create(
             inventory: updatedInventory,
             deck: updatedDeck,
             activeCard: newActive,
+            lastDiscard: cardToDiscard,
+            discardedCustom: isCustom ? [cardToDiscard, ...state.discardedCustom.filter(card => card.id !== id)] : state.discardedCustom,
             toastMessage: isCustom
-              ? `Permanently deleted custom card "${cardToDiscard.name}".`
+              ? `Moved "${cardToDiscard.name}" to recovery.`
               : `Returned "${cardToDiscard.name}" to the deck.`,
           };
         });
+      },
+
+      undoDiscard: () => {
+        const { lastDiscard, inventory } = get();
+        if (!lastDiscard) return;
+        if (inventory.some(card => card.id === lastDiscard.id)) { set({ lastDiscard: null }); return; }
+        const restored = safeRestore(lastDiscard, inventory);
+        set(state => ({ inventory: [restored, ...state.inventory], deck: state.deck.filter(card => card.id !== restored.id), discardedCustom: state.discardedCustom.filter(card => card.id !== restored.id), activeCard: restored, lastDiscard: null, toastMessage: `Restored "${restored.name}"${lastDiscard.isAttuned && !restored.isAttuned ? ' unattuned (3 slots already in use)' : ''}.` }));
+      },
+
+      restoreCustomCard: (id) => {
+        const { discardedCustom, inventory } = get();
+        const card = discardedCustom.find(item => item.id === id);
+        if (!card || inventory.some(item => item.id === id)) return;
+        const restored = safeRestore(card, inventory);
+        set(state => ({ inventory: [restored, ...state.inventory], activeCard: restored, discardedCustom: state.discardedCustom.filter(item => item.id !== id), lastDiscard: state.lastDiscard?.id === id ? null : state.lastDiscard, toastMessage: `Restored "${card.name}"${card.isAttuned && !restored.isAttuned ? ' unattuned (3 slots already in use)' : ''}.` }));
+      },
+
+      exportBackup: () => serializeBackup(get()),
+      importBackup: (text) => {
+        const backup = parseBackup(text);
+        const state = get();
+        const inventory = [...state.inventory];
+        for (const card of backup.inventory) {
+          if (!inventory.some(item => item.id === card.id)) {
+            const recovered = state.discardedCustom.find(item => item.id === card.id);
+            const inDeck = state.deck.find(item => item.id === card.id);
+            const current = recovered || (inDeck && hasDeckEdits(inDeck) ? inDeck : null);
+            inventory.push(safeRestore(current || card, inventory));
+          }
+        }
+        const owned = new Set(inventory.map(card => card.id));
+        const discardedCustom = state.discardedCustom.filter(card => !owned.has(card.id));
+        for (const card of backup.discardedCustom) {
+          if (!owned.has(card.id) && !discardedCustom.some(item => item.id === card.id)) discardedCustom.push(card);
+        }
+        const deck = [...state.deck];
+        for (const card of backup.deck) {
+          const index = deck.findIndex(item => item.id === card.id);
+          if (index < 0) deck.push({ ...card, isAttuned: false });
+          else if (!hasDeckEdits(deck[index])) deck[index] = { ...card, isAttuned: false };
+        }
+        const added = inventory.length - state.inventory.length;
+        set({ inventory, deck: deck.filter(card => !owned.has(card.id)), discardedCustom, lastDiscard: null, toastMessage: `Backup imported. ${added} ${added === 1 ? 'card' : 'cards'} added; your current edits were kept.` });
+        return { added };
       },
 
       // Reset the deck to its default state, excluding cards currently in the inventory
@@ -141,6 +211,7 @@ export const useCardStore = create(
           deck: defaultCards || [],
           inventory: customCards,
           activeCard: customCards[0] || null,
+          lastDiscard: null,
           toastMessage: 'All standard cards returned to the deck.',
         });
       },
@@ -154,11 +225,13 @@ export const useCardStore = create(
         deck: (persisted?.deck || current.deck).map(normalizeCard),
         inventory: (persisted?.inventory || []).map(normalizeCard),
         activeCard: persisted?.activeCard ? normalizeCard(persisted.activeCard) : null,
+        discardedCustom: (persisted?.discardedCustom || []).map(normalizeCard),
       }),
       partialize: (state) => ({
         deck: state.deck,
         inventory: state.inventory,
         activeCard: state.activeCard,
+        discardedCustom: state.discardedCustom,
       }),
     }
   )

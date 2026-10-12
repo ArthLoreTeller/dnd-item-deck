@@ -18,8 +18,8 @@ export function useDialogFocus(ref, open, onClose) {
       }
     }
     document.body.style.overflow = 'hidden';
-    const focusable = () => Array.from(overlay.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]')).filter(e => e.getClientRects().length);
-    (overlay.querySelector('input') || focusable()[0])?.focus();
+    const focusable = () => Array.from(overlay.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]')).filter(e => e.tabIndex >= 0 && e.getClientRects().length);
+    (overlay.querySelector('[data-initial-focus]') || overlay.querySelector('input:not([type="file"])') || focusable()[0])?.focus();
     const key = e => {
       if (e.key === 'Escape') { e.preventDefault(); close.current(); }
       if (e.key !== 'Tab') return;

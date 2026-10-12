@@ -53,10 +53,11 @@ export function ItemSearchModal({ isOpen, onClose, onCardAdded }) {
           <div className="flex items-center gap-2">
             <Search className="w-5 h-5 text-amber-400 shrink-0" />
             <h3 id="item-search-title" className="font-serif font-bold text-amber-200 text-lg">
-              Search & Add Item
+              Find a relic
             </h3>
           </div>
           <button 
+            aria-label="Close relic search"
             onClick={onClose}
             className="close-control text-slate-400 hover:text-white text-sm font-semibold cursor-pointer p-1"
           >
@@ -67,6 +68,7 @@ export function ItemSearchModal({ isOpen, onClose, onCardAdded }) {
         {/* Search Input Box */}
         <div className="relative">
           <input
+            aria-label="Search relics by name or type"
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -115,7 +117,7 @@ export function ItemSearchModal({ isOpen, onClose, onCardAdded }) {
                   onClick={() => handleSelectCard(item)}
                   className="shrink-0 px-3 py-1.5 bg-amber-600/20 hover:bg-amber-600 border border-amber-500/40 hover:border-amber-400 text-amber-200 hover:text-white rounded-lg text-xs font-semibold transition-all cursor-pointer shadow-sm active:scale-95"
                 >
-                  + Add to Bag
+                  + Add to inventory
                 </button>
               </div>
             ))
