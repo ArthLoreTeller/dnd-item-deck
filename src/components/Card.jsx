@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useCardStore } from "../store/useCardStore";
-import { Unlink, RotateCcw } from "lucide-react";
+import { ArtworkViewer } from "./ArtworkViewer";
+import { playSound } from "../audio/sound";
+import { RotateCcw } from "lucide-react";
 
 // StatInput component for rendering individual stat input fields
 function StatInput({
@@ -20,6 +22,7 @@ function StatInput({
       <div className="h-[25px] w-full flex items-center justify-center px-0.5">
         <input
           type="text"
+          aria-label={label}
           value={stats?.[statKey] || ""}
           onChange={(e) =>
             updateCard(id, {
@@ -40,18 +43,18 @@ function StatInput({
 }
 
 // Main Card component
-export function Card({ card, onResetDeck }) {
+export function Card({ card, snapshot = false, initialFlipped = false }) {
   const updateCard = useCardStore((state) => state.updateCard);
   const [isEnhancing, setIsEnhancing] = useState(false);
-  const [isBurningButton, setIsBurningButton] = useState(false);
-  const [isUnlinking, setIsUnlinking] = useState(false);
-  const [isFlipped, setIsFlipped] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(initialFlipped);
   const [flipAnim, setFlipAnim] = useState("");
   const [popoverText, setPopoverText] = useState(null);
   const [expandedImage, setExpandedImage] = useState(null);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const closeArtwork = useCallback(() => setExpandedImage(null), []);
 
   const dragStartX = useRef(null);
+  const previousCardRef = useRef(card);
+  const [outgoingCard, setOutgoingCard] = useState(null);
 
   const {
     id,
@@ -87,24 +90,24 @@ export function Card({ card, onResetDeck }) {
       ? "/assets/attune-base.png"
       : "/assets/card-front.png";
 
-  const prevLevelRef = useRef(currentLevel);
-  const prevAttunedRef = useRef(isAttuned);
-
+  const currentCardRef = useRef(card);
+  const flippedRef = useRef(isFlipped);
+  currentCardRef.current = card;
+  flippedRef.current = isFlipped;
   useEffect(() => {
-    const justAttuned = isAttunable && isAttuned && !prevAttunedRef.current;
-    const leveledUp = currentLevel > prevLevelRef.current;
-
-    if (justAttuned || leveledUp) {
-      setIsEnhancing(true);
-      const timer = setTimeout(() => setIsEnhancing(false), 600);
-      prevAttunedRef.current = isAttuned;
-      prevLevelRef.current = currentLevel;
-      return () => clearTimeout(timer);
-    }
-
-    prevAttunedRef.current = isAttuned;
-    prevLevelRef.current = currentLevel;
-  }, [isAttuned, currentLevel, isAttunable]);
+    const card = currentCardRef.current;
+    const previous = previousCardRef.current;
+    previousCardRef.current = card;
+    if (snapshot || !previous || !card) return;
+    if (previous.isAttuned === card.isAttuned && previous.currentLevel === card.currentLevel) return;
+    setOutgoingCard({ card: previous, flipped: flippedRef.current });
+    setIsFlipped(false);
+    setIsEnhancing(true);
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const timer = setTimeout(() => { setOutgoingCard(null); setIsEnhancing(false); }, reduced ? 0 : 650);
+    return () => clearTimeout(timer);
+  }, [isAttuned, currentLevel, snapshot]);
+  useEffect(() => { previousCardRef.current = card; });
 
   if (!card) return null;
 
@@ -120,7 +123,7 @@ export function Card({ card, onResetDeck }) {
   };
 
   const handleFlip = () => {
-    if (flipAnim || isEnhancing || isUnlinking) return;
+    if (flipAnim || isEnhancing) return;
     setFlipAnim("out");
     setTimeout(() => {
       setIsFlipped((prev) => !prev);
@@ -132,30 +135,11 @@ export function Card({ card, onResetDeck }) {
   };
 
   const handleToggleAttune = (e) => {
-    if (e) e.stopPropagation();
-    if (
-      !isAttunable ||
-      isEnhancing ||
-      isBurningButton ||
-      isUnlinking ||
-      flipAnim
-    )
-      return;
-
-    if (!isAttuned) {
-      setIsBurningButton(true);
-      updateCard(id, { isAttuned: true });
-      setTimeout(() => {
-        setIsBurningButton(false);
-      }, 900);
-    } else {
-      setIsUnlinking(true);
-      setTimeout(() => {
-        setIsUnlinking(false);
-        setIsFlipped(false);
-        updateCard(id, { isAttuned: false });
-      }, 900);
-    }
+    e?.stopPropagation();
+    if (!isAttunable || isEnhancing || flipAnim || snapshot) return;
+    updateCard(id, { isAttuned: !isAttuned });
+    const updated = useCardStore.getState().inventory.find((item) => item.id === id);
+    if (updated?.isAttuned === !isAttuned) playSound(isAttuned ? "discard" : "attune");
   };
 
   const getArtworkSrc = () => {
@@ -170,13 +154,7 @@ export function Card({ card, onResetDeck }) {
     return src;
   };
 
-  const getFadeClass = (delayClass = "") => {
-    return `transition-opacity ${
-      isEnhancing
-        ? "opacity-0 duration-75 pointer-events-none"
-        : `opacity-100 duration-500 ${delayClass}`
-    }`;
-  };
+  const getFadeClass = () => "transition-opacity opacity-100 duration-300";
 
   const renderCheckboxes = (levelIndex, currentVal, customPosition) => (
     <div
@@ -186,7 +164,10 @@ export function Card({ card, onResetDeck }) {
         {Array.from({ length: maxProgress }).map((_, i) => {
           const isNextTarget = i === currentVal;
           return (
-            <div
+            <button
+              type="button"
+              aria-label={`Level ${levelIndex} progress ${i + 1} of ${maxProgress}`}
+              aria-pressed={i < currentVal}
               key={i}
               onClick={(e) => {
                 e.stopPropagation();
@@ -423,10 +404,10 @@ export function Card({ card, onResetDeck }) {
   const artworkSrc = getArtworkSrc();
 
   return (
-    <div className="flex flex-col items-center gap-4 w-full h-full">
+    <div className="item-surface relative flex flex-col items-center gap-4 w-full h-full">
       {/* OUTER WRAPPER: Handles drop-shadow transition and maintains a strict 100% scale */}
       <div
-        className={`relative w-full h-full transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] scale-100 ${
+        className={`attunement-current ${isEnhancing ? "attunement-incoming" : ""} relative w-full h-full transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] scale-100 ${
           isAttunable && isAttuned
             ? "drop-shadow-[0_0_25px_rgba(245,158,11,0.5)]"
             : "drop-shadow-2xl"
@@ -513,11 +494,6 @@ export function Card({ card, onResetDeck }) {
             `}
           </style>
 
-          <div
-            className={`absolute inset-0 bg-gradient-to-t from-amber-200 via-white to-amber-100 mix-blend-overlay rounded-2xl pointer-events-none transition-all duration-500 ease-out z-50 ${
-              isEnhancing ? "opacity-100 scale-105" : "opacity-0 scale-100"
-            }`}
-          />
 
           {isAttunable && isAttuned && (
             <div className="absolute top-[25px] left-[20px] z-30">
@@ -527,7 +503,7 @@ export function Card({ card, onResetDeck }) {
                   handleFlip();
                 }}
                 title={isFlipped ? "View Attuned Stats" : "View Base Stats"}
-                className="relative p-1.5 rounded-full cursor-pointer flex items-center justify-center animate-hieroglyph group transition-all duration-300 ease-out hover:text-amber-500 hover:drop-shadow-[0_0_12px_rgba(245,158,11,0.6)] hover:scale-110 text-amber-950/40"
+                className="relative p-1.5 rounded-full cursor-pointer flex items-center justify-center group transition-all duration-300 ease-out hover:text-amber-500 hover:drop-shadow-[0_0_12px_rgba(245,158,11,0.6)] hover:scale-110 text-amber-950/40"
               >
                 <div className="absolute inset-0 rounded-full border border-amber-400/0 group-hover:border-amber-400/60 group-hover:scale-[1.5] group-hover:opacity-0 transition-all duration-500 ease-out pointer-events-none" />
                 <RotateCcw
@@ -539,24 +515,6 @@ export function Card({ card, onResetDeck }) {
             </div>
           )}
 
-          {isAttunable && isAttuned && (
-            <div className="absolute top-[25px] right-[20px] z-30">
-              <button
-                onClick={handleToggleAttune}
-                title="Unattune Item"
-                className={`relative p-1.5 rounded-full cursor-pointer flex items-center justify-center group ${
-                  isUnlinking
-                    ? "animate-unlink-burn pointer-events-none"
-                    : "animate-hieroglyph transition-all duration-300 ease-out hover:text-amber-500 hover:drop-shadow-[0_0_12px_rgba(245,158,11,0.6)] hover:scale-110"
-                }`}
-              >
-                {!isUnlinking && (
-                  <div className="absolute inset-0 rounded-full border border-amber-400/0 group-hover:border-amber-400/60 group-hover:scale-[1.5] group-hover:opacity-0 transition-all duration-500 ease-out pointer-events-none" />
-                )}
-                <Unlink className="w-4 h-4 relative z-10 transition-colors duration-300" />
-              </button>
-            </div>
-          )}
 
           <div
             className={`absolute top-[25px] inset-x-0 mx-auto w-[220px] h-[38px] flex items-center justify-center text-center px-2 ${getFadeClass(
@@ -570,7 +528,9 @@ export function Card({ card, onResetDeck }) {
 
           <div className="absolute top-[50px] inset-x-0 mx-auto w-full h-[175px] flex flex-col items-center justify-start pt-1 transition-all duration-500">
             {artworkSrc ? (
-              <div
+              <button
+                type="button"
+                aria-label={`Inspect artwork for ${name}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   setExpandedImage(artworkSrc);
@@ -594,7 +554,7 @@ export function Card({ card, onResetDeck }) {
                   alt={name}
                   className="max-w-full max-h-full object-contain drop-shadow-md relative z-10 pointer-events-none"
                 />
-              </div>
+              </button>
             ) : (
               <div
                 onClick={
@@ -734,64 +694,12 @@ export function Card({ card, onResetDeck }) {
             </div>
           )}
 
-          {isAttunable && (!isAttuned || isBurningButton) && (
-            <div className="absolute bottom-[30px] right-[14px] z-20 flex items-center justify-center">
-              {isBurningButton && (
-                <svg width="0" height="0" className="absolute">
-                  <filter
-                    id="button-noise"
-                    x="-20%"
-                    y="-20%"
-                    width="140%"
-                    height="140%"
-                  >
-                    <feTurbulence
-                      type="fractalNoise"
-                      baseFrequency="0.1"
-                      numOctaves="3"
-                      result="noise"
-                    />
-                    <feDisplacementMap
-                      in="SourceGraphic"
-                      in2="noise"
-                      scale="10"
-                      xChannelSelector="R"
-                      yChannelSelector="G"
-                    />
-                  </filter>
-                </svg>
-              )}
-              {isBurningButton && (
-                <div className="absolute inset-0 z-30 pointer-events-none flex items-center justify-center">
-                  <div
-                    className="absolute w-full h-full animate-button-consume rounded bg-[#e8d5b7]"
-                    style={{
-                      filter: "url(#button-noise)",
-                      border: "2px solid #fef08a",
-                      boxShadow:
-                        "inset 0 0 10px 4px rgba(234, 88, 12, 0.8), 0 0 15px 5px rgba(245, 158, 11, 0.6)",
-                    }}
-                  >
-                    <div className="absolute inset-0 opacity-40 mix-blend-multiply bg-slate-900" />
-                  </div>
-                  <div className="absolute animate-button-consume w-full h-full flex items-center justify-center mix-blend-color-dodge opacity-90">
-                    <div className="absolute -top-2 -left-2 w-2 h-2 bg-amber-200 rounded-full blur-[1px] animate-[ping_0.3s_ease-out_infinite]" />
-                    <div className="absolute -bottom-2 -right-2 w-3 h-3 bg-orange-500 rounded-full blur-[2px] animate-[ping_0.5s_ease-out_infinite]" />
-                  </div>
-                </div>
-              )}
-              <button
-                onClick={handleToggleAttune}
-                className={`group relative overflow-hidden px-3 py-1.5 rounded border-[1px] border-[rgb(170,120,38)] bg-[#e8d5b7] hover:bg-[rgb(170,120,38)] hover:border-[rgb(170,120,38)] font-bold text-[8px] tracking-wider uppercase shadow-sm transition-all duration-500 transform origin-center cursor-pointer ${
-                  isBurningButton
-                    ? "opacity-0 scale-0"
-                    : "opacity-100 scale-100 hover:shadow-[0_0_15px_rgba(170,120,38,0.7)] active:scale-95"
-                }`}
-              >
-                <div className="absolute top-0 left-[-100%] w-full h-full bg-gradient-to-r from-transparent via-amber-100/80 to-transparent skew-x-[-25deg] group-hover:translate-x-[250%] transition-transform duration-700 ease-in-out pointer-events-none" />
-                <span className="relative z-10 transition-colors duration-300 text-amber-950 group-hover:text-[#e8d5b7]">
-                  Attune
-                </span>
+          {isAttunable && (
+            <div className="absolute bottom-[30px] right-[14px] z-20">
+              <button data-silent disabled={isEnhancing || Boolean(flipAnim)} onClick={handleToggleAttune}
+                title={isAttuned ? "Unattune Item" : "Attune Item"}
+                className="attune-control px-3 py-1.5 rounded border border-[#AA7826] bg-[#e8d5b7] text-amber-950 font-bold text-[9px] uppercase tracking-wide cursor-pointer disabled:cursor-wait">
+                {isAttuned ? "Unattune" : "Attune"}
               </button>
             </div>
           )}
@@ -828,6 +736,9 @@ export function Card({ card, onResetDeck }) {
           )}
         </div>
       </div>
+      {!snapshot && outgoingCard && <div className="attunement-outgoing" inert aria-hidden="true"><Card card={outgoingCard.card} snapshot initialFlipped={outgoingCard.flipped} /></div>}
+      {!snapshot && isEnhancing && <div className="attunement-aura" aria-hidden="true" />}
+      {expandedImage && <ArtworkViewer src={expandedImage} card={card} onClose={closeArtwork} />}
     </div>
   );
 }

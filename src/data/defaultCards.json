@@ -44,7 +44,8 @@
         "title": "Burning Wound",
         "description": "after each attack, the target must make a Constitution check against your spell save DC. On a fail, the target will receive 1 fire damage each round until the target ends the Constitution check on a success."
       }
-    ]
+    ],
+    "rarity": "epic"
   },
   {
     "id": "wand_001",
@@ -106,7 +107,8 @@
         "title": "Rejuvenation",
         "description": "If the wielder dies, once per long rest, the phoenix feather will immediately bring the wielder back to life with 5 HP. Only a wish can prevent this trait from functioning."
       }
-    ]
+    ],
+    "rarity": "legendary"
   },
   {
     "id": "protection_001",
@@ -137,7 +139,8 @@
         "title": "Consume",
         "description": "You regain 1d4 hit points and ignore the damage that less than 1d4 when you use this talisman as an action."
       }
-    ]
+    ],
+    "rarity": "common"
   },
   {
     "id": "protection_002",
@@ -168,7 +171,8 @@
         "title": "Consume",
         "description": "You regain 1d4+2 hit points and ignore the damage that less than 1d4 when you use this talisman as an action."
       }
-    ]
+    ],
+    "rarity": "uncommon"
   },
   {
     "id": "protection_003",
@@ -199,7 +203,8 @@
         "title": "Consume",
         "description": "You regain 2d4 hit points and ignore the damage that less than 1d4 when you use this talisman as an action."
       }
-    ]
+    ],
+    "rarity": "rare"
   },
   {
     "id": "protection_005",
@@ -230,7 +235,8 @@
         "title": "Consume",
         "description": "You regain 2d4+1 hit points and ignore the damage that less than 1d8+1 when you use this talisman as an action."
       }
-    ]
+    ],
+    "rarity": "epic"
   },
   {
     "id": "kunai_01",
@@ -264,7 +270,8 @@
         "title": "Thrown",
         "description": "1d4 piercing damage to a target within 60 ft."
       }
-    ]
+    ],
+    "rarity": "common"
   },
   {
     "id": "kunai_02",
@@ -298,7 +305,8 @@
         "title": "Glacial Shard",
         "description": "Deals 1d4 piercing + 1 cold damage thrown up to 60 ft. On hit, freezing condensation reduces the target's movement speed by 10 ft until the end of their next turn."
       }
-    ]
+    ],
+    "rarity": "uncommon"
   },
   {
     "id": "kunai_03",
@@ -332,7 +340,8 @@
         "title": "Volcanic Fracture",
         "description": "Deals 1d4 piercing + 1d4 fire damage thrown up to 60 ft. On hit, volcanic glass shards lodge in the wound, dealing 1 fire damage at the start of the target's next turn."
       }
-    ]
+    ],
+    "rarity": "rare"
   },
   {
     "id": "kunai_04",
@@ -366,7 +375,8 @@
         "title": "Caustic Dart",
         "description": "Deals 1d4 piercing + 1d4 acid damage thrown up to 60 ft as the copper carbonate reacts upon impact."
       }
-    ]
+    ],
+    "rarity": "uncommon"
   },
   {
     "id": "kunai_05",
@@ -400,6 +410,7 @@
         "title": "Piezo Resonance",
         "description": "Deals 1d6 piercing + 1 lightning damage thrown up to 60 ft, discharging the quartz's stored kinetic shockwave upon impact."
       }
-    ]
+    ],
+    "rarity": "rare"
   }
 ]

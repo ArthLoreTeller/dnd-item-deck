@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import {
   DndContext,
   useDraggable,
@@ -8,8 +9,15 @@ import {
   MouseSensor,
   TouchSensor,
 } from "@dnd-kit/core";
-import { Search } from "lucide-react";
+import { useTheme } from "./theme/useTheme";
+import { THEMES } from "./theme/themes";
+import { useDeckMotion } from "./motion/useDeckMotion";
+import { RarityBadge } from "./components/RarityBadge";
+import { RARITIES, normalizeCard } from "./data/rarity";
+import { playSound, useSoundSettings } from "./audio/sound";
+import { Search, Volume2, VolumeX } from "lucide-react";
 import { useCardStore } from "./store/useCardStore";
+import { DiceTray } from "./components/DiceTray";
 import { Card } from "./components/Card";
 import { ItemSearchModal } from "./components/ItemSearchModal";
 import { CustomCardModal } from "./components/CustomCardModal";
@@ -47,7 +55,10 @@ function DraggableInventoryCard({
       ref={setNodeRef}
       style={style}
       {...listeners}
-      {...attributes}
+      {...(disabled ? {} : attributes)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); onSelect(item); } }}
       onClick={() => onSelect(item)}
       className={`p-3 rounded-lg border bg-slate-800 text-left transition-all select-none group flex flex-col gap-1 ${
         disabled ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"
@@ -66,16 +77,19 @@ function DraggableInventoryCard({
         </div>
 
         <button
+          data-silent
+          aria-label={`Discard ${item.name}`}
           onClick={(e) => {
             e.stopPropagation();
             onDiscard(item.id);
           }}
-          className="text-slate-500 hover:text-red-400 p-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity cursor-pointer"
+          className="close-control text-slate-500 hover:text-red-400 p-1 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 focus-visible:opacity-100 transition-opacity cursor-pointer"
         >
           ✕
         </button>
       </div>
 
+      <RarityBadge card={item} />
       {(isAttunable || item.type === "progressive") && (
         <div className="text-xs text-slate-400 flex justify-between items-center">
           <span>
@@ -127,7 +141,20 @@ function TrashZone({ activeCardItem }) {
 }
 
 export default function App() {
-  const [isDrawn, setIsDrawn] = useState(false);
+  const { motion, reveal, select, returnToDeck, discard: discardMotion } = useDeckMotion();
+  const isDrawn = motion.face === "front";
+  const isRevealing = motion.phase !== "idle";
+  const [diceOpen, setDiceOpen] = useState(false);
+  const closeDice = useCallback(() => setDiceOpen(false), []);
+  const theme = useTheme((state) => state.theme);
+  const setTheme = useTheme((state) => state.setTheme);
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    const palette = THEMES[theme];
+    for (const [key, value] of Object.entries(palette)) { if (key !== "label") document.documentElement.style.setProperty(`--env-${key}`, value); }
+  }, [theme]);
+  const muted = useSoundSettings((state) => state.muted);
+  const toggleMuted = useSoundSettings((state) => state.toggleMuted);
   const [sortBy, setSortBy] = useState("recent");
   const [activeDragId, setActiveDragId] = useState(null);
 
@@ -143,8 +170,8 @@ export default function App() {
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
 
   const activeCard = useCardStore((state) => state.activeCard);
-  const inventory = useCardStore((state) => state.inventory) || [];
-  const deck = useCardStore((state) => state.deck) || [];
+  const inventory = useCardStore((state) => state.inventory);
+  const deck = useCardStore((state) => state.deck);
   const drawRandomCard = useCardStore((state) => state.drawRandomCard);
   const discardCard = useCardStore((state) => state.discardCard);
   const setActiveCard = useCardStore((state) => state.setActiveCard);
@@ -164,10 +191,8 @@ export default function App() {
     cardBackImg.src = "/assets/card-back.png";
 
     deck.forEach((card) => {
-      if (card?.image) {
-        const img = new Image();
-        img.src = card.image;
-      }
+      const artwork = [...Object.values(card.images || {}), card.itemImage].filter(Boolean);
+      artwork.forEach((src) => { const img = new Image(); img.src = src; });
     });
   }, [deck]);
 
@@ -224,6 +249,12 @@ export default function App() {
     }
   }, [inventory, sortBy]);
 
+  const handleDiscardInventoryItem = (id) => {
+    discardMotion(id);
+    playSound("discard");
+    discardCard(id);
+  };
+
   const handleDragStart = (event) => {
     setActiveDragId(event.active.id);
   };
@@ -231,7 +262,7 @@ export default function App() {
   const handleDragEnd = (event) => {
     const { active, over } = event;
     if (over && over.id === "trash-zone") {
-      discardCard(active.id);
+      handleDiscardInventoryItem(active.id);
     }
     setActiveDragId(null);
   };
@@ -240,22 +271,41 @@ export default function App() {
     setActiveDragId(null);
   };
 
+  const displayedCard = motion.card && activeCard?.id === motion.card.id ? activeCard : motion.card;
+
+  useEffect(() => {
+    if (!activeCard && motion.face === "front") returnToDeck();
+  }, [activeCard, motion.face, returnToDeck]);
+
   const handleDrawCard = () => {
-    if (deck.length === 0) return;
+    if (deck.length === 0 || isRevealing) return;
+    playSound("draw");
     drawRandomCard();
-    setIsDrawn(true);
+    reveal(useCardStore.getState().activeCard);
+  };
+
+  const handleResetDeck = () => {
+    playSound("reset");
+    returnToDeck();
+    resetDeck();
+    setActiveDragId(null);
+  };
+
+  const handleContinue = () => {
+    playSound("continue");
+    returnToDeck();
   };
 
   const handleReturnToDeck = () => {
-    if (activeCard) {
-      discardCard(activeCard.id);
-    }
-    setIsDrawn(false);
+    playSound("discard");
+    returnToDeck();
+    if (displayedCard) discardCard(displayedCard.id);
   };
 
   const handleSelectInventoryItem = (card) => {
+    if (isRevealing) return;
     setActiveCard(card);
-    setIsDrawn(true);
+    select(card);
   };
 
   return (
@@ -265,29 +315,37 @@ export default function App() {
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="min-h-screen bg-slate-900 text-white flex flex-col items-center p-4 sm:p-6 gap-6 relative">
-        {toastMessage && (
-          <div className="fixed top-16 z-50 bg-amber-950 border-2 border-amber-500 text-amber-200 px-5 py-2.5 rounded-xl shadow-2xl animate-[bounce_0.75s_1_forwards] text-sm font-semibold flex items-center gap-2">
+      <div onClickCapture={(event) => {
+        if (event.target.closest("button, select, [role=button]") && !event.target.closest("[data-silent]")) playSound("click");
+      }} className="reliquary min-h-screen bg-slate-900 text-white flex flex-col items-center p-4 sm:p-6 gap-6 relative">
+        {diceOpen && <DiceTray onClose={closeDice} />}
+        {toastMessage && createPortal(
+          <div role="status" className="notification-toast toast-enter">
             <span>{toastMessage}</span>
             <button
               onClick={clearToast}
-              className="text-amber-400 hover:text-white font-bold ml-2 cursor-pointer"
+              className="close-control font-bold ml-2 cursor-pointer"
             >
               ✕
             </button>
-          </div>
+          </div>, document.body
         )}
 
-        <header className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4 mb-2">
-          <div
+        <header className="w-full max-w-5xl mx-auto flex flex-col items-center gap-4 mb-2">
+          <div className="reliquary-heading">
+            <div><p className="eyebrow">YOUR ADVENTURE, ENSHRINED · v1.1</p><h1>The Reliquary</h1><p className="heading-subtitle">Draw a relic. Discover its magic. Make it yours.</p></div>
+            <div className="header-tools"><button className="dice-launch" onClick={() => setDiceOpen(true)} aria-label="Roll a D20" aria-haspopup="dialog"><svg width="20" height="22" viewBox="0 0 24 26" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M12 1 23 7v12l-11 6L1 19V7Z M12 1 6 9l-5-2 M12 1l6 8 5-2 M6 9l-5 10 11 6 11-6-5-10 M6 9h12l-6 11Z M1 19l11 1 11-1 M12 20v5"/><text x="12" y="15" fill="currentColor" stroke="none" textAnchor="middle" fontSize="6" fontWeight="bold">20</text></svg></button><button data-silent aria-label={muted ? "Enable sound" : "Mute sound"} aria-pressed={muted} onClick={toggleMuted} className="sound-toggle">{muted ? <VolumeX size={19} /> : <Volume2 size={19} />}</button></div>
+          </div>
+          <div className="theme-picker"><label htmlFor="environment-theme">Atmosphere</label><select id="environment-theme" value={theme} onChange={(event) => setTheme(event.target.value)}>{Object.entries(THEMES).map(([key, palette]) => <option key={key} value={key}>{palette.label}</option>)}</select><span className="theme-swatches">{Object.entries(THEMES).map(([key, palette]) => <button type="button" className="theme-swatch" key={key} onClick={() => setTheme(key)} aria-label={`Switch to ${palette.label} theme`} aria-pressed={key === theme} title={palette.label} style={{ background: key === "love" ? "#FFB7C5" : palette.background, opacity: key === theme ? 1 : .4, outline: key === theme ? `2px solid var(--env-text)` : "none", outlineOffset: "3px" }} />)}</span></div>
+          <button type="button"
             onClick={() => setIsSearchModalOpen(true)}
             className="w-full bg-slate-800/80 hover:bg-slate-700/90 border-2 border-amber-500/50 hover:border-amber-400 text-slate-300 px-6 py-3.5 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.15)] flex items-center gap-3 cursor-pointer transition-all"
           >
             <Search className="w-5 h-5 text-amber-400 shrink-0" />
             <span className="flex-1 text-left text-sm font-medium placeholder:text-slate-500">
-              Search for an item, spell, or card...
+              Find a relic in the deck…
             </span>
-          </div>
+          </button>
 
           <div className="w-full">
             <div className="hidden md:flex flex-wrap items-center justify-center gap-3 text-xs bg-slate-800/80 border border-slate-700 px-4 py-2 rounded-full shadow-inner mx-auto w-fit">
@@ -325,7 +383,7 @@ export default function App() {
               </button>
               <span className="text-slate-600">|</span>
               <button
-                onClick={resetDeck}
+                data-silent onClick={handleResetDeck}
                 className="text-amber-500/80 hover:text-amber-300 underline cursor-pointer text-[11px]"
               >
                 Reset Deck
@@ -375,7 +433,7 @@ export default function App() {
 
                 <div className="flex-1 py-2 px-2 flex items-center justify-center">
                   <button
-                    onClick={resetDeck}
+                    data-silent onClick={handleResetDeck}
                     className="text-amber-500/80 hover:text-amber-300 underline cursor-pointer text-xs flex items-center gap-1.5 transition-colors"
                   >
                     <span className="text-sm leading-none"></span> ↺ Reset Deck
@@ -386,16 +444,18 @@ export default function App() {
           </div>
         </header>
 
-        <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-12 gap-8 items-start mt-2">
-          <div className="md:col-span-7 flex flex-col items-center gap-4">
-            <div className="relative w-80 h-[500px] perspective-deck select-none">
+        <div className="relic-layout w-full max-w-5xl grid grid-cols-1 md:grid-cols-12 gap-8 items-start mt-2">
+          <div className="relic-stage md:col-span-7 flex flex-col items-center gap-4">
+            <div className="card-display"><div className="card-scale">
+            <div className={`relative w-80 h-[500px] perspective-deck select-none ${motion.phase === "lifting" ? "deck-lift" : ""}`} style={{ "--rarity-color": displayedCard ? RARITIES[normalizeCard(displayedCard).rarity].color : "#ffd078" }}>
+              {motion.phase === "revealing" && motion.celebrate && <div className="rarity-draw-effect" aria-hidden="true" key={displayedCard?.id}><span>✦</span><span>✧</span><span>✦</span></div>}
               <div
-                className={`w-full h-full transition-transform duration-300 ease-out card-preserve-3d relative ${
+                className={`w-full h-full deck-turn card-preserve-3d relative ${
                   isDrawn ? "[transform:rotateY(180deg)]" : ""
                 }`}
               >
-                <div className="absolute inset-0 w-full h-full card-face-front">
-                  <div
+                <div inert={isDrawn || isRevealing} className="absolute inset-0 w-full h-full card-face-front">
+                  <button type="button" aria-label="Draw a random relic" disabled={deck.length === 0 || isRevealing} data-silent
                     onClick={handleDrawCard}
                     className={`relative w-full h-full cursor-pointer group transition-transform duration-200 ${
                       deck.length === 0
@@ -415,15 +475,15 @@ export default function App() {
                         </span>
                       )}
                     </div>
-                  </div>
+                  </button>
                 </div>
 
-                <div className="absolute inset-0 w-full h-full card-face-back">
+                <div inert={!isDrawn || isRevealing} className="absolute inset-0 w-full h-full card-face-back">
                   <div className="w-full h-full">
-                    {activeCard ? (
+                    {displayedCard ? (
                       <Card
-                        card={activeCard}
-                        onResetDeck={handleReturnToDeck}
+                        key={displayedCard.id}
+                        card={displayedCard}
                       />
                     ) : (
                       <div className="w-full h-full border border-slate-700 bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 p-4 text-center">
@@ -435,30 +495,28 @@ export default function App() {
               </div>
             </div>
 
-            <div
-              className={`mt-4 w-full max-w-[280px] transition-all duration-300 ${isDrawn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none absolute"}`}
-            >
-              {isDrawn && (
-                <div className="bg-slate-800/90 border border-slate-700 p-2 rounded-xl shadow-[0_10px_20px_rgba(0,0,0,0.5)] flex items-center justify-between gap-2 backdrop-blur-sm">
-                  <button
-                    onClick={handleReturnToDeck}
-                    className="flex-1 px-3 py-2.5 bg-red-950/30 hover:bg-red-900/50 text-red-400 border border-red-900/50 hover:border-red-500/60 rounded-lg text-xs font-bold tracking-wide uppercase transition-all cursor-pointer shadow-inner active:scale-95 flex justify-center gap-1.5"
-                  >
-                    Discard
-                  </button>
-
-                  <button
-                    onClick={() => setIsDrawn(false)}
-                    className="flex-1 px-3 py-2.5 bg-slate-900 hover:bg-slate-950 text-amber-400 border border-amber-500/30 hover:border-amber-400/60 rounded-lg text-xs font-bold tracking-wide uppercase transition-all cursor-pointer shadow-inner active:scale-95 flex justify-center gap-1.5"
-                  >
-                    CONTINUE
-                  </button>
+            </div></div>
+            <div className="deck-footer" inert={isRevealing}>
+              {!isDrawn ? (
+                <div className="draw-prompt controls-enter">
+                  <button data-silent className="primary-magic-button" disabled={!deck.length || isRevealing} onClick={handleDrawCard}>✦ {deck.length ? "Draw a relic" : "Deck empty"}</button>
+                  <p>Rarity-weighted draws · {deck.length} relics remain</p>
+                  <details className="draw-odds"><summary>How fate chooses</summary><p>Each remaining card carries a weight: Common 60 · Uncommon 25 · Rare 10 · Epic 4 · Legendary 1. Odds change as cards leave the deck. Search lets you choose directly.</p></details>
+                </div>
+              ) : (
+                <div className="controls-enter w-full">
+                  <p className="inspection-tip text-center">Tap the artwork to explore its enchantment.</p>
+                  <div className="bg-slate-800/90 border border-slate-700 p-2 rounded-xl shadow-lg flex items-center justify-between gap-2 mt-3">
+                    <button data-silent disabled={isRevealing} onClick={handleReturnToDeck} className="discard-action flex-1 px-3 py-2.5 bg-red-950/30 hover:bg-red-900/50 text-red-400 border border-red-900/50 rounded-lg text-xs font-bold uppercase transition-colors cursor-pointer">Discard</button>
+                    <button data-silent disabled={isRevealing} onClick={handleContinue} className="continue-action flex-1 px-3 py-2.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-200 border border-amber-500/40 rounded-lg text-xs font-bold uppercase transition-colors cursor-pointer">Continue</button>
+                  </div>
+                  <p className="inspection-tip text-center">Continue keeps this item in your inventory.</p>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="md:col-span-5 flex flex-col gap-4 bg-slate-800/40 border border-slate-800 p-5 rounded-2xl">
+          <div className="inventory-panel md:col-span-5 flex flex-col gap-4 bg-slate-800/40 border border-slate-800 p-5 rounded-2xl">
             <div className="flex justify-between items-center border-b border-slate-700/60 pb-3 gap-2">
               <h2 className="text-lg font-bold text-amber-200 font-serif">
                 Inventory ({inventory.length})
@@ -493,7 +551,7 @@ export default function App() {
                     item={item}
                     isActive={activeCard?.id === item.id}
                     onSelect={handleSelectInventoryItem}
-                    onDiscard={discardCard}
+                    onDiscard={handleDiscardInventoryItem}
                     disabled={isMobile}
                   />
                 ))
@@ -511,13 +569,14 @@ export default function App() {
           onClose={() => setIsSearchModalOpen(false)}
           onCardAdded={(card) => {
             setActiveCard(card);
-            setIsDrawn(true);
+            select(card);
           }}
         />
 
         <CustomCardModal
           isOpen={isCustomModalOpen}
           onClose={() => setIsCustomModalOpen(false)}
+          onCardAdded={(card) => select(card)}
         />
       </div>
     </DndContext>

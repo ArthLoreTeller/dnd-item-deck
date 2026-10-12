@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
+import { useDialogFocus } from "../hooks/useDialogFocus";
+import React, { useState, useRef } from 'react';
+import { RARITIES } from '../data/rarity';
 import { useCardStore } from '../store/useCardStore';
 
-export function CustomCardModal({ isOpen, onClose }) {
+export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
+  const overlayRef = useRef(null);
+  useDialogFocus(overlayRef, isOpen, onClose);
   const addToInventory = useCardStore((state) => state.addToInventory);
   const [activeTab, setActiveTab] = useState('general');
 
   const [formData, setFormData] = useState({
     name: '',
+    rarity: 'common',
     icon: '💠', 
     type: 'standard',
     itemImage: '',
@@ -80,6 +85,7 @@ export function CustomCardModal({ isOpen, onClose }) {
       name: formData.name.trim(),
       icon: formData.icon.trim() || '💠',
       type: formData.type,
+      rarity: formData.rarity,
       itemImage: formData.itemImage.trim() || '',
       flavorText: formData.flavorText.trim(),
       description: formData.description.trim() || formData.flavorText.trim(),
@@ -97,24 +103,27 @@ export function CustomCardModal({ isOpen, onClose }) {
     };
 
     addToInventory(newCard);
+    onCardAdded?.(newCard);
     onClose();
   };
 
   return (
     <div
+      ref={overlayRef}
       className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div
+        role="dialog" aria-modal="true" aria-labelledby="custom-card-title"
         className="bg-slate-900 border border-slate-700 w-full max-w-xl rounded-2xl shadow-2xl p-6 flex flex-col gap-4 text-white animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center border-b border-slate-800 pb-3">
           <div>
-            <h3 className="font-serif font-bold text-amber-200 text-lg">Create Custom Item Card</h3>
+            <h3 id="custom-card-title" className="font-serif font-bold text-amber-200 text-lg">Create Custom Item Card</h3>
             <p className="text-[11px] text-slate-400">Configure item statistics, rules, and ability slots</p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white text-sm font-semibold cursor-pointer">✕</button>
+          <button onClick={onClose} className="close-control text-slate-400 hover:text-white text-sm font-semibold cursor-pointer">✕</button>
         </div>
 
         <div className="flex border-b border-slate-800 gap-2 text-xs">
@@ -149,6 +158,10 @@ export function CustomCardModal({ isOpen, onClose }) {
                 </div>
 
                 <div>
+                  <label className="text-slate-300 font-semibold mb-1 block" htmlFor="custom-rarity">Rarity</label>
+                  <select id="custom-rarity" value={formData.rarity} onChange={(e) => handleInputChange("rarity", e.target.value)} className="w-full bg-slate-950 border border-slate-600 rounded-lg px-3 py-2 text-amber-100 mb-3">
+                    {Object.entries(RARITIES).map(([key, rarity]) => <option key={key} value={key}>{rarity.label}</option>)}
+                  </select>
                   <label className="text-slate-300 font-semibold mb-1 block">Item Icon (Emoji)</label>
                   <input
                     type="text"
@@ -269,7 +282,7 @@ export function CustomCardModal({ isOpen, onClose }) {
                               className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 text-xs no-scrollbar"
                             />
                           </div>
-                          <button type="button" onClick={() => removeAbilityRow('level1Abilities', idx)} className="text-red-400 font-bold px-1.5 py-1">✕</button>
+                          <button type="button" onClick={() => removeAbilityRow('level1Abilities', idx)} className="close-control text-red-400 font-bold px-1.5 py-1">✕</button>
                         </div>
                       ))}
                     </div>
@@ -297,7 +310,7 @@ export function CustomCardModal({ isOpen, onClose }) {
                               className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 text-xs no-scrollbar"
                             />
                           </div>
-                          <button type="button" onClick={() => removeAbilityRow('level2Abilities', idx)} className="text-red-400 font-bold px-1.5 py-1">✕</button>
+                          <button type="button" onClick={() => removeAbilityRow('level2Abilities', idx)} className="close-control text-red-400 font-bold px-1.5 py-1">✕</button>
                         </div>
                       ))}
                     </div>
@@ -325,7 +338,7 @@ export function CustomCardModal({ isOpen, onClose }) {
                               className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 text-xs no-scrollbar"
                             />
                           </div>
-                          <button type="button" onClick={() => removeAbilityRow('level3Abilities', idx)} className="text-red-400 font-bold px-1.5 py-1">✕</button>
+                          <button type="button" onClick={() => removeAbilityRow('level3Abilities', idx)} className="close-control text-red-400 font-bold px-1.5 py-1">✕</button>
                         </div>
                       ))}
                     </div>
@@ -354,7 +367,7 @@ export function CustomCardModal({ isOpen, onClose }) {
                             className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 text-xs no-scrollbar"
                           />
                         </div>
-                        <button type="button" onClick={() => removeAbilityRow('abilities', idx)} className="text-red-400 font-bold px-1.5 py-1">✕</button>
+                        <button type="button" onClick={() => removeAbilityRow('abilities', idx)} className="close-control text-red-400 font-bold px-1.5 py-1">✕</button>
                       </div>
                     ))}
                   </div>

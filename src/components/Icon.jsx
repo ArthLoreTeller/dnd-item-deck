@@ -11,14 +11,14 @@ export const getLucideIcon = (item) => {
     if (itemName.includes("obsidian")) colorClass = "text-purple-800";
     if (itemName.includes("malachite")) colorClass = "text-emerald-500";
     if (itemName.includes("ferruginous")) colorClass = "text-orange-500";
-    return <Pyramid className={`w-4 h-4 ${colorClass}`} />;
+    return <Pyramid data-item-icon={itemName.includes("aquamarine") ? "aquamarine" : itemName.includes("obsidian") ? "obsidian" : itemName.includes("malachite") ? "malachite" : itemName.includes("ferruginous") ? "ferruginous" : "weapon"} className={`w-4 h-4 ${colorClass}`} />;
   }
 
   switch (iconString) {
-    case "sword": return <Sword className="w-4 h-4 text-slate-300" />;
-    case "wand": return <Wand2 className="w-4 h-4 text-blue-400" />;
-    case "buff": return <SquareText className="w-4 h-4 text-yellow-400" />;
-    case "shield": return <Shield className="w-4 h-4 text-yellow-400" />;
-    default: return <Star className="w-4 h-4 text-slate-400" />;
+    case "sword": return <Sword data-item-icon="weapon" className="w-4 h-4 text-slate-300" />;
+    case "wand": return <Wand2 data-item-icon="wand" className="w-4 h-4 text-blue-400" />;
+    case "buff": return <SquareText data-item-icon="talisman" className="w-4 h-4 text-yellow-400" />;
+    case "shield": return <Shield data-item-icon="talisman" className="w-4 h-4 text-yellow-400" />;
+    default: return <Star data-item-icon="generic" className="w-4 h-4 text-slate-400" />;
   }
 };

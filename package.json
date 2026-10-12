@@ -1,13 +1,14 @@
 {
   "name": "dnd-card-app",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --test tests/*.test.js"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -25,6 +26,7 @@
     "oxlint": "^1.75.0",
     "postcss": "^8.5.26",
     "tailwindcss": "^3.4.19",
-    "vite": "^8.2.0"
+    "vite": "^8.2.0",
+    "rolldown": "^1.2.3"
   }
 }

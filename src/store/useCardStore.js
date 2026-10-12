@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import defaultCards from '../data/defaultCards.json';
+import rawDefaultCards from '../data/defaultCards.json' with { type: 'json' };
+import { normalizeCard, chooseWeightedCard } from '../data/rarity.js';
+const defaultCards = rawDefaultCards.map(normalizeCard);
 
 export const useCardStore = create(
   persist(
@@ -19,6 +21,7 @@ export const useCardStore = create(
 
       // Add a new card to the inventory, ensuring no duplicates
       addToInventory: (newCard) => {
+        newCard = normalizeCard(newCard);
         const { inventory } = get();
         if (inventory.some((c) => c.id === newCard.id)) {
           set({ toastMessage: `"${newCard.name}" is already in inventory!` });
@@ -37,10 +40,9 @@ export const useCardStore = create(
         const { deck, inventory } = get();
         if (deck.length === 0) return;
 
-        const randomIndex = Math.floor(Math.random() * deck.length);
-        const drawnCard = deck[randomIndex];
+        const drawnCard = chooseWeightedCard(deck);
         //Create a new deck array without the drawn card
-        const updatedDeck = deck.filter((_, i) => i !== randomIndex);
+        const updatedDeck = deck.filter((card) => card.id !== drawnCard.id);
 
         set({
           deck: updatedDeck,
@@ -146,6 +148,13 @@ export const useCardStore = create(
     {
       name: 'dnd-item-deck-storage', // LocalStorage Key
       storage: createJSONStorage(() => localStorage),
+      merge: (persisted, current) => ({
+        ...current,
+        ...persisted,
+        deck: (persisted?.deck || current.deck).map(normalizeCard),
+        inventory: (persisted?.inventory || []).map(normalizeCard),
+        activeCard: persisted?.activeCard ? normalizeCard(persisted.activeCard) : null,
+      }),
       partialize: (state) => ({
         deck: state.deck,
         inventory: state.inventory,
