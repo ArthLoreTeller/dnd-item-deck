@@ -1,5 +1,6 @@
 import { normalizeCard } from './rarity.js';
 import defaults from './defaultCards.json' with { type: 'json' };
+import { migratePlayerData, validateEquipment, validateProfile } from './player.js';
 
 export const MAX_BACKUP_BYTES = 5 * 1024 * 1024;
 const builtinIds = new Set(defaults.map(card => card.id));
@@ -51,7 +52,7 @@ export function parseBackup(text) {
   if (typeof text !== 'string' || new TextEncoder().encode(text).length > MAX_BACKUP_BYTES) throw new Error('Choose a JSON backup smaller than 5 MB.');
   let data;
   try { data = JSON.parse(text); } catch { throw new Error('This file is not valid JSON. Your inventory has not changed.'); }
-  if (data?.format !== 'reliquary-backup' || data.version !== 1) throw new Error('Choose a supported Reliquary inventory backup.');
+  if (data?.format !== 'reliquary-backup' || ![1, 2].includes(data.version)) throw new Error('Choose a supported Reliquary inventory backup.');
   const result = {};
   const ids = new Set();
   for (const key of ['inventory', 'deck', 'discardedCustom']) {
@@ -64,9 +65,30 @@ export function parseBackup(text) {
       return clean;
     });
   }
+  if (data.version === 2) {
+    result.profile = validateProfile(data.profile);
+    if (!Array.isArray(data.equipment) || data.equipment.length > 5000) throw new Error('Invalid equipment list.');
+    result.equipment = data.equipment.map(validateEquipment);
+    const equipmentIds = new Set(), links = new Set(), owned = new Set(result.inventory.map(card => card.id));
+    for (const entry of result.equipment) {
+      if (equipmentIds.has(entry.id) || entry.characterId !== result.profile.id || (entry.relicCardId && (!owned.has(entry.relicCardId) || links.has(entry.relicCardId)))) throw new Error('Duplicate or misplaced equipment.');
+      equipmentIds.add(entry.id); if (entry.relicCardId) links.add(entry.relicCardId);
+    }
+    result.relicEquipmentCache = {};
+    const cache = data.relicEquipmentCache ?? {};
+    if (!cache || typeof cache !== 'object' || Array.isArray(cache) || Object.keys(cache).length > 5000) throw new Error('Invalid relic equipment recovery data.');
+    for (const [id, value] of Object.entries(cache)) {
+      const entry = validateEquipment(value);
+      if (entry.relicCardId !== id || !ids.has(id) || ['__proto__', 'prototype', 'constructor'].includes(id)) throw new Error('Invalid relic equipment recovery link.');
+      result.relicEquipmentCache[id] = entry;
+    }
+  }
   return result;
 }
 
 export function serializeBackup(state) {
-  return JSON.stringify({ format: 'reliquary-backup', version: 1, exportedAt: new Date().toISOString(), deck: state.deck, inventory: state.inventory, discardedCustom: state.discardedCustom ?? [] }, null, 2);
+  const player = migratePlayerData(state);
+  const cardIds = new Set([...state.deck, ...state.inventory, ...(state.discardedCustom ?? [])].map(card => String(card.id)));
+  const relicEquipmentCache = Object.fromEntries(Object.entries(state.relicEquipmentCache ?? {}).filter(([id]) => cardIds.has(id)));
+  return JSON.stringify({ format: 'reliquary-backup', version: 2, exportedAt: new Date().toISOString(), deck: state.deck, inventory: state.inventory, discardedCustom: state.discardedCustom ?? [], ...player, relicEquipmentCache }, null, 2);
 }

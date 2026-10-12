@@ -4,6 +4,7 @@ import rawDefaultCards from '../data/defaultCards.json' with { type: 'json' };
 import { normalizeCard, chooseWeightedCard } from '../data/rarity.js';
 import { parseBackup, serializeBackup } from '../data/backup.js';
 import { createPlayerProfile, migratePlayerData, newId, relicEquipment, validateEquipment, validateProfile } from '../data/player.js';
+import { mergeCharacterDraft } from '../data/character-import.js';
 const defaultCards = rawDefaultCards.map(normalizeCard);
 
 function safeRestore(card, inventory) {
@@ -40,6 +41,7 @@ export const useCardStore = create(
       equipment: [],
       relicEquipmentCache: {},
       lastEquipmentRemoval: null,
+      applyCharacterImport: (draft, selection) => set(state => ({ ...mergeCharacterDraft(state, draft, selection), toastMessage: 'Reviewed character import saved.' })),
       updateProfile: patch => set(state => ({ profile: validateProfile({ ...state.profile, ...patch }) })),
       addEquipment: value => {
         const entry = validateEquipment({ ...value, id: newId(), characterId: get().profile.id, relicCardId: null });
@@ -231,7 +233,20 @@ export const useCardStore = create(
           else if (!hasDeckEdits(deck[index])) deck[index] = { ...card, isAttuned: false };
         }
         const added = inventory.length - state.inventory.length;
-        set({ inventory, deck: deck.filter(card => !owned.has(card.id)), discardedCustom, lastDiscard: null, toastMessage: `Backup imported. ${added} ${added === 1 ? 'card' : 'cards'} added; your current edits were kept.` });
+        const player = {};
+        if (backup.profile) {
+          const merged = { ...state.profile };
+          for (const [key, value] of Object.entries(backup.profile)) {
+            if (['id', 'rulesVersion'].includes(key)) continue;
+            if (['abilities', 'hp', 'currency'].includes(key)) merged[key] = Object.fromEntries(Object.keys(value).map(field => [field, state.profile[key][field] ?? value[field]]));
+            else if (state.profile[key] === null || state.profile[key] === '' || (Array.isArray(state.profile[key]) && !state.profile[key].length)) merged[key] = value;
+          }
+          player.profile = validateProfile(merged);
+          player.equipment = [...state.equipment];
+          for (const entry of backup.equipment) if (!player.equipment.some(item => item.id === entry.id || (entry.relicCardId && item.relicCardId === entry.relicCardId))) player.equipment.push({ ...entry, characterId: player.profile.id });
+          player.relicEquipmentCache = { ...backup.relicEquipmentCache, ...state.relicEquipmentCache };
+        }
+        set({ ...player, inventory, deck: deck.filter(card => !owned.has(card.id)), discardedCustom, lastDiscard: null, toastMessage: `Backup imported. ${added} ${added === 1 ? 'card' : 'cards'} added; your current edits were kept.` });
         return { added };
       },
 

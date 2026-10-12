@@ -2,6 +2,26 @@
 
 Version 1.2 is a browser-based homebrew item deck and inventory companion. Draw a random relic, find a specific item, create custom cards, attune magic items, and track three-stage item progression.
 
+## Player inventory and character sheet
+
+The three-line menu now opens dedicated Deck, Inventory, and Character pages (`#/deck`, `#/inventory`, `#/character`). Old `#relic-deck` and `#relic-inventory` bookmarks still work. Inventory displays relic artwork at its current attunement/progression stage and category placeholders for ordinary gear. Search, carried/attuned filters, name/rarity/weight sorting, and quantity/weight editing are available. Select a relic to inspect the original card; the menu’s Read details opens its journal.
+
+Character tracks names, portrait URL, species, background, classes/levels, ability scores/modifiers, HP, AC, speed, size, currency, notes, and an optional capacity override. Save character commits valid edits; equipment never recalculates combat stats.
+
+Carrying capacity uses the [2024 rules](https://www.dndbeyond.com/sources/dnd/br-2024/rules-glossary#CarryingCapacity): Strength × 7.5/15/15/30/60/120 for Tiny/Small/Medium/Large/Huge/Gargantuan. Push/drag/lift is twice capacity. Stored gear is excluded. Unknown weight remains unknown, with partial totals explicitly labeled. Coins are tracked separately and excluded from load. Containers and feature-specific capacity changes require manual tracking/override; 2014 variant encumbrance is not applied.
+
+Existing relic saves migrate to carried, quantity-one equipment with unknown weight. Draw/discard/recovery/reset keep linked weight metadata. Ordinary gear has separate removal undo. Version-two JSON backups include character/equipment and dormant relic weight metadata; version-one backups remain supported. Merge fills missing character values and adds missing equipment while retaining existing edits. Backups reference artwork URLs rather than storing images.
+
+## Local PDF import
+
+Character → Import character PDF accepts exported character-sheet PDFs, processed locally with PDF.js. No character-link import or backend is required. [D&D Beyond documents its PDF export](https://dndbeyond-support.wizards.com/hc/en-us/articles/7747193980820-Character-Header). PDFs are limited to 10 MB and 30 pages; scanned or unsupported layouts return an explanation and leave manual entry available.
+
+Supported inputs are standard AcroForm fields (`CharacterName`, `PlayerName`, `ClassLevel`, `Race`/`Species`, ability abbreviations, `AC`, `Speed`, `HPCurrent`, `HPMax`, `HPTemp`, coin abbreviations, `Equipment`) and explicit labeled text such as `Character Name: Aria` and `STR: 10`. Class entries use `Wizard 3 / Fighter 2`. Multiline equipment becomes ordinary gear with quantity one and unknown unit weight for review; it does not invent magic properties. Flattened sheets without supported labels may not be interpreted reliably and are rejected.
+
+The preview allows corrections and explicit selection before an atomic save. Existing filled fields and previously imported equipment start unchecked; cancel saves nothing. Reimport identity uses the PDF character/player names and equipment names, so reimporting the same source avoids duplicates. Renaming the character/player or equipment can create new source entries; review the pack after such changes. Optional source-equipment replacement removes only that PDF character’s ordinary imported gear, retaining unrelated items and relics.
+
+Verification includes a synthetic standard AcroForm PDF through the actual PDF.js parser and browser upload/review flow. No representative user-exported D&D Beyond PDF has been supplied, so compatibility with that export’s exact layout remains unverified. Always review extracted fields.
+
 ## Run locally
 
 Use Node.js 24 and npm:

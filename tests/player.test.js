@@ -1,6 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createPlayerProfile, validateProfile, validateEquipment, migratePlayerData } from '../src/data/player.js';
+import { createPlayerProfile, validateProfile, validateEquipment, migratePlayerData, newId } from '../src/data/player.js';
+test('IDs also work on HTTP LAN pages without randomUUID', () => {
+  const original = globalThis.crypto.randomUUID;
+  try { globalThis.crypto.randomUUID = undefined; assert.notEqual(newId(), newId()); }
+  finally { globalThis.crypto.randomUUID = original; }
+});
 test('legacy migration links each owned relic once without changing cards', () => {
   const inventory = [{ id: 'wand', name: 'Edited wand', stats: { hit: '+9' } }];
   const result = migratePlayerData({ inventory });

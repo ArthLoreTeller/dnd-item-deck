@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Menu, Layers, Backpack, BookOpen, Volume2, VolumeX } from 'lucide-react';
+import { Menu, Layers, Backpack, BookOpen, Volume2, VolumeX, UserRound } from 'lucide-react';
 
-export function CollectionNavigation({ canRead, onRead, onDice, muted, onToggleSound }) {
+export function CollectionNavigation({ page, canRead, onRead, onDice, muted, onToggleSound }) {
   const [open, setOpen] = useState(false);
   const openDialog = (event, action) => {
     event.currentTarget.closest('nav').querySelector('.orbit-toggle')?.focus();
@@ -17,8 +17,7 @@ export function CollectionNavigation({ canRead, onRead, onDice, muted, onToggleS
         }
       }}>
       <div id="collection-shortcuts" className="orbit-shortcuts" inert={!open} aria-hidden={!open}>
-        <a href="#relic-deck" aria-label="Deck" title="Deck" onClick={() => setOpen(false)}><Layers size={20} aria-hidden="true" /></a>
-        <a href="#relic-inventory" aria-label="Inventory" title="Inventory" onClick={() => setOpen(false)}><Backpack size={20} aria-hidden="true" /></a>
+        {[[ 'deck', 'Deck', Layers ], [ 'inventory', 'Inventory', Backpack ], [ 'character', 'Character', UserRound ]].map(([route, label, Icon]) => <a key={route} href={`#/${route}`} aria-current={page === route ? 'page' : undefined} aria-label={label} title={label} onClick={event => { event.currentTarget.closest('nav').querySelector('.orbit-toggle')?.focus(); setOpen(false); }}><Icon size={20} aria-hidden="true" /></a>)}
         <button type="button" aria-label="Read details" title={canRead ? 'Read details' : 'Select a relic to read details'} disabled={!canRead}
           onClick={event => openDialog(event, onRead)}><BookOpen size={20} aria-hidden="true" /></button>
         <button type="button" aria-label="Roll a D20" title="Roll a D20" aria-haspopup="dialog" onClick={event => openDialog(event, onDice)}>

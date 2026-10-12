@@ -2,7 +2,10 @@ export const SIZES = ['Tiny', 'Small', 'Medium', 'Large', 'Huge', 'Gargantuan'];
 export const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
 export const COINS = ['cp', 'sp', 'ep', 'gp', 'pp'];
 const object = value => value && typeof value === 'object' && !Array.isArray(value);
-export function newId(prefix = 'equipment') { return `${prefix}-${globalThis.crypto.randomUUID()}`; }
+export function newId(prefix = 'equipment') {
+  const bytes = globalThis.crypto.getRandomValues(new Uint8Array(16));
+  return `${prefix}-${Array.from(bytes, value => value.toString(16).padStart(2, '0')).join('')}`;
+}
 function string(value, label, max = 500) {
   if (typeof value !== 'string' || value.length > max) throw new Error(`${label} must be text, at most ${max} characters.`);
   return value;

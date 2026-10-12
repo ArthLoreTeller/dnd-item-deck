@@ -26,6 +26,26 @@ test('linked equipment survives discard, reload, redraw and reset', async () => 
   assert.equal(store.getState().equipment[0].quantity, 2);
 });
 
+test('old backups preserve player data; new backups fill missing values and equipment', () => {
+  const originalProfile = store.getState().profile;
+  store.setState({ inventory: [], deck: [], equipment: [], discardedCustom: [], relicEquipmentCache: {} });
+  store.getState().updateProfile({ name: 'Manual hero', abilities: { ...originalProfile.abilities, str: 12 } });
+  store.getState().addEquipment({ name: 'Rope', quantity: 1, unitWeightLb: null, carried: true });
+  const backup = store.getState().exportBackup();
+  const profile = store.getState().profile;
+  const equipment = store.getState().equipment;
+  store.getState().importBackup(JSON.stringify({ format: 'reliquary-backup', version: 1, deck: [], inventory: [] }));
+  assert.deepEqual(store.getState().profile, profile);
+  assert.deepEqual(store.getState().equipment, equipment);
+  store.setState({ profile: { ...originalProfile, name: '', abilities: { ...originalProfile.abilities, str: null } }, equipment: [] });
+  store.getState().importBackup(backup);
+  assert.equal(store.getState().profile.name, 'Manual hero');
+  assert.equal(store.getState().profile.abilities.str, 12);
+  assert.equal(store.getState().equipment[0].unitWeightLb, null);
+  store.getState().importBackup(backup);
+  assert.equal(store.getState().equipment.length, 1);
+});
+
 test('draw removes exactly the selected weighted card and keeps previous inventory', (t) => {
   t.mock.method(Math, 'random', () => 0.9);
   store.setState({ deck: [{ id: 'a', rarity: 'common' }, { id: 'b', rarity: 'legendary' }], inventory: [{ id: 'owned' }] });
