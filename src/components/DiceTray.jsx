@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { D20_FACES, rollD20, isDoubleNatural } from '../dice/d20';
 import { playSound } from '../audio/sound';
+import { prefersReducedMotion } from '../motion/preference';
 
 export function DiceTray({ onClose }) {
   const [result,setResult]=useState(null);
@@ -45,7 +46,7 @@ export function DiceTray({ onClose }) {
     const next=forcedResult ?? rollD20();
     setTarget(next);setResult(null);setDoubleImpact(false);setRolling(true);
     playSound('dice');
-    const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduced=prefersReducedMotion();
     timer.current=setTimeout(()=>{
       setDoubleImpact(isDoubleNatural(previousRoll.current,next));
       previousRoll.current=next;

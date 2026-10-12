@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { RARITIES, normalizeCard } from '../data/rarity';
 import { RarityBadge } from './RarityBadge';
+import { prefersReducedMotion } from '../motion/preference';
 
 export function ArtworkViewer({ src, card, onClose }) {
   const [isClosing, setIsClosing] = useState(false);
@@ -31,12 +32,12 @@ export function ArtworkViewer({ src, card, onClose }) {
   }, [onClose]);
   useEffect(() => {
     if (!isClosing) return;
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduced = prefersReducedMotion();
     const timer = setTimeout(onClose, reduced ? 0 : 160);
     return () => clearTimeout(timer);
   }, [isClosing, onClose]);
   const move = (event) => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (prefersReducedMotion()) return;
     const rect = event.currentTarget.getBoundingClientRect();
     setTilt({ x: Math.max(-1, Math.min(1, (event.clientX - rect.left) / rect.width * 2 - 1)), y: Math.max(-1, Math.min(1, (event.clientY - rect.top) / rect.height * 2 - 1)) });
   };

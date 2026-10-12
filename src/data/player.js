@@ -1,3 +1,6 @@
+import { emptySheet, validateSheet } from './character-sheet.js';
+import { guidelineWeightLb } from './equipment-weights.js';
+
 export const SIZES = ['Tiny', 'Small', 'Medium', 'Large', 'Huge', 'Gargantuan'];
 export const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
 export const COINS = ['cp', 'sp', 'ep', 'gp', 'pp'];
@@ -28,14 +31,15 @@ function source(value) {
   return Object.fromEntries(['kind', 'characterId', 'itemId'].filter(key => value[key] !== undefined).map(key => [key, string(value[key], `Source ${key}`)]));
 }
 export function createPlayerProfile() {
-  return { id: newId('character'), rulesVersion: '2024', name: '', playerName: '', portraitUrl: '', species: '', background: '', classes: [], abilities: Object.fromEntries(ABILITIES.map(key => [key, null])), hp: { current: null, max: null, temp: null }, ac: null, speed: null, size: null, currency: Object.fromEntries(COINS.map(key => [key, null])), notes: '', capacityOverrideLb: null, capacityOverrideReason: '', source: null };
+  return { id: newId('character'), rulesVersion: '2024', name: '', playerName: '', portraitUrl: '', sheet: emptySheet(), species: '', background: '', classes: [], abilities: Object.fromEntries(ABILITIES.map(key => [key, null])), hp: { current: null, max: null, temp: null }, ac: null, speed: null, size: null, currency: Object.fromEntries(COINS.map(key => [key, null])), notes: '', capacityOverrideLb: null, capacityOverrideReason: '', source: null };
 }
 export function validateProfile(value) {
   if (!object(value) || value.rulesVersion !== '2024' || !object(value.abilities) || !object(value.hp) || !object(value.currency)) throw new Error('Invalid 2024 character profile.');
   const clean = { id: string(value.id, 'Character ID'), rulesVersion: '2024' };
   if (!clean.id) throw new Error('Character ID is required.');
   for (const key of ['name', 'playerName', 'species', 'background', 'capacityOverrideReason', 'notes']) clean[key] = string(value[key], key, key === 'notes' ? 20000 : 500);
-  clean.portraitUrl = safeImageUrl(value.portraitUrl);
+  clean.portraitUrl = safePortrait(value.portraitUrl);
+  clean.sheet = validateSheet(value.sheet);
   if (!Array.isArray(value.classes) || value.classes.length > 20) throw new Error('Invalid classes.');
   clean.classes = value.classes.map(entry => ({ name: string(entry.name, 'Class'), level: number(entry.level, 'Class level', 1, 20, true) }));
   if (clean.classes.some(entry => entry.level === null || !entry.name.trim()) || clean.classes.reduce((total, entry) => total + entry.level, 0) > 20) throw new Error('Classes need names and levels totaling 20 or less.');
@@ -65,7 +69,7 @@ export function validateEquipment(value) {
   return clean;
 }
 export function relicEquipment(card, characterId) {
-  return { id: `relic:${card.id}`, characterId, name: card.name || 'Relic', quantity: 1, unitWeightLb: null, carried: true, category: 'Relic', imageUrl: '', relicCardId: String(card.id), source: null };
+  return { id: `relic:${card.id}`, characterId, name: card.name || 'Relic', quantity: 1, unitWeightLb: guidelineWeightLb(card.id), carried: true, category: 'Relic', imageUrl: '', relicCardId: String(card.id), source: null };
 }
 export function migratePlayerData(savedState) {
   const profile = savedState.profile ? validateProfile(savedState.profile) : createPlayerProfile();
@@ -79,4 +83,9 @@ export function migratePlayerData(savedState) {
   }).map(entry => ({ ...entry, characterId: profile.id }));
   for (const card of cards) if (!links.has(String(card.id))) { equipment.push(relicEquipment(card, profile.id)); links.add(String(card.id)); }
   return { profile, equipment };
+}
+
+export function safePortrait(value = '') {
+  if (typeof value === 'string' && value.length <= 750000 && /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(value)) return value;
+  return safeImageUrl(value);
 }

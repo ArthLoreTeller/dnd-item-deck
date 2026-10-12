@@ -1,4 +1,5 @@
 import { ABILITIES, COINS, createPlayerProfile, SIZES, validateEquipment, validateProfile } from '../data/player.js';
+import { SKILLS } from '../data/character-sheet.js';
 function hash(text) { let value = 2166136261; for (const char of text) { value ^= char.charCodeAt(0); value = Math.imul(value, 16777619); } return (value >>> 0).toString(16); }
 const normalize = value => value.toLowerCase().replace(/[^a-z0-9]/g, '');
 export function normalizePdfFields(fields, { fingerprint = '', text = '' } = {}) {
@@ -30,6 +31,25 @@ export function normalizePdfFields(fields, { fingerprint = '', text = '' } = {})
     } else warnings.push(`Could not parse class and level: “${classes.slice(0, 100)}”.`);
   }
   profile.notes = get('Notes', 'Backstory', 'CharacterBackstory').slice(0, 20000);
+  const signed = (raw, min = -100, max = 100) => {
+    if (!raw) return null;
+    const value = /^[+-]?\d+$/.test(raw) ? Number(raw) : NaN;
+    if (!Number.isInteger(value) || value < min || value > max) { warnings.push(`Unsupported check bonus “${raw.slice(0,80)}”; enter it manually.`); return null; }
+    return value;
+  };
+  for (const name of Object.keys(SKILLS)) {
+    profile.sheet.skills[name].override = signed(get(name, `${name}Bonus`, `${name}Modifier`));
+    const prof = get(`${name}Proficiency`, `${name}Prof`).toLowerCase();
+    if (['expertise','2'].includes(prof)) profile.sheet.skills[name].proficiency=2;
+    else if (['yes','true','on','1','proficient'].includes(prof)) profile.sheet.skills[name].proficiency=1;
+    else if (['no','false','off','0'].includes(prof)) profile.sheet.skills[name].proficiency=0;
+  }
+  for (const key of ABILITIES) profile.sheet.savingThrows[key].override=signed(get(`${key}Save`,`${key}SavingThrow`,`${key}SaveBonus`));
+  profile.sheet.proficiencyBonusOverride=signed(get('ProficiencyBonus','ProfBonus'),0,20);
+  profile.sheet.initiativeOverride=signed(get('Initiative'));
+  profile.sheet.features=get('FeaturesTraits','Features and Traits','Features').slice(0,20000);
+  profile.sheet.languages=get('ProficienciesLanguages','Other Proficiencies and Languages','Languages').slice(0,20000);
+  warnings.push('Skills and saving throws are imported only from recognized fields. Review bonuses, Hit Dice, spells, and recovery rules manually.');
   const identity = profile.name || profile.playerName ? `${profile.name.toLowerCase()}|${profile.playerName.toLowerCase()}` : fingerprint;
   const characterId = `pdf:${hash(identity)}:${hash([...identity].reverse().join(''))}`;
   profile.source = { kind: 'pdf', characterId };

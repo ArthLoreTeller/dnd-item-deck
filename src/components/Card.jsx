@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useCardStore } from "../store/useCardStore";
 import { ArtworkViewer } from "./ArtworkViewer";
 import { playSound } from "../audio/sound";
+import { prefersReducedMotion } from '../motion/preference';
+import { FLIP_MS } from '../motion/deckMotion';
 import { RotateCcw, Unlink } from "lucide-react";
 
 // StatInput component for rendering individual stat input fields
@@ -65,6 +67,16 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
   const dragStartX = useRef(null);
   const previousCardRef = useRef(card);
   const [outgoingCard, setOutgoingCard] = useState(null);
+  const preloadImage = card?.itemImage;
+  const preloadImages = card?.images;
+  useEffect(() => {
+    if (snapshot) return;
+    for (const src of new Set([preloadImage, ...Object.values(preloadImages || {})].filter(Boolean))) {
+      const image = new Image();
+      image.src = src;
+      image.decode?.().catch(() => {});
+    }
+  }, [preloadImage, preloadImages, snapshot]);
 
   const {
     id,
@@ -113,8 +125,8 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
     setOutgoingCard({ card: previous, flipped: flippedRef.current });
     setIsFlipped(false);
     setIsEnhancing(true);
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const timer = setTimeout(() => { setOutgoingCard(null); setIsEnhancing(false); }, reduced ? 0 : 950);
+    const reduced = prefersReducedMotion();
+    const timer = setTimeout(() => { setOutgoingCard(null); setIsEnhancing(false); }, reduced ? 0 : 480);
     return () => clearTimeout(timer);
   }, [isAttuned, currentLevel, snapshot]);
   useEffect(() => { previousCardRef.current = card; });
@@ -131,15 +143,16 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
 
   const handleFlip = () => {
     if (flipAnim || isEnhancing) return;
+    if (prefersReducedMotion()) { setIsFlipped(previous => !previous); return; }
     setFlipAnim("out");
     flipTimers.current.push(setTimeout(() => {
       setIsFlipped((prev) => !prev);
       setFlipAnim("in");
-    }, 250));
+    }, FLIP_MS / 2));
     flipTimers.current.push(setTimeout(() => {
       setFlipAnim("");
       flipTimers.current = [];
-    }, 500));
+    }, FLIP_MS));
   };
 
   const handleToggleAttune = (e) => {
@@ -415,7 +428,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
     <div className="item-surface relative flex flex-col items-center gap-4 w-full h-full">
       {/* OUTER WRAPPER: Handles drop-shadow transition and maintains a strict 100% scale */}
       <div
-        className={`attunement-current ${isEnhancing ? "attunement-incoming" : ""} relative w-full h-full transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] scale-100 ${
+        className={`attunement-current ${isEnhancing ? "attunement-incoming" : ""} relative w-full h-full scale-100 ${
           isAttunable && isAttuned
             ? "drop-shadow-[0_0_25px_rgba(245,158,11,0.5)]"
             : "drop-shadow-2xl"
@@ -457,21 +470,22 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
           style={{
             backgroundImage: `url('${bgImage}')`,
             transformStyle: "preserve-3d",
+            '--card-half-turn': `${FLIP_MS / 2}ms`,
           }}
         >
           <style>
             {`
               @keyframes flip-out {
-                0% { transform: rotateY(0deg); opacity: 1; filter: brightness(1); }
-                100% { transform: rotateY(90deg); opacity: 0.5; filter: brightness(0.5); }
+                0% { transform: rotateY(0deg); }
+                100% { transform: rotateY(90deg); }
               }
-              .animate-flip-out { animation: flip-out 0.25s ease-in forwards; }
+              .animate-flip-out { will-change: transform; animation: flip-out var(--card-half-turn) cubic-bezier(.42,0,1,1) forwards; }
               
               @keyframes flip-in {
-                0% { transform: rotateY(-90deg); opacity: 0.5; filter: brightness(0.5); }
-                100% { transform: rotateY(0deg); opacity: 1; filter: brightness(1); }
+                0% { transform: rotateY(-90deg); }
+                100% { transform: rotateY(0deg); }
               }
-              .animate-flip-in { animation: flip-in 0.25s ease-out forwards; }
+              .animate-flip-in { will-change: transform; animation: flip-in var(--card-half-turn) cubic-bezier(0,0,.58,1) forwards; }
 
               @keyframes hieroglyph-etch {
                 0% { clip-path: inset(0 100% 0 0); filter: drop-shadow(0 0 12px #fbbf24) brightness(2); color: #fef08a; transform: scale(1.1); }

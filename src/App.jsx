@@ -42,7 +42,6 @@ export default function App() {
   const [toolsOpen, setToolsOpen] = useState(false);
 
   const { page, navigate } = usePageRoute();
-  const equipment = useCardStore(state => state.equipment);
   const [importOpen, setImportOpen] = useState(false);
   const activeCard = useCardStore((state) => state.activeCard);
   const inventory = useCardStore((state) => state.inventory);
@@ -255,7 +254,7 @@ export default function App() {
           </>}
         </header>
 
-        {page === 'deck' && <><DeckPage {...{ motion, displayedCard, isDrawn, isRevealing, deck, handleDrawCard, handleReturnToDeck, handleContinue }} /><button className="journal-button" onClick={() => navigate('inventory')}>Open inventory · {equipment.length} items →</button></>}
+        {page === 'deck' && <DeckPage {...{ motion, displayedCard, isDrawn, isRevealing, deck, inventory, handleDrawCard, handleReturnToDeck, handleContinue }} onInspect={handleSelectInventoryItem} onDiscard={id => { playSound('discard'); discardCard(id); }} onOpenInventory={() => navigate('inventory')} />}
         {page === 'inventory' && <InventoryPage onInspect={card => { handleSelectInventoryItem(card); navigate('deck'); }} onTools={() => setToolsOpen(true)} onCharacter={() => navigate('character')} onDeck={() => navigate('deck')} />}
         {page === 'character' && <CharacterPage onImport={() => setImportOpen(true)} />}
 

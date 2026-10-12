@@ -1,11 +1,12 @@
 import { Card } from '../components/Card';
 import { RARITIES, normalizeCard } from '../data/rarity';
-export function DeckPage({ motion, displayedCard, isDrawn, isRevealing, deck, handleDrawCard, handleReturnToDeck, handleContinue }) { return (
+import { MiniInventory } from '../components/MiniInventory';
+export function DeckPage({ motion, displayedCard, isDrawn, isRevealing, deck, handleDrawCard, handleReturnToDeck, handleContinue, inventory, onInspect, onDiscard, onOpenInventory }) { return (
         <div className="relic-layout w-full max-w-5xl grid grid-cols-1 gap-8 items-start mt-2">
           <div id="relic-deck" className="relic-stage  flex flex-col items-center gap-4">
             <div className="card-display"><div className="card-scale">
             <div className={`relative w-80 h-[500px] perspective-deck select-none ${motion.phase === "lifting" ? "deck-lift" : ""}`} style={{ "--rarity-color": displayedCard ? RARITIES[normalizeCard(displayedCard).rarity].color : "#ffd078" }}>
-              {motion.phase === "revealing" && motion.celebrate && <div className="rarity-draw-effect" aria-hidden="true" key={displayedCard?.id}><span>✦</span><span>✧</span><span>✦</span></div>}
+              {motion.phase === "celebrating" && motion.celebrate && <div className="rarity-draw-effect" aria-hidden="true" key={displayedCard?.id}><span>✦</span><span>✧</span><span>✦</span></div>}
               <div
                 className={`w-full h-full deck-turn card-preserve-3d relative ${
                   isDrawn ? "[transform:rotateY(180deg)]" : ""
@@ -55,14 +56,14 @@ export function DeckPage({ motion, displayedCard, isDrawn, isRevealing, deck, ha
             </div></div>
             <div className="deck-footer" inert={isRevealing}>
               {!isDrawn ? (
-                <div className="draw-prompt controls-enter">
+                <div className="draw-prompt">
                   <button data-silent className="primary-magic-button" disabled={!deck.length || isRevealing} onClick={handleDrawCard}>✦ {deck.length ? "Draw a relic" : "Deck empty"}</button>
                   <p>Rarity-weighted draws · {deck.length} relics remain</p>
                   <details className="draw-odds"><summary>How fate chooses</summary><p>Each remaining card carries a weight: Common 60 · Uncommon 25 · Rare 10 · Epic 4 · Legendary 1. Odds change as cards leave the deck. Search lets you choose directly.</p></details>
                 </div>
               ) : (
-                <div className="controls-enter w-full">
-                  <div className="bg-slate-800/90 border border-slate-700 p-2 rounded-xl shadow-lg flex items-center justify-between gap-2 mt-3">
+                <div className="w-full">
+                  <div className="deck-action-row flex items-center justify-between gap-2">
                     <button data-silent disabled={isRevealing} onClick={handleReturnToDeck} className="discard-action flex-1 px-3 py-2.5 bg-red-950/30 hover:bg-red-900/50 text-red-400 border border-red-900/50 rounded-lg text-xs font-bold uppercase transition-colors cursor-pointer">Discard</button>
                     <button data-silent disabled={isRevealing} onClick={handleContinue} className="continue-action flex-1 px-3 py-2.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-200 border border-amber-500/40 rounded-lg text-xs font-bold transition-colors cursor-pointer">Keep</button>
                   </div>
@@ -72,5 +73,6 @@ export function DeckPage({ motion, displayedCard, isDrawn, isRevealing, deck, ha
             </div>
           </div>
 
+          <MiniInventory inventory={inventory} activeId={isDrawn ? displayedCard?.id : null} disabled={isRevealing} onInspect={onInspect} onDiscard={onDiscard} onOpenInventory={onOpenInventory} />
         </div>
 ); }

@@ -32,6 +32,19 @@ test('inventory selection reveals with rarity celebration', () => {
   assert.equal(selected.celebrate, true);
 });
 
+test('rarity celebration starts only after flipping and finishes once', () => {
+  const lifting = deckMotionReducer(initialDeckMotion, { type: 'reveal', card: { id: 'a' }, celebrate: true });
+  const flipping = deckMotionReducer(lifting, { type: 'flip' });
+  assert.equal(flipping.phase, 'revealing');
+  const stable = deckMotionReducer(flipping, { type: 'settle' });
+  assert.equal(stable.phase, 'celebrating');
+  assert.equal(stable.face, 'front');
+  assert.equal(stable.celebrate, true);
+  const finished = deckMotionReducer(stable, { type: 'settle' });
+  assert.equal(finished.phase, 'idle');
+  assert.equal(finished.celebrate, false);
+});
+
 test('discarding the displayed inventory item starts a return instead of showing stale item actions', () => {
   const front = { face: 'front', phase: 'idle', card: { id: 'a' }, celebrate: false };
   const discarded = deckMotionReducer(front, { type: 'discard', id: 'a' });

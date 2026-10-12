@@ -5,6 +5,8 @@ import { normalizeCard, chooseWeightedCard } from '../data/rarity.js';
 import { parseBackup, serializeBackup } from '../data/backup.js';
 import { createPlayerProfile, migratePlayerData, newId, relicEquipment, validateEquipment, validateProfile } from '../data/player.js';
 import { mergeCharacterDraft } from '../data/character-import.js';
+import { applyGuidelineWeights } from '../data/equipment-weights.js';
+import { hasSheetData } from '../data/character-sheet.js';
 const defaultCards = rawDefaultCards.map(normalizeCard);
 
 function safeRestore(card, inventory) {
@@ -239,6 +241,7 @@ export const useCardStore = create(
           for (const [key, value] of Object.entries(backup.profile)) {
             if (['id', 'rulesVersion'].includes(key)) continue;
             if (['abilities', 'hp', 'currency'].includes(key)) merged[key] = Object.fromEntries(Object.keys(value).map(field => [field, state.profile[key][field] ?? value[field]]));
+            else if (key === 'sheet' && !hasSheetData(state.profile.sheet)) merged[key] = value;
             else if (state.profile[key] === null || state.profile[key] === '' || (Array.isArray(state.profile[key]) && !state.profile[key].length)) merged[key] = value;
           }
           player.profile = validateProfile(merged);
@@ -271,8 +274,8 @@ export const useCardStore = create(
     {
       name: 'dnd-item-deck-storage', // LocalStorage Key
       storage: createJSONStorage(() => localStorage),
-      version: 2,
-      migrate: persisted => ({ ...persisted, ...migratePlayerData(persisted) }),
+      version: 3,
+      migrate: persisted => applyGuidelineWeights({ ...persisted, ...migratePlayerData(persisted) }),
       merge: (persisted, current) => ({
         ...current,
         ...persisted,

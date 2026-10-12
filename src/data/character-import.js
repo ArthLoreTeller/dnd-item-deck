@@ -1,5 +1,5 @@
 import { validateProfile, validateEquipment } from './player.js';
-export const PROFILE_IMPORT_FIELDS = ['name', 'playerName', 'species', 'background', 'classes', 'abilities', 'hp', 'ac', 'speed', 'size', 'currency', 'notes'];
+export const PROFILE_IMPORT_FIELDS = ['portraitUrl', 'sheet', 'name', 'playerName', 'species', 'background', 'classes', 'abilities', 'hp', 'ac', 'speed', 'size', 'currency', 'notes'];
 export function validateImportDraft(draft) {
   if (!draft || !Array.isArray(draft.equipment) || draft.equipment.length > 5000 || !Array.isArray(draft.warnings) || !draft.provenance?.characterId) throw new Error('Invalid character import draft.');
   const profile = validateProfile(draft.profile);
