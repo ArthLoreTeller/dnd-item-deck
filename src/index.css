@@ -479,7 +479,7 @@ html[data-theme="woody"] .reliquary {
 .reliquary .collection-orbit :is(a,button) { display: flex; align-items: center; justify-content: center; width: 46px; height: 46px; min-height: 46px; padding: 0; border: 1px solid var(--env-border); border-radius: 50%; background: var(--env-panel); color: var(--env-panel-text); box-shadow: 0 4px 18px #0004; cursor: pointer; text-decoration: none; }
 .collection-orbit .orbit-toggle { position: relative; z-index: 1; }
 .orbit-toggle svg { transition: transform 260ms ease; }
-.is-open .orbit-toggle svg { transform: rotate(90deg); }
+.is-open .orbit-toggle { box-shadow: 0 0 0 2px var(--env-panel-accent), 0 4px 18px #0004; }
 .orbit-shortcuts { position: absolute; bottom: 56px; left: 0; display: flex; flex-direction: column; gap: 10px; opacity: 0; visibility: hidden; transform: translateY(18px) scale(.9); transform-origin: bottom center; transition: opacity 240ms, transform 240ms, visibility 240ms; }
 .is-open .orbit-shortcuts { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
 .collection-orbit :is(a,button):focus-visible, .card-attune-control:focus-visible { outline: 2px solid var(--env-panel-accent,#aa7826); outline-offset: 3px; }

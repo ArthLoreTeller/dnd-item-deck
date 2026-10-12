@@ -15,7 +15,7 @@ import { useDeckMotion } from "./motion/useDeckMotion";
 import { RarityBadge } from "./components/RarityBadge";
 import { RARITIES, normalizeCard } from "./data/rarity";
 import { playSound, useSoundSettings } from "./audio/sound";
-import { Search, Volume2, VolumeX } from "lucide-react";
+import { Search } from "lucide-react";
 import { useCardStore } from "./store/useCardStore";
 import { DiceTray } from "./components/DiceTray";
 import { Card } from "./components/Card";
@@ -340,7 +340,6 @@ export default function App() {
         <header className="w-full max-w-5xl mx-auto flex flex-col items-center gap-4 mb-2">
           <div className="reliquary-heading">
             <div><p className="eyebrow">YOUR ADVENTURE, ENSHRINED · v1.2</p><h1>The Reliquary</h1><p className="heading-subtitle">Draw a relic. Discover its magic. Make it yours.</p></div>
-            <div className="header-tools"><button className="dice-launch" onClick={() => setDiceOpen(true)} aria-label="Roll a D20" aria-haspopup="dialog"><svg width="20" height="22" viewBox="0 0 24 26" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M12 1 23 7v12l-11 6L1 19V7Z M12 1 6 9l-5-2 M12 1l6 8 5-2 M6 9l-5 10 11 6 11-6-5-10 M6 9h12l-6 11Z M1 19l11 1 11-1 M12 20v5"/><text x="12" y="15" fill="currentColor" stroke="none" textAnchor="middle" fontSize="6" fontWeight="bold">20</text></svg></button><button data-silent aria-label={muted ? "Enable sound" : "Mute sound"} aria-pressed={muted} onClick={toggleMuted} className="sound-toggle">{muted ? <VolumeX size={19} /> : <Volume2 size={19} />}</button></div>
           </div>
           <div className="theme-picker"><label htmlFor="environment-theme">Atmosphere</label><select id="environment-theme" value={theme} onChange={(event) => setTheme(event.target.value)}>{Object.entries(THEMES).map(([key, palette]) => <option key={key} value={key}>{palette.label}</option>)}</select><span className="theme-swatches">{Object.entries(THEMES).map(([key, palette]) => <button type="button" className="theme-swatch" key={key} onClick={() => setTheme(key)} aria-label={`Switch to ${palette.label} theme`} aria-pressed={key === theme} title={palette.label} style={{ background: key === "love" ? "#FFB7C5" : palette.background, opacity: key === theme ? 1 : .4, outline: key === theme ? `2px solid var(--env-text)` : "none", outlineOffset: "3px" }} />)}</span></div>
           <button type="button"
@@ -573,7 +572,7 @@ export default function App() {
           </section>
         </div>
 
-        <CollectionNavigation canRead={isDrawn && !isRevealing && Boolean(displayedCard)} onRead={() => setDetailsOpen(true)} />
+        <CollectionNavigation canRead={isDrawn && !isRevealing && Boolean(displayedCard)} onRead={() => setDetailsOpen(true)} onDice={() => setDiceOpen(true)} muted={muted} onToggleSound={toggleMuted} />
 
         <ItemSearchModal
           isOpen={isSearchModalOpen}

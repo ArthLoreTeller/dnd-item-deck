@@ -26,7 +26,7 @@ npm run preview
 - Keep retains the relic in inventory and shows the card back. Discard offers undo; custom cards move into persistent recovery instead of being deleted.
 - Backup & recovery downloads a JSON copy of the deck, inventory, and recovery collection. Import validates the whole file before merging, preserves current edits across collections, and respects the three-item attunement limit. Images are referenced by URL rather than embedded.
 - Reset Deck explains that standard relic edits and progression reset, while custom cards and recovery remain. Download a backup first to preserve those edits.
-- A circular collection menu on the left expands upward into Deck, Inventory, and Read details icons on mobile and desktop. Search and custom-card fields have explicit labels, dialog focus stays inside the dialog, and dice effect test buttons are removed.
+- A circular three-line menu on the left expands upward into Deck, Inventory, Read details, Roll a D20, and Sound icons on mobile and desktop. Search and custom-card fields have explicit labels, dialog focus stays inside the dialog, and dice effect test buttons are removed.
 - Artwork loads as it is needed instead of preloading every relic and upgrade. The browser title identifies The Reliquary.
 
 ## Deck and atmosphere
