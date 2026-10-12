@@ -5,6 +5,27 @@ const saved = new Map();
 globalThis.localStorage = { getItem: (key) => saved.get(key) ?? null, setItem: (key, value) => saved.set(key, value), removeItem: (key) => saved.delete(key) };
 const { useCardStore: store } = await import('../src/store/useCardStore.js');
 
+test('linked equipment survives discard, reload, redraw and reset', async () => {
+  store.setState({ deck: [defaults[0]], inventory: [], equipment: [], relicEquipmentCache: {} });
+  store.getState().drawCardById(defaults[0].id);
+  const entry = store.getState().equipment[0];
+  assert.equal(entry.relicCardId, defaults[0].id);
+  store.getState().updateEquipment(entry.id, { unitWeightLb: 4, carried: false });
+  store.getState().discardCard(defaults[0].id);
+  assert.equal(store.getState().equipment.length, 0);
+  await store.persist.rehydrate();
+  store.getState().drawCardById(defaults[0].id);
+  assert.equal(store.getState().equipment[0].unitWeightLb, 4);
+  assert.equal(store.getState().equipment[0].carried, false);
+  store.getState().addEquipment({ name: 'Rope', quantity: 2, unitWeightLb: 10, carried: true });
+  store.getState().resetDeck();
+  assert.deepEqual(store.getState().equipment.map(e => e.name), ['Rope']);
+  const rope = store.getState().equipment[0];
+  store.getState().removeEquipment(rope.id);
+  store.getState().undoEquipmentRemoval();
+  assert.equal(store.getState().equipment[0].quantity, 2);
+});
+
 test('draw removes exactly the selected weighted card and keeps previous inventory', (t) => {
   t.mock.method(Math, 'random', () => 0.9);
   store.setState({ deck: [{ id: 'a', rarity: 'common' }, { id: 'b', rarity: 'legendary' }], inventory: [{ id: 'owned' }] });

@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import rawDefaultCards from '../data/defaultCards.json' with { type: 'json' };
 import { normalizeCard, chooseWeightedCard } from '../data/rarity.js';
 import { parseBackup, serializeBackup } from '../data/backup.js';
+import { createPlayerProfile, migratePlayerData, newId, relicEquipment, validateEquipment, validateProfile } from '../data/player.js';
 const defaultCards = rawDefaultCards.map(normalizeCard);
 
 function safeRestore(card, inventory) {
@@ -18,7 +19,40 @@ function hasDeckEdits(card) {
 
 export const useCardStore = create(
   persist(
-    (set, get) => ({
+    (rawSet, get) => {
+      // Reconcile every card lifecycle change in the same persisted transaction.
+      const set = update => rawSet(state => {
+        const patch = typeof update === 'function' ? update(state) : update;
+        if (!patch.inventory) return patch;
+        const profile = patch.profile ?? state.profile;
+        const cache = { ...state.relicEquipmentCache, ...patch.relicEquipmentCache };
+        for (const entry of state.equipment) if (entry.relicCardId) cache[entry.relicCardId] = entry;
+        const candidates = patch.equipment ?? state.equipment;
+        const equipment = candidates.filter(entry => !entry.relicCardId);
+        for (const card of patch.inventory) {
+          const linked = candidates.find(entry => entry.relicCardId === String(card.id)) ?? cache[String(card.id)] ?? relicEquipment(card, profile.id);
+          equipment.push({ ...linked, characterId: profile.id, name: card.name || 'Relic' });
+        }
+        return { ...patch, equipment, relicEquipmentCache: cache };
+      });
+      return ({
+      profile: createPlayerProfile(),
+      equipment: [],
+      relicEquipmentCache: {},
+      lastEquipmentRemoval: null,
+      updateProfile: patch => set(state => ({ profile: validateProfile({ ...state.profile, ...patch }) })),
+      addEquipment: value => {
+        const entry = validateEquipment({ ...value, id: newId(), characterId: get().profile.id, relicCardId: null });
+        set(state => ({ equipment: [...state.equipment, entry] }));
+      },
+      updateEquipment: (id, patch) => set(state => ({ equipment: state.equipment.map(entry => entry.id === id ? validateEquipment({ ...entry, ...patch, id: entry.id, characterId: entry.characterId, relicCardId: entry.relicCardId, source: entry.source }) : entry) })),
+      removeEquipment: id => {
+        const entry = get().equipment.find(item => item.id === id);
+        if (!entry) return;
+        if (entry.relicCardId) { get().discardCard(entry.relicCardId); return; }
+        set(state => ({ equipment: state.equipment.filter(item => item.id !== id), lastEquipmentRemoval: entry }));
+      },
+      undoEquipmentRemoval: () => set(state => ({ equipment: state.lastEquipmentRemoval && !state.equipment.some(item => item.id === state.lastEquipmentRemoval.id) ? [...state.equipment, state.lastEquipmentRemoval] : state.equipment, lastEquipmentRemoval: null })),
       // Set basic state properties
       deck: defaultCards || [],
       inventory: [],
@@ -215,13 +249,16 @@ export const useCardStore = create(
           toastMessage: 'All standard cards returned to the deck.',
         });
       },
-    }),
+    }); },
     {
       name: 'dnd-item-deck-storage', // LocalStorage Key
       storage: createJSONStorage(() => localStorage),
+      version: 2,
+      migrate: persisted => ({ ...persisted, ...migratePlayerData(persisted) }),
       merge: (persisted, current) => ({
         ...current,
         ...persisted,
+        ...migratePlayerData(persisted ?? current),
         deck: (persisted?.deck || current.deck).map(normalizeCard),
         inventory: (persisted?.inventory || []).map(normalizeCard),
         activeCard: persisted?.activeCard ? normalizeCard(persisted.activeCard) : null,
@@ -232,6 +269,9 @@ export const useCardStore = create(
         inventory: state.inventory,
         activeCard: state.activeCard,
         discardedCustom: state.discardedCustom,
+        profile: state.profile,
+        equipment: state.equipment,
+        relicEquipmentCache: state.relicEquipmentCache,
       }),
     }
   )
