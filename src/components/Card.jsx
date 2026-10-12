@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useCardStore } from "../store/useCardStore";
 import { ArtworkViewer } from "./ArtworkViewer";
 import { playSound } from "../audio/sound";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Unlink } from "lucide-react";
 
 // StatInput component for rendering individual stat input fields
 function StatInput({
@@ -114,7 +114,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
     setIsFlipped(false);
     setIsEnhancing(true);
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const timer = setTimeout(() => { setOutgoingCard(null); setIsEnhancing(false); }, reduced ? 0 : 650);
+    const timer = setTimeout(() => { setOutgoingCard(null); setIsEnhancing(false); }, reduced ? 0 : 950);
     return () => clearTimeout(timer);
   }, [isAttuned, currentLevel, snapshot]);
   useEffect(() => { previousCardRef.current = card; });
@@ -200,7 +200,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
         setPopoverText({ title: "Item Lore", text: flavorText || description })
       }
     >
-      <p className="italic font-serif leading-tight text-justify">
+      <p className="italic font-serif text-justify">
         {flavorText || description}
       </p>
     </div>
@@ -699,6 +699,18 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
                   "top-[385px] right-[7.5px]"
                 )}
             </div>
+          )}
+
+          {isAttunable && (
+            <button type="button" data-silent
+              aria-label={isAttuned ? "Unattune item" : "Attune item"}
+              title={isAttuned ? "Unattune item" : "Attune item"}
+              aria-pressed={isAttuned}
+              disabled={snapshot || isEnhancing || Boolean(flipAnim)}
+              onClick={handleToggleAttune}
+              className={`attune-control card-attune-control ${isAttuned ? 'card-attune-icon' : ''} ${isEnhancing ? 'card-attune-transform' : ''}`}>
+              {isAttuned ? <Unlink size={15} aria-hidden="true" /> : <span>Attune</span>}
+            </button>
           )}
 
           {popoverText && (

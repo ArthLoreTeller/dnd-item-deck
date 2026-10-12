@@ -22,11 +22,11 @@ npm run preview
 
 ## Version 1.2
 
-- Read item details opens a journal with readable lore, specifications, abilities, editable stats, and larger progression controls. The original card artwork remains intact, with attunement controls below the card to keep descriptions unobstructed.
+- The Read details icon in the circular collection menu opens a journal with readable lore, specifications, abilities, editable stats, and larger progression controls. The original card artwork remains intact, with an in-card Attune button that dissolves into the original top-right Unattune icon. Matching text spacing stays inside the painted boxes.
 - Keep retains the relic in inventory and shows the card back. Discard offers undo; custom cards move into persistent recovery instead of being deleted.
 - Backup & recovery downloads a JSON copy of the deck, inventory, and recovery collection. Import validates the whole file before merging, preserves current edits across collections, and respects the three-item attunement limit. Images are referenced by URL rather than embedded.
 - Reset Deck explains that standard relic edits and progression reset, while custom cards and recovery remain. Download a backup first to preserve those edits.
-- Mobile navigation provides quick access to drawing, inventory, and item details. Search and custom-card fields have explicit labels, dialog focus stays inside the dialog, and dice effect test buttons are removed.
+- A circular collection menu on the left expands upward into Deck, Inventory, and Read details icons on mobile and desktop. Search and custom-card fields have explicit labels, dialog focus stays inside the dialog, and dice effect test buttons are removed.
 - Artwork loads as it is needed instead of preloading every relic and upgrade. The browser title identifies The Reliquary.
 
 ## Deck and atmosphere
@@ -37,7 +37,7 @@ npm run preview
 - Synthesized button, draw, reveal, and attunement chimes require no remote assets. The sound toggle saves your preference.
 - Click artwork for a layered 2.5D inspection view with pointer/touch tilt and moving highlights. Reduced-motion settings disable movement. Existing artwork is a single image layer, with separate aura, runes, frame, and shine layers.
 - A fantasy interface emphasizes drawing and inventory, with desktop and mobile controls. The Atmosphere selector saves Midnight, Evergreen, Love, Woody, or Warm environment palettes.
-- Attuning and unattuning crossfade the complete card face over 520ms with a gentle aura; reduced motion replaces the transition immediately.
+- Attuning and unattuning crossfade the complete card face over 900ms with a gentle aura; reduced motion replaces the transition immediately.
 
 ## Data and behavior
 

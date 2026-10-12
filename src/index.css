@@ -101,10 +101,10 @@ button:focus-visible, select:focus-visible, summary:focus-visible, input:focus-v
 .item-surface { animation: veil-in 180ms ease-out both; }
 
 /* Complete faces dissolve together; the old face stays until the new one is readable. */
-.attunement-outgoing { position: absolute; inset: 0; z-index: 60; pointer-events: none; animation: attunement-out 520ms cubic-bezier(.2,.6,.3,1) both; }
+.attunement-outgoing { position: absolute; inset: 0; z-index: 60; pointer-events: none; animation: attunement-out 900ms cubic-bezier(.2,.6,.3,1) both; }
 .attunement-outgoing .item-surface { animation: none; }
-.attunement-incoming { animation: attunement-in 520ms cubic-bezier(.2,.6,.3,1) both; }
-.attunement-aura { position: absolute; inset: -12px; z-index: 70; pointer-events: none; border-radius: 20px; box-shadow: inset 0 0 30px #ffd07844, 0 0 35px #ffd07833; animation: attunement-aura 650ms ease-in-out both; }
+.attunement-incoming { animation: attunement-in 900ms cubic-bezier(.2,.6,.3,1) both; }
+.attunement-aura { position: absolute; inset: -12px; z-index: 70; pointer-events: none; border-radius: 20px; box-shadow: inset 0 0 30px #ffd07844, 0 0 35px #ffd07833; animation: attunement-aura 900ms ease-in-out both; }
 @keyframes attunement-out { 0%, 15% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes attunement-in { 0% { opacity: 0; } 100% { opacity: 1; } }
 @keyframes attunement-aura { 0%, 100% { opacity: 0; } 45% { opacity: .65; } }
@@ -437,7 +437,7 @@ html[data-theme="woody"] .reliquary {
 .reading-footer { padding: 16px 28px; border-top: 1px solid var(--env-border); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-shrink: 0; }
 .reading-footer p { font-size: 12px; color: var(--env-panel-muted); margin: 0; }
 .reading-footer button { flex-shrink: 0; }
-.read-details-button { width: 100%; }
+
 .inventory-utilities { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
 .inventory-utilities p { font-size: 12px; color: var(--env-panel-muted); margin: 0; }
 .reliquary .inventory-select { background: transparent; border: 0; min-height: 44px; text-align: left; flex: 1; min-width: 0; cursor: pointer; padding-right: 8px; }
@@ -452,7 +452,7 @@ html[data-theme="woody"] .reliquary {
 .recovery-list li button { flex-shrink: 0; }
 .notification-toast { flex-wrap: wrap; }
 .notification-toast .journal-button { font-size: 13px; }
-.mobile-journal-nav { display: none; }
+
 
 /* Keep content inset from the painted card dividers and away from actions. */
 .card-shelf { position: absolute; left: 16px; right: 16px; height: 55px; display: flex; flex-direction: column; font-size: 7.5px; line-height: 1.45; color: #451a03; overflow: hidden; }
@@ -460,15 +460,31 @@ html[data-theme="woody"] .reliquary {
 .card-shelf-2 { top: 332px; }
 .card-shelf-3 { top: 413px; }
 .card-shelf-with-progress { height: 48px; }
-.card-lore-shelf { top: 254px; height: 60px; font-size: 8px; }
-.card-rules-shelf { top: 356px; height: 104px; }
+.card-lore-shelf { top: 252px; height: 66px; }
+.card-rules-shelf { top: 352px; height: 92px; }
 .card-shelf > div { min-height: 0; max-height: 100%; }
 .card-shelf [role="button"] { padding-inline: 0; }
 .card-stat-field input { text-overflow: ellipsis; }
-.relic-actions { display: flex; align-items: stretch; gap: 10px; }
-.relic-actions .read-details-button { flex: 1; width: auto; min-width: 0; }
-.reliquary .deck-footer button.attune-control.attune-control { padding: 10px 12px; min-height: 44px; border: 1px solid #aa7826; border-radius: 8px; background: #e8d5b7; color: #451a03; font-size: 12px; font-weight: bold; cursor: pointer; }
-.reliquary .deck-footer button.attune-control.attune-control:hover { background: #d8bb84; color: #451a03; }
+.card-shelf p, .card-shelf [role="button"] { line-height: inherit; }
+.card-shelf { font-family: ui-serif, Georgia, Cambria, 'Times New Roman', serif; }
+.card-attune-control { position: absolute; bottom: 26px; right: 16px; z-index: 30; height: 24px; min-width: 66px; display: flex; align-items: center; justify-content: center; padding: 3px 10px; border: 1px solid #aa7826; border-radius: 4px; background: #e8d5b7; color: #451a03; font: bold 9px Georgia,serif; text-transform: uppercase; letter-spacing: .06em; cursor: pointer; transition: width 520ms, min-width 520ms, background-color 300ms, box-shadow 300ms; }
+.card-attune-icon { top: 25px; bottom: auto; right: 20px; min-width: 28px; width: 28px; padding: 0; border-color: transparent; background: transparent; }
+.card-attune-icon:hover { background: #aa782622; }
+.card-attune-transform { animation: attune-control-glow 900ms ease-in-out both; }
+.attunement-outgoing .card-attune-control:not(.card-attune-icon) { animation: button-consume 900ms ease-in both; }
+.attunement-outgoing .card-attune-icon { animation: unlink-glow-burn 900ms ease-in both; }
+.attunement-incoming .card-attune-icon { animation: hieroglyph-etch 900ms ease-out both; }
+@keyframes attune-control-glow { 0% { filter: brightness(1); } 45% { filter: brightness(1.5) drop-shadow(0 0 7px #fbbf24); } 100% { filter: brightness(1); } }
+.collection-orbit { position: fixed; left: 16px; bottom: max(20px,env(safe-area-inset-bottom)); z-index: 45; }
+.reliquary .collection-orbit :is(a,button) { display: flex; align-items: center; justify-content: center; width: 46px; height: 46px; min-height: 46px; padding: 0; border: 1px solid var(--env-border); border-radius: 50%; background: var(--env-panel); color: var(--env-panel-text); box-shadow: 0 4px 18px #0004; cursor: pointer; text-decoration: none; }
+.collection-orbit .orbit-toggle { position: relative; z-index: 1; }
+.orbit-toggle svg { transition: transform 260ms ease; }
+.is-open .orbit-toggle svg { transform: rotate(90deg); }
+.orbit-shortcuts { position: absolute; bottom: 56px; left: 0; display: flex; flex-direction: column; gap: 10px; opacity: 0; visibility: hidden; transform: translateY(18px) scale(.9); transform-origin: bottom center; transition: opacity 240ms, transform 240ms, visibility 240ms; }
+.is-open .orbit-shortcuts { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
+.collection-orbit :is(a,button):focus-visible, .card-attune-control:focus-visible { outline: 2px solid var(--env-panel-accent,#aa7826); outline-offset: 3px; }
+.collection-orbit button:disabled { opacity: .4; cursor: default; }
+@media (prefers-reduced-motion: reduce) { .card-attune-control, .orbit-shortcuts, .orbit-toggle svg { transition: none; animation: none !important; } }
 .reliquary .inventory-panel button.inventory-select.inventory-select { background: transparent; border: 0; box-shadow: none; padding: 6px 8px 6px 0; min-height: 38px; gap: 10px; }
 .reliquary .inventory-panel button.inventory-select.inventory-select:hover { background: transparent; color: var(--env-panel-text); }
 .inventory-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; min-height: 24px; }
@@ -476,7 +492,7 @@ html[data-theme="woody"] .reliquary {
 .inventory-level { margin-left: auto; font: 11px ui-monospace, monospace; color: var(--env-panel-accent); white-space: nowrap; }
 .inventory-panel [role="group"] { gap: 8px; padding: 14px; }
 @media (max-width: 767px) {
-  .reliquary { padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
+  .reliquary { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
   .reading-overlay { padding: 12px; }
   .reading-dialog { max-height: calc(100dvh - 24px); border-radius: 14px; }
   .reading-header { padding: 18px; }
@@ -487,7 +503,4 @@ html[data-theme="woody"] .reliquary {
   .inventory-panel .close-control { min-width: 44px; min-height: 44px; }
   .inventory-panel select { min-height: 44px; }
   .deck-footer button { min-height: 44px; }
-  .mobile-journal-nav { position: fixed; bottom: max(12px,env(safe-area-inset-bottom)); left: 12px; right: 12px; z-index: 40; display: flex; align-items: stretch; gap: 6px; padding: 6px; border: 1px solid var(--env-border); border-radius: 12px; background: var(--env-panel); box-shadow: 0 5px 25px #0005; }
-  .mobile-journal-nav :is(a,button) { flex: 1; min-height: 44px; padding: 8px 5px; display: flex; align-items: center; justify-content: center; color: var(--env-panel-text); font-size: 13px; font-weight: bold; border-radius: 8px; text-decoration: none; text-align: center; }
-  .mobile-journal-nav a:focus-visible { outline: 2px solid var(--env-panel-text); outline-offset: 1px; }
 }
