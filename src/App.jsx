@@ -1,6 +1,7 @@
 import { DeckPage } from './pages/DeckPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { CharacterPage } from './pages/CharacterPage';
+import { SettingsPage } from './pages/SettingsPage';
 import { CharacterImportDialog } from './components/CharacterImportDialog';
 import { usePageRoute } from './navigation/usePageRoute';
 import { createPortal } from "react-dom";
@@ -11,7 +12,7 @@ import { useDeckMotion } from "./motion/useDeckMotion";
 
 
 import { playSound, useSoundSettings } from "./audio/sound";
-import { Search } from "lucide-react";
+import { Search, Dices } from "lucide-react";
 import { useCardStore } from "./store/useCardStore";
 import { DiceTray } from "./components/DiceTray";
 
@@ -21,6 +22,8 @@ import { ItemDetails } from "./components/ItemDetails";
 import { InventoryTools } from "./components/InventoryTools";
 import { CollectionNavigation } from "./components/CollectionNavigation";
 
+const pendingPages = { skills: 'Skills', spells: 'Spells', 'spell-tome': 'Spell Tome', notes: 'Notes', shop: 'Shop' };
+
 export default function App() {
   const { motion, reveal, select, returnToDeck, reconcileInventory } = useDeckMotion();
   const isDrawn = motion.face === "front";
@@ -28,14 +31,15 @@ export default function App() {
   const [diceOpen, setDiceOpen] = useState(false);
   const closeDice = useCallback(() => setDiceOpen(false), []);
   const theme = useTheme((state) => state.theme);
-  const setTheme = useTheme((state) => state.setTheme);
+  const reducedMotion = useSoundSettings((state) => state.reducedMotion);
+  useEffect(() => {
+    document.documentElement.dataset.motion = reducedMotion ? 'reduced' : 'full';
+  }, [reducedMotion]);
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     const palette = THEMES[theme];
     for (const [key, value] of Object.entries(palette)) { if (key !== "label") document.documentElement.style.setProperty(`--env-${key}`, value); }
   }, [theme]);
-  const muted = useSoundSettings((state) => state.muted);
-  const toggleMuted = useSoundSettings((state) => state.toggleMuted);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
   const [detailsCardId, setDetailsCardId] = useState(null);
@@ -146,7 +150,7 @@ export default function App() {
           <div className="reliquary-heading">
             <div><p className="eyebrow">YOUR ADVENTURE, ENSHRINED · v1.2</p><h1>The Reliquary</h1><p className="heading-subtitle">Draw a relic. Discover its magic. Make it yours.</p></div>
           </div>
-          <div className="theme-picker"><label htmlFor="environment-theme">Atmosphere</label><select id="environment-theme" value={theme} onChange={(event) => setTheme(event.target.value)}>{Object.entries(THEMES).map(([key, palette]) => <option key={key} value={key}>{palette.label}</option>)}</select><span className="theme-swatches">{Object.entries(THEMES).map(([key, palette]) => <button type="button" className="theme-swatch" key={key} onClick={() => setTheme(key)} aria-label={`Switch to ${palette.label} theme`} aria-pressed={key === theme} title={palette.label} style={{ background: key === "love" ? "#FFB7C5" : palette.background, opacity: key === theme ? 1 : .4, outline: key === theme ? `2px solid var(--env-text)` : "none", outlineOffset: "3px" }} />)}</span></div>
+          {['deck', 'character'].includes(page) && <div className="contextual-actions"><button type="button" className="journal-button" aria-label="Roll D20" aria-haspopup="dialog" onClick={() => setDiceOpen(true)}><Dices size={18} aria-hidden="true" />Roll D20</button></div>}
           {page === 'deck' && <><button type="button"
             onClick={() => setIsSearchModalOpen(true)}
             className="w-full bg-slate-800/80 hover:bg-slate-700/90 border-2 border-amber-500/50 hover:border-amber-400 text-slate-300 px-6 py-3.5 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.15)] flex items-center gap-3 cursor-pointer transition-all"
@@ -258,8 +262,10 @@ export default function App() {
         {page === 'deck' && <DeckPage {...{ motion, displayedCard, isDrawn, isRevealing, deck, inventory, handleDrawCard, handleReturnToDeck, handleContinue }} onInspect={handleSelectInventoryItem} onReadDetails={card => setDetailsCardId(card.id)} onDiscard={id => { playSound('discard'); discardCard(id); }} onOpenInventory={() => navigate('inventory')} />}
         {page === 'inventory' && <InventoryPage onInspect={card => setDetailsCardId(card.id)} onTools={() => setToolsOpen(true)} onCharacter={() => navigate('character')} onDeck={() => navigate('deck')} />}
         {page === 'character' && <CharacterPage onImport={() => setImportOpen(true)} />}
+        {page === 'settings' && <SettingsPage />}
+        {pendingPages[page] && <main className="player-page page-unavailable" aria-labelledby="pending-page-title"><div className="page-title-row"><div><p className="eyebrow">YOUR ADVENTURE COMPANION</p><h2 id="pending-page-title">{pendingPages[page]}</h2><p className="muted">This page is not available yet.</p></div></div><a className="journal-button" href="#/deck">Back to Deck</a></main>}
 
-        <CollectionNavigation page={page} onDice={() => setDiceOpen(true)} muted={muted} onToggleSound={toggleMuted} />
+        <CollectionNavigation page={page} />
 
         <ItemSearchModal
           isOpen={isSearchModalOpen}

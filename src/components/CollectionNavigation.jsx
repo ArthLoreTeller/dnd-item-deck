@@ -1,31 +1,35 @@
 import React, { useState } from 'react';
-import { Menu, Layers, Backpack, Volume2, VolumeX, UserRound } from 'lucide-react';
+import { Menu, Layers, Backpack, UserRound, ListChecks, Sparkles, NotebookPen, Store, Settings } from 'lucide-react';
 
-export function CollectionNavigation({ page, onDice, muted, onToggleSound }) {
+const shortcuts = [
+  ['deck', 'Deck', Layers], ['inventory', 'Inventory', Backpack],
+  ['character', 'Character', UserRound], ['skills', 'Skills', ListChecks],
+  ['spells', 'Spells', Sparkles], ['notes', 'Notes', NotebookPen],
+  ['shop', 'Shop', Store], ['settings', 'Settings', Settings],
+];
+
+export function CollectionNavigation({ page }) {
   const [open, setOpen] = useState(false);
-  const openDialog = (event, action) => {
+  const close = event => {
     event.currentTarget.closest('nav').querySelector('.orbit-toggle')?.focus();
     setOpen(false);
-    action();
   };
   return (
-    <nav className={`collection-orbit ${open ? 'is-open' : ''}`} aria-label="Collection navigation"
+    <nav className={`collection-orbit ${open ? 'is-open' : ''}`} aria-label="Corner Menu"
       onKeyDown={event => {
         if (event.key === 'Escape') {
-          setOpen(false);
-          event.currentTarget.querySelector('.orbit-toggle')?.focus();
+          close(event);
         }
       }}>
       <div id="collection-shortcuts" className="orbit-shortcuts" inert={!open} aria-hidden={!open}>
-        {[[ 'deck', 'Deck', Layers ], [ 'inventory', 'Inventory', Backpack ], [ 'character', 'Character', UserRound ]].map(([route, label, Icon]) => <a key={route} href={`#/${route}`} aria-current={page === route ? 'page' : undefined} aria-label={label} title={label} onClick={event => { event.currentTarget.closest('nav').querySelector('.orbit-toggle')?.focus(); setOpen(false); }}><Icon size={20} aria-hidden="true" /></a>)}
-        <button type="button" aria-label="Roll a D20" title="Roll a D20" aria-haspopup="dialog" onClick={event => openDialog(event, onDice)}>
-          <svg width="20" height="22" viewBox="0 0 24 26" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M12 1 23 7v12l-11 6L1 19V7Z M12 1 6 9l-5-2 M12 1l6 8 5-2 M6 9l-5 10 11 6 11-6-5-10 M6 9h12l-6 11Z M1 19l11 1 11-1 M12 20v5"/><text x="12" y="15" fill="currentColor" stroke="none" textAnchor="middle" fontSize="6" fontWeight="bold">20</text></svg>
-        </button>
-        <button type="button" data-silent aria-label={muted ? 'Enable sound' : 'Mute sound'} title={muted ? 'Enable sound' : 'Mute sound'} aria-pressed={muted} onClick={onToggleSound}>
-          {muted ? <VolumeX size={20} aria-hidden="true" /> : <Volume2 size={20} aria-hidden="true" />}
-        </button>
+        {shortcuts.map(([route, label, Icon]) => <a key={route} href={`#/${route}`}
+          aria-current={page === route || (route === 'spells' && page === 'spell-tome') ? 'page' : undefined}
+          aria-label={label} title={label} onClick={close}>
+          <Icon size={20} aria-hidden="true" />
+          <span className="corner-tooltip" aria-hidden="true">{label}</span>
+        </a>)}
       </div>
-      <button type="button" className="orbit-toggle" aria-label={open ? 'Close collection shortcuts' : 'Open collection shortcuts'}
+      <button type="button" className="orbit-toggle" aria-label={open ? 'Close Corner Menu' : 'Open Corner Menu'}
         aria-expanded={open} aria-controls="collection-shortcuts" onClick={() => setOpen(value => !value)}>
         <Menu size={22} aria-hidden="true" />
       </button>

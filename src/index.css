@@ -496,7 +496,7 @@ html[data-theme="woody"] .reliquary {
 .collection-orbit .orbit-toggle { position: relative; z-index: 1; }
 .orbit-toggle svg { transition: transform 260ms ease; }
 .is-open .orbit-toggle { box-shadow: 0 0 0 2px var(--env-panel-accent), 0 4px 18px #0004; }
-.orbit-shortcuts { position: absolute; bottom: 56px; left: 0; display: flex; flex-direction: column; gap: 10px; opacity: 0; visibility: hidden; transform: translateY(18px) scale(.9); transform-origin: bottom center; transition: opacity 240ms, transform 240ms, visibility 240ms; }
+.orbit-shortcuts { position: absolute; bottom: 56px; left: 0; display: grid; grid-template-columns: repeat(2, 46px); gap: 8px; padding: 5px; opacity: 0; visibility: hidden; transform: translateY(18px) scale(.9); transform-origin: bottom left; transition: opacity 240ms, transform 240ms, visibility 240ms; }
 .is-open .orbit-shortcuts { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
 .collection-orbit :is(a,button):focus-visible, .card-attune-control:focus-visible { outline: 2px solid var(--env-panel-accent,#aa7826); outline-offset: 3px; }
 .collection-orbit button:disabled { opacity: .4; cursor: default; }
@@ -612,6 +612,29 @@ html[data-theme="woody"] .reliquary {
 .orbit-shortcuts { max-height: calc(100dvh - 110px); overflow-y: auto; scrollbar-width: thin; }
 .orbit-shortcuts > * { flex-shrink: 0; }
 .orbit-shortcuts [aria-current=page] { box-shadow: inset 0 0 0 2px var(--env-accent); }
+
+/* Compact Corner Menu and browser-local preferences. */
+.orbit-shortcuts a { position: relative; }
+.corner-tooltip { position: absolute; inset: auto auto calc(100% + 5px) 50%; transform: translateX(-50%); padding: 4px 7px; border: 1px solid var(--env-border); border-radius: 4px; background: var(--env-panel); color: var(--env-panel-text); font-size: 11px; line-height: 1.4; white-space: nowrap; opacity: 0; pointer-events: none; z-index: 2; }
+.orbit-shortcuts a:is(:hover,:focus-visible,:active) .corner-tooltip { opacity: 1; }
+.orbit-shortcuts { overflow: visible; }
+.contextual-actions { width: 100%; display: flex; justify-content: flex-end; }
+.settings-page { max-width: 720px; }
+.settings-panel { padding: 0 18px; gap: 0; }
+.setting-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 66px; padding: 10px 0; border-bottom: 1px solid var(--env-border); }
+.setting-row > label { color: var(--env-panel-text); font-size: 14px; font-weight: 600; }
+.setting-row select { min-height: 44px; max-width: 55%; padding: 8px 12px; border: 1px solid var(--env-border); border-radius: 6px; background: var(--env-select-background); color: var(--env-select-text); }
+.settings-switch { min-width: 100px; }
+.settings-switch[aria-checked=true] { box-shadow: inset 0 0 0 1px var(--env-panel-accent); }
+.settings-volume-control { display: flex; align-items: center; gap: 12px; width: min(50%,240px); }
+.settings-volume-control input { width: 100%; min-width: 0; min-height: 44px; accent-color: var(--env-panel-accent); cursor: pointer; }
+.settings-volume-control output { min-width: 4ch; color: var(--env-panel-text); font-size: 13px; font-variant-numeric: tabular-nums; text-align: right; }
+.settings-hint { margin: 14px 0; font-size: 12px; line-height: 1.6; }
+.settings-page :is(button,input,select):focus-visible { outline: 2px solid var(--env-panel-accent); outline-offset: 3px; }
+.page-unavailable .journal-button { width: fit-content; text-decoration: none; }
+@media (max-width: 420px) { .setting-row { gap: 12px; } .setting-volume { align-items: flex-start; flex-direction: column; gap: 0; } .settings-volume-control { width: 100%; } }
+:root[data-motion="reduced"] *, :root[data-motion="reduced"] *::before, :root[data-motion="reduced"] *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+:root[data-motion="reduced"] .artwork-depth, :root[data-motion="reduced"] .artwork-layer { transform: none !important; }
 @media (max-width: 600px) {
   .load-summary, .sheet-columns, .character-identity { grid-template-columns: 1fr; }
   .portrait { width: 105px; height: 130px; min-height: 0; }
