@@ -43,6 +43,7 @@ export const useCardStore = create(
       equipment: [],
       relicEquipmentCache: {},
       lastEquipmentRemoval: null,
+      lastConsumption: null,
       applyCharacterImport: (draft, selection) => set(state => ({ ...mergeCharacterDraft(state, draft, selection), toastMessage: 'Reviewed character import saved.' })),
       updateProfile: patch => set(state => ({ profile: validateProfile({ ...state.profile, ...patch }) })),
       addEquipment: value => {
@@ -57,6 +58,47 @@ export const useCardStore = create(
         set(state => ({ equipment: state.equipment.filter(item => item.id !== id), lastEquipmentRemoval: entry }));
       },
       undoEquipmentRemoval: () => set(state => ({ equipment: state.lastEquipmentRemoval && !state.equipment.some(item => item.id === state.lastEquipmentRemoval.id) ? [...state.equipment, state.lastEquipmentRemoval] : state.equipment, lastEquipmentRemoval: null })),
+      consumeEquipment: id => set(state => {
+        const index = state.equipment.findIndex(entry => entry.id === id);
+        const entry = state.equipment[index];
+        if (!entry) return { toastMessage: 'Item not found.' };
+        if (!entry.consumable) return { toastMessage: 'Item is not consumable.' };
+        const snapshot = { entry: structuredClone(entry), index };
+        const patch = {
+          equipment: entry.quantity > 1
+            ? state.equipment.map(item => item.id === id ? { ...item, quantity: item.quantity - 1 } : item)
+            : state.equipment.filter(item => item.id !== id),
+          lastConsumption: snapshot,
+          toastMessage: `Consumed one "${entry.name}".`,
+        };
+        if (entry.relicCardId) {
+          const cardIndex = state.inventory.findIndex(card => String(card.id) === entry.relicCardId);
+          if (cardIndex < 0) return { toastMessage: 'Linked relic not found.' };
+          snapshot.card = structuredClone(state.inventory[cardIndex]);
+          snapshot.cardIndex = cardIndex;
+          patch.inventory = state.inventory.filter((_, index) => index !== cardIndex);
+          if (String(state.activeCard?.id) === entry.relicCardId) {
+            snapshot.activeCard = structuredClone(state.activeCard);
+            patch.activeCard = patch.inventory[0] ?? null;
+          }
+        }
+        return patch;
+      }),
+      undoConsume: () => {
+        if (!get().lastConsumption) return;
+        set(state => {
+          const { entry, index, card, cardIndex, activeCard } = state.lastConsumption;
+          const equipment = state.equipment.filter(item => item.id !== entry.id);
+          equipment.splice(index, 0, structuredClone(entry));
+          const patch = { equipment, lastConsumption: null, toastMessage: `Restored "${entry.name}".` };
+          if (card) {
+            patch.inventory = state.inventory.filter(item => item.id !== card.id);
+            patch.inventory.splice(cardIndex, 0, structuredClone(card));
+            if (activeCard) patch.activeCard = structuredClone(activeCard);
+          }
+          return patch;
+        });
+      },
       // Set basic state properties
       deck: defaultCards || [],
       inventory: [],

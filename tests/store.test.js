@@ -6,6 +6,84 @@ const saved = new Map();
 globalThis.localStorage = { getItem: (key) => saved.get(key) ?? null, setItem: (key, value) => saved.set(key, value), removeItem: (key) => saved.delete(key) };
 const { useCardStore: store } = await import('../src/store/useCardStore.js');
 
+test('consume decrements one unit and Undo restores the exact equipment snapshot', () => {
+  store.setState({ equipment: [], inventory: [], relicEquipmentCache: {}, lastConsumption: null });
+  store.getState().addEquipment({ name: 'Potion', quantity: 3, unitWeightLb: 0.5, carried: true, consumable: true, category: 'Supplies', imageUrl: '/potion.png', source: null });
+  const original = structuredClone(store.getState().equipment[0]);
+  const profile = store.getState().profile;
+  const inventory = store.getState().inventory;
+  store.getState().consumeEquipment(original.id);
+  assert.deepEqual(store.getState().equipment[0], { ...original, quantity: 2 });
+  assert.equal(store.getState().profile, profile);
+  assert.equal(store.getState().inventory, inventory);
+  assert.equal(store.getState().lastConsumption.entry.id, original.id);
+  store.getState().updateEquipment(original.id, { name: 'Edited later', unitWeightLb: 7 });
+  store.getState().undoConsume();
+  assert.deepEqual(store.getState().equipment, [original]);
+  assert.equal(store.getState().lastConsumption, null);
+  store.getState().undoConsume();
+  assert.deepEqual(store.getState().equipment, [original]);
+});
+
+test('consume quantity one removes equipment and Undo restores its original position', () => {
+  store.setState({ equipment: [], inventory: [], relicEquipmentCache: {}, lastConsumption: null });
+  for (const name of ['Rope', 'Potion', 'Torch']) store.getState().addEquipment({ name, quantity: 1, unitWeightLb: null, carried: false, consumable: name === 'Potion' });
+  const original = structuredClone(store.getState().equipment);
+  store.getState().consumeEquipment(original[1].id);
+  assert.deepEqual(store.getState().equipment, [original[0], original[2]]);
+  store.getState().undoConsume();
+  assert.deepEqual(store.getState().equipment, original);
+});
+
+test('invalid or non-consumable targets leave domain state and pending Undo unchanged', () => {
+  store.setState({ equipment: [], inventory: [], relicEquipmentCache: {}, lastConsumption: null });
+  store.getState().addEquipment({ name: 'Potion', quantity: 2, unitWeightLb: 1, carried: true, consumable: true });
+  store.getState().addEquipment({ name: 'Rope', quantity: 1, unitWeightLb: 10, carried: true });
+  store.getState().consumeEquipment(store.getState().equipment[0].id);
+  const before = store.getState();
+  for (const id of ['missing', undefined, before.equipment[1].id]) {
+    store.getState().consumeEquipment(id);
+    const after = store.getState();
+    for (const key of ['equipment', 'inventory', 'profile', 'lastConsumption', 'deck', 'discardedCustom', 'relicEquipmentCache']) assert.equal(after[key], before[key]);
+    assert.equal(typeof after.toastMessage, 'string');
+    assert.ok(after.toastMessage.length < 100);
+  }
+});
+
+test('only the latest consumption can be undone', () => {
+  store.setState({ equipment: [], inventory: [], relicEquipmentCache: {}, lastConsumption: null });
+  for (const name of ['Potion', 'Ration']) store.getState().addEquipment({ name, quantity: 3, unitWeightLb: 1, carried: true, consumable: true });
+  const [potion, ration] = store.getState().equipment;
+  store.getState().consumeEquipment(potion.id);
+  store.getState().consumeEquipment(ration.id);
+  store.getState().undoConsume();
+  assert.deepEqual(store.getState().equipment.map(entry => entry.quantity), [2, 3]);
+});
+
+test('consuming a linked relic removes ownership atomically and Undo restores exact records', () => {
+  for (const id of ['base-consumable', 'custom-consumable']) {
+    const card = { id, name: 'Relic potion', rarity: 'common', isAttuned: true, progress: { level1: 2, level2: 0 }, stats: { hit: '+9' } };
+    const sibling = { id: 'sibling', name: 'Keep me', rarity: 'rare' };
+    store.setState({ deck: [], inventory: [], equipment: [], relicEquipmentCache: {}, discardedCustom: [], lastConsumption: null, lastDiscard: null, activeCard: null });
+    store.getState().addToInventory(sibling);
+    store.getState().addToInventory(card);
+    const entry = store.getState().equipment.find(item => item.relicCardId === id);
+    store.getState().updateEquipment(entry.id, { consumable: true, carried: false, unitWeightLb: 0.5 });
+    const original = structuredClone({ equipment: store.getState().equipment, inventory: store.getState().inventory, activeCard: store.getState().activeCard });
+    store.getState().consumeEquipment(entry.id);
+    assert.deepEqual(store.getState().inventory.map(item => item.id), ['sibling']);
+    assert.deepEqual(store.getState().equipment.map(item => item.relicCardId), ['sibling']);
+    assert.equal(store.getState().activeCard.id, 'sibling');
+    assert.deepEqual(store.getState().deck, []);
+    assert.deepEqual(store.getState().discardedCustom, []);
+    assert.equal(store.getState().lastDiscard, null);
+    store.getState().undoConsume();
+    assert.deepEqual(store.getState().equipment, original.equipment);
+    assert.deepEqual(store.getState().inventory, original.inventory);
+    assert.deepEqual(store.getState().activeCard, original.activeCard);
+  }
+});
+
 test('version three storage upgrades spells and consumables once without changing player or relic edits', async () => {
   const profile = { ...createPlayerProfile(), name: 'Legacy hero', notes: 'Old journal', currency: { cp: 12, sp: 2, ep: null, gp: 100, pp: 0 }, capacityOverrideLb: 150, capacityOverrideReason: 'Pack' };
   delete profile.sheet.learnedSpellIds;
