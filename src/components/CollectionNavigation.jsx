@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Menu, Layers, Backpack, BookOpen, Volume2, VolumeX, UserRound } from 'lucide-react';
+import { Menu, Layers, Backpack, Volume2, VolumeX, UserRound } from 'lucide-react';
 
-export function CollectionNavigation({ page, canRead, onRead, onDice, muted, onToggleSound }) {
+export function CollectionNavigation({ page, onDice, muted, onToggleSound }) {
   const [open, setOpen] = useState(false);
   const openDialog = (event, action) => {
     event.currentTarget.closest('nav').querySelector('.orbit-toggle')?.focus();
@@ -18,8 +18,6 @@ export function CollectionNavigation({ page, canRead, onRead, onDice, muted, onT
       }}>
       <div id="collection-shortcuts" className="orbit-shortcuts" inert={!open} aria-hidden={!open}>
         {[[ 'deck', 'Deck', Layers ], [ 'inventory', 'Inventory', Backpack ], [ 'character', 'Character', UserRound ]].map(([route, label, Icon]) => <a key={route} href={`#/${route}`} aria-current={page === route ? 'page' : undefined} aria-label={label} title={label} onClick={event => { event.currentTarget.closest('nav').querySelector('.orbit-toggle')?.focus(); setOpen(false); }}><Icon size={20} aria-hidden="true" /></a>)}
-        <button type="button" aria-label="Read details" title={canRead ? 'Read details' : 'Select a relic to read details'} disabled={!canRead}
-          onClick={event => openDialog(event, onRead)}><BookOpen size={20} aria-hidden="true" /></button>
         <button type="button" aria-label="Roll a D20" title="Roll a D20" aria-haspopup="dialog" onClick={event => openDialog(event, onDice)}>
           <svg width="20" height="22" viewBox="0 0 24 26" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M12 1 23 7v12l-11 6L1 19V7Z M12 1 6 9l-5-2 M12 1l6 8 5-2 M6 9l-5 10 11 6 11-6-5-10 M6 9h12l-6 11Z M1 19l11 1 11-1 M12 20v5"/><text x="12" y="15" fill="currentColor" stroke="none" textAnchor="middle" fontSize="6" fontWeight="bold">20</text></svg>
         </button>

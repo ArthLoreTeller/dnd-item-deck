@@ -38,7 +38,7 @@ export default function App() {
   const toggleMuted = useSoundSettings((state) => state.toggleMuted);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
-  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsCardId, setDetailsCardId] = useState(null);
   const [toolsOpen, setToolsOpen] = useState(false);
 
   const { page, navigate } = usePageRoute();
@@ -76,11 +76,12 @@ export default function App() {
   );
 
   const displayedCard = inventory.find(card => card.id === motion.card?.id) || motion.card;
+  const detailsCard = inventory.find(card => card.id === detailsCardId);
 
   useEffect(() => {
     reconcileInventory(inventory);
-    if (motion.card && !inventory.some(card => card.id === motion.card.id)) setDetailsOpen(false);
-  }, [inventory, motion.card, reconcileInventory]);
+    if (detailsCardId !== null && !inventory.some(card => card.id === detailsCardId)) setDetailsCardId(null);
+  }, [inventory, motion.card, detailsCardId, reconcileInventory]);
 
   useEffect(() => {
     if (!activeCard && motion.face === "front") returnToDeck();
@@ -124,7 +125,7 @@ export default function App() {
         if (event.target.closest("button, select, [role=button]") && !event.target.closest("[data-silent]")) playSound("click");
       }} className="reliquary min-h-screen bg-slate-900 text-white flex flex-col items-center p-4 sm:p-6 gap-6 relative">
         {diceOpen && <DiceTray onClose={closeDice} />}
-        {detailsOpen && displayedCard && <ItemDetails card={displayedCard} onClose={() => setDetailsOpen(false)} />}
+        {detailsCard && <ItemDetails card={detailsCard} onClose={() => setDetailsCardId(null)} />}
         {importOpen && <CharacterImportDialog onClose={() => setImportOpen(false)} />}
         {toolsOpen && <InventoryTools onClose={() => setToolsOpen(false)} onRestored={card => { if (card) select(card); }} />}
         {toastMessage && createPortal(
@@ -254,11 +255,11 @@ export default function App() {
           </>}
         </header>
 
-        {page === 'deck' && <DeckPage {...{ motion, displayedCard, isDrawn, isRevealing, deck, inventory, handleDrawCard, handleReturnToDeck, handleContinue }} onInspect={handleSelectInventoryItem} onDiscard={id => { playSound('discard'); discardCard(id); }} onOpenInventory={() => navigate('inventory')} />}
-        {page === 'inventory' && <InventoryPage onInspect={card => { handleSelectInventoryItem(card); navigate('deck'); }} onTools={() => setToolsOpen(true)} onCharacter={() => navigate('character')} onDeck={() => navigate('deck')} />}
+        {page === 'deck' && <DeckPage {...{ motion, displayedCard, isDrawn, isRevealing, deck, inventory, handleDrawCard, handleReturnToDeck, handleContinue }} onInspect={handleSelectInventoryItem} onReadDetails={card => setDetailsCardId(card.id)} onDiscard={id => { playSound('discard'); discardCard(id); }} onOpenInventory={() => navigate('inventory')} />}
+        {page === 'inventory' && <InventoryPage onInspect={card => setDetailsCardId(card.id)} onTools={() => setToolsOpen(true)} onCharacter={() => navigate('character')} onDeck={() => navigate('deck')} />}
         {page === 'character' && <CharacterPage onImport={() => setImportOpen(true)} />}
 
-        <CollectionNavigation page={page} canRead={isDrawn && !isRevealing && Boolean(displayedCard)} onRead={() => setDetailsOpen(true)} onDice={() => setDiceOpen(true)} muted={muted} onToggleSound={toggleMuted} />
+        <CollectionNavigation page={page} onDice={() => setDiceOpen(true)} muted={muted} onToggleSound={toggleMuted} />
 
         <ItemSearchModal
           isOpen={isSearchModalOpen}

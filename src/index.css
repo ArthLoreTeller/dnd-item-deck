@@ -522,7 +522,7 @@ html[data-theme="woody"] .reliquary {
 }
 :root { --player-radius: 16px; }
 .player-page { width: 100%; max-width: 1024px; padding-bottom: 90px; }
-.sheet-panel, .load-summary, .equipment-tile, .player-dialog, .ability-box { --env-text: var(--env-panel-text); --env-muted: var(--env-panel-muted); --env-accent: var(--env-panel-accent); color: var(--env-text); }
+.sheet-panel, .load-summary, .equipment-row, .player-dialog, .ability-box { --env-text: var(--env-panel-text); --env-muted: var(--env-panel-muted); --env-accent: var(--env-panel-accent); color: var(--env-text); }
 .pdf-picker { border: 1px dashed var(--env-border); padding: 22px; border-radius: 12px; align-items: center; text-align: center; }
 .import-warnings { padding: 16px; border: 1px solid var(--env-border); border-radius: 12px; }
 .import-warnings li { margin: 8px 0 8px 18px; list-style: disc; font-size: 13px; color: var(--env-muted); }
@@ -549,18 +549,43 @@ html[data-theme="woody"] .reliquary {
 .player-form input[type=checkbox] { width: 17px; height: 17px; accent-color: var(--env-accent); }
 .inventory-toolbar { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin: 22px 0; }
 .inventory-toolbar .search-field { flex: 1; min-width: 180px; flex-direction: row; align-items: center; }
-.inventory-toolbar select { width: auto; }
-.equipment-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; margin-top: 16px; }
-.equipment-tile { min-width: 0; background: var(--env-panel); border: 1px solid var(--env-border); border-radius: var(--player-radius); overflow: hidden; }
-.equipment-inspect { width: 100%; text-align: left; }
-.equipment-art { height: 230px; position: relative; display: grid; place-items: center; background: radial-gradient(ellipse, color-mix(in srgb, var(--env-accent), transparent 88%), var(--env-deep)); overflow: hidden; }
-.equipment-art img { width: 100%; height: 100%; object-fit: contain; padding: 18px; z-index: 1; }
-.equipment-art img:not([hidden]) + .equipment-placeholder { display: none; }
-.equipment-placeholder { position: absolute; color: var(--env-accent); opacity: .55; }
-.equipment-title { padding: 18px 18px 0; }
-.equipment-title h3 { margin: 12px 0 16px; font-size: 20px; overflow-wrap: anywhere; }
-.equipment-foot { display: flex; flex-wrap: wrap; gap: 8px 14px; padding: 0 18px 18px; color: var(--env-muted); font-size: 12px; }
-.equipment-foot button { flex-basis: 100%; text-align: left; }
+.inventory-toolbar select { width: auto; background: var(--env-select-background); color: var(--env-select-text); }
+.reliquary select option { background: var(--env-select-background); color: var(--env-select-text); }
+.inventory-recovery:not(:empty) { margin-bottom: 14px; }
+.equipment-list { margin-top: 16px; max-height: min(64dvh, 680px); overflow-y: auto; overscroll-behavior-y: contain; scrollbar-width: none; border-block: 1px solid var(--env-border); background: var(--env-panel); }
+.equipment-list::-webkit-scrollbar, .mini-inventory-list::-webkit-scrollbar { display: none; }
+.mini-inventory-list { scrollbar-width: none; }
+.equipment-row { min-width: 0; display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--env-border); transition: background-color 160ms ease, box-shadow 160ms ease; }
+.equipment-row:last-child { border-bottom: 0; }
+.equipment-row:focus-within { background: color-mix(in srgb, var(--env-panel-accent), var(--env-panel) 94%); box-shadow: inset 3px 0 var(--env-panel-accent); }
+.equipment-thumbnail { width: 44px; height: 48px; position: relative; display: grid; place-items: center; background: var(--env-deep); border: 1px solid var(--env-border); border-radius: 4px; overflow: hidden; }
+.equipment-thumbnail img { width: 100%; height: 100%; object-fit: contain; padding: 4px; z-index: 1; }
+.equipment-thumbnail img:not([hidden]) + .equipment-placeholder { display: none; }
+.equipment-placeholder { position: absolute; color: var(--env-panel-accent); opacity: .7; }
+.equipment-info { min-width: 0; }
+.equipment-name-line { display: flex; align-items: baseline; gap: 10px; }
+.equipment-row h3 { margin: 0; font: 18px/1.3 Georgia, serif; overflow-wrap: anywhere; }
+.equipment-quantity { flex-shrink: 0; padding: 2px 6px; border: 1px solid var(--env-border); border-radius: 4px; font: 12px/1.3 ui-monospace, monospace; color: var(--env-panel-text); font-variant-numeric: tabular-nums; }
+.equipment-row .inventory-meta { gap: 5px 10px; margin-top: 5px; color: var(--env-panel-muted); font-size: 11px; line-height: 1.4; }
+.equipment-row .rarity-badge { font-size: 9px; padding: 2px 5px; }
+.equipment-row-actions { display: flex; align-items: center; gap: 5px; }
+.reliquary button.equipment-icon-action, .reliquary button.equipment-consume { position: relative; display: inline-flex; align-items: center; justify-content: center; min-width: 36px; min-height: 36px; border: 1px solid transparent; border-radius: 5px; padding: 8px; background: transparent; color: var(--env-panel-text); box-shadow: none; cursor: pointer; }
+.reliquary button.equipment-consume { padding-inline: 10px; border-color: var(--env-border); color: var(--env-panel-accent); font: 600 12px/1.3 'Trebuchet MS', system-ui, sans-serif; }
+.reliquary button.equipment-icon-action:focus-visible, .reliquary button.equipment-consume:focus-visible { outline: 2px solid var(--env-panel-accent); outline-offset: 2px; background: color-mix(in srgb, var(--env-panel-accent), var(--env-panel) 88%); }
+.reliquary button.equipment-icon-action:active, .reliquary button.equipment-consume:active { background: color-mix(in srgb, var(--env-panel-accent), var(--env-panel) 78%); color: var(--env-panel-text); }
+.reliquary button.equipment-icon-action:disabled { opacity: .45; cursor: default; }
+.action-tooltip { position: absolute; top: 50%; right: calc(100% + 7px); transform: translateY(-50%); z-index: 40; padding: 5px 8px; border: 1px solid var(--env-border); border-radius: 4px; background: var(--env-panel); color: var(--env-panel-text); font: 11px/1.4 'Trebuchet MS', system-ui, sans-serif; white-space: nowrap; pointer-events: none; visibility: hidden; opacity: 0; }
+.equipment-icon-action:focus-visible .action-tooltip { visibility: visible; opacity: 1; }
+.reliquary button.card-details-action { flex-shrink: 0; min-width: 44px; min-height: 44px; background: var(--env-panel); border-color: var(--env-border); }
+@media (hover: hover) {
+  .equipment-row:hover { background: color-mix(in srgb, var(--env-panel-accent), var(--env-panel) 96%); box-shadow: inset 3px 0 var(--env-panel-accent); }
+  .reliquary button.equipment-icon-action.equipment-icon-action:not([disabled]):hover, .reliquary button.equipment-consume.equipment-consume:not([disabled]):hover { background: color-mix(in srgb, var(--env-panel-accent), var(--env-panel) 88%); color: var(--env-panel-text); border-color: var(--env-border); }
+  .equipment-icon-action:hover .action-tooltip { visibility: visible; opacity: 1; }
+}
+@media (pointer: coarse) {
+  .reliquary button.equipment-icon-action, .reliquary button.equipment-consume { min-width: 44px; min-height: 44px; }
+  .inventory-toolbar .check-label { min-height: 44px; }
+}
 .empty-pack { text-align: center; padding: 55px 20px; display: grid; justify-items: center; gap: 14px; color: var(--env-muted); }
 .player-overlay { position: fixed; inset: 0; background: #080d16bd; backdrop-filter: blur(8px); z-index: 80; display: grid; place-items: center; padding: 20px; }
 .player-dialog { width: min(100%, 680px); max-height: calc(100dvh - 40px); overflow: auto; background: var(--env-panel); border: 1px solid var(--env-border); border-radius: 20px; padding: 28px; color: var(--env-text); display: flex; flex-direction: column; gap: 18px; }
@@ -596,8 +621,10 @@ html[data-theme="woody"] .reliquary {
   .player-dialog { padding: 20px; }
   .class-row { grid-template-columns: minmax(0, 1fr) 70px; }
   .class-row button { grid-column: 1 / -1; justify-self: start; }
-  .equipment-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
-  .equipment-art { height: 180px; }
+  .equipment-row { grid-template-columns: 36px minmax(0, 1fr); gap: 8px 12px; padding: 12px; }
+  .equipment-thumbnail { width: 36px; height: 42px; }
+  .equipment-row-actions { grid-column: 2; justify-self: end; }
+  .equipment-row h3 { font-size: 16px; }
 }
 
 @keyframes attune-control-pulse { 0%, 100% { transform: scale(1); } 45% { transform: scale(1.08); } }

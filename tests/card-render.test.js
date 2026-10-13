@@ -8,14 +8,18 @@ import { pathToFileURL } from 'node:url';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { rolldown } from 'rolldown';
 import defaultCards from '../src/data/defaultCards.json' with { type: 'json' };
-const bundle = await rolldown({ input: 'src/components/Card.jsx', plugins: [{ name: 'external-dependencies', resolveId(id) { if (/^(react(?:-dom)?|zustand|lucide-react)(\/|$)/.test(id)) return { id: import.meta.resolve(id), external: true }; } }] });
-const output = await bundle.generate({ format: 'esm' });
+const bundle = await rolldown({ input: { card: 'src/components/Card.jsx', deck: 'src/pages/DeckPage.jsx', navigation: 'src/components/CollectionNavigation.jsx' }, plugins: [{ name: 'external-dependencies', resolveId(id) { if (/^(react(?:-dom)?|zustand|lucide-react)(\/|$)/.test(id)) return { id: import.meta.resolve(id), external: true }; } }] });
+const output = await bundle.generate({ format: 'esm', entryFileNames: '[name].mjs', chunkFileNames: '[name]-[hash].mjs' });
 await bundle.close();
 const directory = await mkdtemp(join(tmpdir(), 'reliquary-render-'));
 const modulePath = join(directory, 'card.mjs');
-await writeFile(modulePath, output.output[0].code);
-let Card;
-try { ({ Card } = await import(pathToFileURL(modulePath).href)); } finally { await rm(directory, { recursive: true }); }
+await Promise.all(output.output.map(file => writeFile(join(directory, file.fileName), file.code)));
+let Card, DeckPage, CollectionNavigation;
+try {
+  ({ Card } = await import(pathToFileURL(modulePath).href));
+  ({ DeckPage } = await import(pathToFileURL(join(directory, 'deck.mjs')).href));
+  ({ CollectionNavigation } = await import(pathToFileURL(join(directory, 'navigation.mjs')).href));
+} finally { await rm(directory, { recursive: true }); }
 
 test('attuned cards render editable stats without crashing', () => {
   for (const card of defaultCards.filter(card => card.type !== 'normal')) {
@@ -35,4 +39,24 @@ test('progressive cards expose named keyboard-operable progression buttons', () 
   const html = renderToStaticMarkup(React.createElement(Card, { card: { ...card, isAttuned: true } }));
   assert.match(html, /<button[^>]*aria-label="Level 1 progress 1 of 20"/);
   assert.match(html, /aria-pressed="false"/);
+});
+
+test('the visible deck card offers an accessible Read Details action', () => {
+  const card = defaultCards[0];
+  const html = renderToStaticMarkup(React.createElement(DeckPage, { motion: { phase: 'idle' }, displayedCard: card, isDrawn: true, isRevealing: false, deck: [], inventory: [] }));
+  assert.ok(html.includes(`aria-label="Read details for ${card.name}"`));
+  assert.match(html, /aria-haspopup="dialog"/);
+});
+
+test('card details action is unavailable while revealing or showing the deck back', () => {
+  const card = defaultCards[0];
+  const reveal = renderToStaticMarkup(React.createElement(DeckPage, { motion: { phase: 'revealing' }, displayedCard: card, isDrawn: true, isRevealing: true, deck: [], inventory: [] }));
+  assert.match(reveal, /<button[^>]*aria-label="Read details for [^"]+"[^>]*disabled=""/);
+  const back = renderToStaticMarkup(React.createElement(DeckPage, { motion: { phase: 'idle' }, displayedCard: card, isDrawn: false, isRevealing: false, deck: [], inventory: [] }));
+  assert.doesNotMatch(back, /aria-label="Read details for/);
+});
+
+test('collection shortcuts no longer offer a detached Read Details action', () => {
+  const html = renderToStaticMarkup(React.createElement(CollectionNavigation, { page: 'deck', canRead: true }));
+  assert.doesNotMatch(html, /aria-label="Read details"/);
 });

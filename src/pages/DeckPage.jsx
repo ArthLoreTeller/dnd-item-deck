@@ -1,7 +1,8 @@
 import { Card } from '../components/Card';
 import { RARITIES, normalizeCard } from '../data/rarity';
 import { MiniInventory } from '../components/MiniInventory';
-export function DeckPage({ motion, displayedCard, isDrawn, isRevealing, deck, handleDrawCard, handleReturnToDeck, handleContinue, inventory, onInspect, onDiscard, onOpenInventory }) { return (
+import { BookOpen } from 'lucide-react';
+export function DeckPage({ motion, displayedCard, isDrawn, isRevealing, deck, handleDrawCard, handleReturnToDeck, handleContinue, inventory, onInspect, onReadDetails, onDiscard, onOpenInventory }) { return (
         <div className="relic-layout w-full max-w-5xl grid grid-cols-1 gap-8 items-start mt-2">
           <div id="relic-deck" className="relic-stage  flex flex-col items-center gap-4">
             <div className="card-display"><div className="card-scale">
@@ -66,6 +67,7 @@ export function DeckPage({ motion, displayedCard, isDrawn, isRevealing, deck, ha
                   <div className="deck-action-row flex items-center justify-between gap-2">
                     <button data-silent disabled={isRevealing} onClick={handleReturnToDeck} className="discard-action flex-1 px-3 py-2.5 bg-red-950/30 hover:bg-red-900/50 text-red-400 border border-red-900/50 rounded-lg text-xs font-bold uppercase transition-colors cursor-pointer">Discard</button>
                     <button data-silent disabled={isRevealing} onClick={handleContinue} className="continue-action flex-1 px-3 py-2.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-200 border border-amber-500/40 rounded-lg text-xs font-bold transition-colors cursor-pointer">Keep</button>
+                    {displayedCard && <button type="button" className="card-details-action equipment-icon-action" aria-label={`Read details for ${displayedCard.name}`} aria-haspopup="dialog" disabled={isRevealing} onClick={() => onReadDetails(displayedCard)}><BookOpen size={20} aria-hidden="true" /><span className="action-tooltip" aria-hidden="true">Read details</span></button>}
                   </div>
                   <p className="inspection-tip text-center">Keep saves this relic in inventory and shows the deck.</p>
                 </div>
