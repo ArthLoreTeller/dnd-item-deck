@@ -60,6 +60,77 @@ test('failed purchases preserve all domain records and persisted state', () => {
   assert.match(store.getState().purchaseItem('acid').error, /insufficient funds/i);
 });
 
+test('purchase after partial consumption invalidates Undo atomically and preserves paid stack quantity', () => {
+  const profile = { ...createPlayerProfile(), currency: { cp: 0, sp: 0, ep: 0, gp: 1, pp: 0 } };
+  store.setState({ profile, equipment: [], inventory: [], relicEquipmentCache: {}, lastConsumption: null });
+  store.getState().purchaseItem('torch', 2);
+  const id = store.getState().equipment[0].id;
+  store.getState().consumeEquipment(id);
+  assert.equal(store.getState().equipment[0].quantity, 1);
+  assert.ok(store.getState().lastConsumption);
+  const observed = [];
+  const unsubscribe = store.subscribe(state => observed.push(state));
+  try {
+    assert.deepEqual(store.getState().purchaseItem('torch', 3), { ok: true });
+  } finally {
+    unsubscribe();
+  }
+  const purchased = store.getState();
+  const persisted = localStorage.getItem('dnd-item-deck-storage');
+  assert.equal(purchased.equipment[0].quantity, 4);
+  store.getState().undoConsume();
+  assert.equal(store.getState().equipment[0].quantity, 4);
+  assert.equal(store.getState().equipment, purchased.equipment);
+  assert.equal(store.getState().profile, purchased.profile);
+  assert.deepEqual(store.getState().profile.currency, { cp: 5, sp: 4, ep: 1, gp: 0, pp: 0 });
+  assert.equal(localStorage.getItem('dnd-item-deck-storage'), persisted);
+  assert.equal(observed.length, 1);
+  assert.equal(observed[0].lastConsumption, null);
+});
+
+test('repurchase after full consumption invalidates Undo and preserves paid quantity at the reused ID', () => {
+  const profile = { ...createPlayerProfile(), currency: { cp: 0, sp: 0, ep: 0, gp: 1, pp: 0 } };
+  store.setState({ profile, equipment: [], inventory: [], relicEquipmentCache: {}, lastConsumption: null });
+  store.getState().purchaseItem('torch');
+  const id = store.getState().equipment[0].id;
+  assert.equal(id, 'shop:torch');
+  store.getState().consumeEquipment(id);
+  assert.deepEqual(store.getState().equipment, []);
+  assert.ok(store.getState().lastConsumption);
+  assert.deepEqual(store.getState().purchaseItem('torch', 3), { ok: true });
+  const purchased = store.getState();
+  const persisted = localStorage.getItem('dnd-item-deck-storage');
+  assert.equal(purchased.equipment[0].id, id);
+  assert.equal(purchased.equipment[0].quantity, 3);
+  store.getState().undoConsume();
+  assert.equal(store.getState().equipment[0].quantity, 3);
+  assert.equal(store.getState().equipment, purchased.equipment);
+  assert.equal(store.getState().profile, purchased.profile);
+  assert.deepEqual(store.getState().profile.currency, { cp: 6, sp: 4, ep: 1, gp: 0, pp: 0 });
+  assert.equal(localStorage.getItem('dnd-item-deck-storage'), persisted);
+  assert.equal(purchased.lastConsumption, null);
+});
+
+test('failed purchase preserves an active consumption Undo and every domain reference', () => {
+  const profile = { ...createPlayerProfile(), currency: { cp: 3, sp: 0, ep: 0, gp: 0, pp: 0 } };
+  store.setState({ profile, equipment: [], inventory: [], relicEquipmentCache: {}, lastConsumption: null });
+  store.getState().purchaseItem('torch', 2);
+  const original = structuredClone(store.getState().equipment);
+  store.getState().consumeEquipment(original[0].id);
+  const before = store.getState();
+  const persisted = localStorage.getItem('dnd-item-deck-storage');
+  assert.ok(before.lastConsumption);
+  for (const [id, quantity] of [['acid', 1], ['torch', 0], ['missing', 1]]) {
+    assert.equal(store.getState().purchaseItem(id, quantity).ok, false);
+    const after = store.getState();
+    for (const key of Object.keys(before).filter(key => key !== 'toastMessage')) assert.equal(after[key], before[key]);
+    assert.equal(localStorage.getItem('dnd-item-deck-storage'), persisted);
+  }
+  store.getState().undoConsume();
+  assert.deepEqual(store.getState().equipment, original);
+  assert.equal(store.getState().profile, before.profile);
+});
+
 test('consume decrements one unit and Undo restores the exact equipment snapshot', () => {
   store.setState({ equipment: [], inventory: [], relicEquipmentCache: {}, lastConsumption: null });
   store.getState().addEquipment({ name: 'Potion', quantity: 3, unitWeightLb: 0.5, carried: true, consumable: true, category: 'Supplies', imageUrl: '/potion.png', source: null });

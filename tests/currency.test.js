@@ -94,3 +94,18 @@ test('a purchase beyond the equipment quantity limit rejects before spending', (
   assert.throws(() => purchaseEquipment({ profile, equipment: [entry], catalogItem: torch, quantity: 1 }), /quantity/i);
   assert.deepEqual({ profile, equipment: [entry] }, before);
 });
+
+test('pure purchases allocate repeatable base IDs and the lowest unoccupied suffix', () => {
+  const profile = { ...createPlayerProfile(), currency: { ...zeroWallet, gp: 1 } };
+  const first = purchaseEquipment({ profile, equipment: [], catalogItem: torch, quantity: 1 });
+  assert.equal(first.equipment[0].id, 'shop:torch');
+  assert.deepEqual(purchaseEquipment({ profile, equipment: [], catalogItem: torch, quantity: 1 }), first);
+  const occupied = [
+    { ...first.equipment[0], unitWeightLb: 7 },
+    { ...first.equipment[0], id: 'shop:torch:3', unitWeightLb: 9 },
+  ];
+  const second = purchaseEquipment({ profile, equipment: occupied, catalogItem: torch, quantity: 2 });
+  assert.equal(second.equipment[2].id, 'shop:torch:2');
+  assert.deepEqual(second.equipment.slice(0, 2), occupied);
+  assert.deepEqual(purchaseEquipment({ profile, equipment: occupied, catalogItem: torch, quantity: 2 }), second);
+});

@@ -56,7 +56,7 @@ export const useCardStore = create(
             if (!catalogItem) throw new Error('Item not found in the shop.');
             const patch = purchaseEquipment({ profile: state.profile, equipment: state.equipment, catalogItem, quantity });
             result = { ok: true };
-            return { ...patch, toastMessage: `Purchased ${quantity} ${catalogItem.name}.` };
+            return { ...patch, lastConsumption: null, toastMessage: `Purchased ${quantity} ${catalogItem.name}.` };
           } catch (error) {
             result = { ok: false, error: error.message };
             return { toastMessage: result.error };
