@@ -721,3 +721,29 @@ html[data-theme="woody"] .reliquary {
   .character-stat-row-health { grid-template-columns: 1.4fr .8fr 1fr; }
   .character-stat { padding-inline: 6px; }
 }
+
+/* Skills: a compact ledger with directly editable character bonuses. */
+.skills-page { max-width: 780px; }
+.skill-list { --env-text: var(--env-panel-text); --env-muted: var(--env-panel-muted); --env-accent: var(--env-panel-accent); color: var(--env-text); border: 1px solid var(--env-border); border-radius: 6px; background: var(--env-panel); padding: 0 16px; list-style: none; }
+.skill-row { display: grid; grid-template-columns: minmax(0,1fr) 3ch 124px 76px; align-items: center; gap: 10px 16px; padding: 10px 0; border-bottom: 1px solid var(--env-border); }
+.skill-row:last-child { border-bottom: 0; }
+.skill-summary { min-width: 0; position: relative; }
+.reliquary button.skill-description-trigger { display: block; width: 100%; min-height: 44px; padding: 5px 0; border: 0; border-radius: 3px; text-align: left; background: transparent; color: var(--env-panel-text); box-shadow: none; font: 16px/1.4 Georgia,serif; text-decoration: underline dotted var(--env-panel-muted); text-underline-offset: 5px; cursor: pointer; }
+.skill-bonus { color: var(--env-panel-accent); font: 19px/1.3 Georgia,serif; font-variant-numeric: tabular-nums; text-align: right; }
+.skills-form label { gap: 4px; font-size: 10px; }
+.skills-form :is(input,select) { min-height: 38px; padding: 7px 8px; border-radius: 4px; font-size: 12px; }
+.skills-form :is(input,select,button):focus-visible { outline: 2px solid var(--env-panel-accent); outline-offset: 3px; }
+.skill-tooltip { position: absolute; top: calc(100% + 2px); left: 0; width: max-content; max-width: min(360px,calc(100vw - 64px)); z-index: 45; padding: 10px 12px; border: 1px solid var(--env-border); border-radius: 4px; background: var(--env-deep); color: var(--env-panel-text); box-shadow: 0 5px 18px #0003; font-size: 12px; line-height: 1.6; }
+.skills-note { margin-top: 14px; }
+.skills-save { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 16px; }
+.skills-save span { color: var(--env-muted); font-size: 12px; }
+@media (hover: hover) { .reliquary button.skill-description-trigger:hover { color: var(--env-panel-accent); } }
+@media (pointer: coarse) { .skills-form :is(input,select) { min-height: 44px; } }
+@media (max-width: 520px) {
+  .skill-list { padding: 0 12px; }
+  .skill-row { grid-template-columns: minmax(0,1fr) 76px; gap: 6px 12px; padding: 9px 0; }
+  .skill-proficiency { grid-column: 1; }
+  .skill-override { grid-column: 2; width: 100%; }
+  .skill-bonus { grid-column: 2; }
+  .skill-tooltip { max-width: min(320px,calc(100vw - 64px)); }
+}
