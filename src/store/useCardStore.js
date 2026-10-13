@@ -7,6 +7,8 @@ import { createPlayerProfile, migratePlayerData, newId, relicEquipment, validate
 import { mergeCharacterDraft } from '../data/character-import.js';
 import { applyGuidelineWeights } from '../data/equipment-weights.js';
 import { hasSheetData } from '../data/character-sheet.js';
+import { SRD_EQUIPMENT } from '../data/srd/equipment.js';
+import { purchaseEquipment } from '../data/currency.js';
 const defaultCards = rawDefaultCards.map(normalizeCard);
 
 function safeRestore(card, inventory) {
@@ -46,6 +48,22 @@ export const useCardStore = create(
       lastConsumption: null,
       applyCharacterImport: (draft, selection) => set(state => ({ ...mergeCharacterDraft(state, draft, selection), toastMessage: 'Reviewed character import saved.' })),
       updateProfile: patch => set(state => ({ profile: validateProfile({ ...state.profile, ...patch }) })),
+      purchaseItem: (catalogId, quantity = 1) => {
+        let result;
+        set(state => {
+          try {
+            const catalogItem = SRD_EQUIPMENT.find(item => item.id === catalogId);
+            if (!catalogItem) throw new Error('Item not found in the shop.');
+            const patch = purchaseEquipment({ profile: state.profile, equipment: state.equipment, catalogItem, quantity });
+            result = { ok: true };
+            return { ...patch, toastMessage: `Purchased ${quantity} ${catalogItem.name}.` };
+          } catch (error) {
+            result = { ok: false, error: error.message };
+            return { toastMessage: result.error };
+          }
+        });
+        return result;
+      },
       addEquipment: value => {
         const entry = validateEquipment({ ...value, id: newId(), characterId: get().profile.id, relicCardId: null });
         set(state => ({ equipment: [...state.equipment, entry] }));

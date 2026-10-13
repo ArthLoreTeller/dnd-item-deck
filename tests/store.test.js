@@ -6,6 +6,60 @@ const saved = new Map();
 globalThis.localStorage = { getItem: (key) => saved.get(key) ?? null, setItem: (key, value) => saved.set(key, value), removeItem: (key) => saved.delete(key) };
 const { useCardStore: store } = await import('../src/store/useCardStore.js');
 
+test('purchase updates funds and ordinary equipment in one atomic persisted transaction', async () => {
+  const profile = { ...createPlayerProfile(), currency: { cp: 0, sp: 0, ep: 0, gp: 0, pp: 5 } };
+  store.setState({ profile, equipment: [], inventory: [], relicEquipmentCache: {}, lastConsumption: null });
+  const observed = [];
+  const unsubscribe = store.subscribe(state => observed.push({ currency: state.profile.currency, equipment: state.equipment }));
+  try {
+    assert.deepEqual(store.getState().purchaseItem('acid', 2), { ok: true });
+  } finally {
+    unsubscribe();
+  }
+  assert.equal(observed.length, 1);
+  assert.deepEqual(observed[0].currency, { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 });
+  assert.equal(observed[0].equipment[0].quantity, 2);
+  assert.equal(observed[0].equipment[0].unitWeightLb, 1);
+  assert.equal(observed[0].equipment[0].consumable, true);
+  assert.equal(observed[0].equipment[0].relicCardId, null);
+  const equipment = structuredClone(store.getState().equipment);
+  await store.persist.rehydrate();
+  assert.deepEqual(store.getState().equipment, equipment);
+  assert.deepEqual(store.getState().profile, { ...profile, currency: observed[0].currency });
+});
+
+test('purchase defaults to one and merges identical ordinary stacks without altering relic state', () => {
+  const profile = { ...createPlayerProfile(), currency: { cp: 7, sp: 3, ep: 2, gp: 4, pp: 1 } };
+  store.setState({ profile, equipment: [], inventory: [], relicEquipmentCache: {}, deck: [], discardedCustom: [] });
+  store.getState().addToInventory({ id: 'custom-shop-torch', name: 'Torch', rarity: 'common', isAttuned: true });
+  store.getState().addEquipment({ name: ' TORCH ', quantity: 2, unitWeightLb: 1, carried: true, consumable: true, category: 'Adventuring Gear', imageUrl: '/torch.png' });
+  const before = store.getState();
+  const original = structuredClone(before.equipment);
+  assert.deepEqual(before.purchaseItem('torch'), { ok: true });
+  assert.deepEqual(store.getState().equipment, [original[0], { ...original[1], quantity: 3 }]);
+  assert.deepEqual(store.getState().profile.currency, { cp: 6, sp: 3, ep: 0, gp: 5, pp: 1 });
+  for (const key of ['inventory', 'deck', 'activeCard', 'relicEquipmentCache', 'discardedCustom']) assert.equal(store.getState()[key], before[key]);
+});
+
+test('failed purchases preserve all domain records and persisted state', () => {
+  const profile = { ...createPlayerProfile(), currency: { cp: 9, sp: 4, ep: 1, gp: 4, pp: 2 } };
+  store.setState({ profile, equipment: [], inventory: [], relicEquipmentCache: {}, deck: [], discardedCustom: [], lastConsumption: null, lastEquipmentRemoval: null, lastDiscard: null });
+  const before = store.getState();
+  const persisted = localStorage.getItem('dnd-item-deck-storage');
+  for (const [id, quantity] of [['acid', 1], ['missing', 1], ['torch', 0], ['torch', -1], ['torch', 1.5], ['torch', '2'], ['torch', Infinity], ['torch', 1000000]]) {
+    const result = store.getState().purchaseItem(id, quantity);
+    assert.equal(result.ok, false);
+    assert.equal(typeof result.error, 'string');
+    assert.equal(store.getState().toastMessage, result.error);
+    for (const key of ['profile', 'equipment', 'inventory', 'deck', 'activeCard', 'discardedCustom', 'relicEquipmentCache', 'lastConsumption', 'lastEquipmentRemoval', 'lastDiscard']) {
+      assert.equal(store.getState()[key], before[key]);
+      assert.deepEqual(store.getState()[key], before[key]);
+    }
+    assert.equal(localStorage.getItem('dnd-item-deck-storage'), persisted);
+  }
+  assert.match(store.getState().purchaseItem('acid').error, /insufficient funds/i);
+});
+
 test('consume decrements one unit and Undo restores the exact equipment snapshot', () => {
   store.setState({ equipment: [], inventory: [], relicEquipmentCache: {}, lastConsumption: null });
   store.getState().addEquipment({ name: 'Potion', quantity: 3, unitWeightLb: 0.5, carried: true, consumable: true, category: 'Supplies', imageUrl: '/potion.png', source: null });
