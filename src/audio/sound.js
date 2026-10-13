@@ -1,37 +1,38 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { SFX_ASSETS, isReadySfxPath } from './assets.js';
+
+function clampVolume(value) {
+  const number = typeof value === 'number' || typeof value === 'string' ? Number(value) : NaN;
+  return Number.isFinite(number) ? Math.min(1, Math.max(0, number)) : 1;
+}
 
 export const useSoundSettings = create(persist((set) => ({
   muted: false,
+  volume: 1,
+  reducedMotion: false,
   toggleMuted: () => set((state) => ({ muted: !state.muted })),
-}), { name: 'dnd-item-sound-settings' }));
+  setVolume: (value) => set({ volume: clampVolume(value) }),
+  setReducedMotion: (value) => set({ reducedMotion: Boolean(value) }),
+}), {
+  name: 'dnd-item-sound-settings',
+  partialize: ({ muted, volume, reducedMotion }) => ({ muted, volume, reducedMotion }),
+  merge: (saved, current) => ({
+    ...current,
+    muted: typeof saved?.muted === 'boolean' ? saved.muted : current.muted,
+    volume: clampVolume(saved?.volume ?? current.volume),
+    reducedMotion: typeof saved?.reducedMotion === 'boolean' ? saved.reducedMotion : current.reducedMotion,
+  }),
+}));
 
-let context;
-// Small synthesized chimes keep the app self-contained and work offline.
 export function playSound(kind = 'click', rarity = 'common') {
-  if (useSoundSettings.getState().muted) return;
+  const { muted, volume } = useSoundSettings.getState();
+  const path = kind === 'reveal' ? SFX_ASSETS.reveal[rarity] : SFX_ASSETS[kind];
+  if (muted || volume === 0 || !isReadySfxPath(path)) return;
   try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
-    context ||= new AudioContext();
-    if (context.state === 'suspended') context.resume().catch(() => {});
-    const tones = kind === 'dice' ? [160, 220, 180, 260, 200, 320] : kind === 'draw' ? [261.63, 392, 523.25, 783.99]
-      : kind === 'reveal' ? ({ common: [392, 523], uncommon: [440, 659], rare: [523, 784, 1047], epic: [523, 659, 784, 1047], legendary: [523, 659, 784, 1047, 1568] }[rarity] || [392, 523])
-      : kind === 'continue' ? [659, 523] : kind === 'reset' ? [523, 392, 261.63] : kind === 'discard' ? [330, 220] : kind === 'attune' ? [440, 554, 659] : [880, 1108];
-    const now = context.currentTime;
-    tones.forEach((frequency, index) => {
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      const start = now + index * (kind === 'click' ? 0.025 : 0.075);
-      const duration = kind === 'click' ? 0.09 : 0.4;
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(frequency, start);
-      gain.gain.setValueAtTime(0, start);
-      gain.gain.linearRampToValueAtTime(kind === 'click' ? 0.025 : 0.05, start + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
-      oscillator.connect(gain); gain.connect(context.destination);
-      oscillator.start(start); oscillator.stop(start + duration);
-      oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
-    });
+    if (typeof globalThis.Audio !== 'function') return;
+    const audio = new globalThis.Audio(path);
+    audio.volume = volume;
+    return Promise.resolve(audio.play()).catch(() => {});
   } catch { /* Audio support must never prevent a card action. */ }
 }

@@ -125,7 +125,7 @@ body { background-color: var(--env-background); transition: background-color 450
 .heading-subtitle, .inspection-tip, .draw-prompt > p, .draw-odds { color: var(--env-muted); }
 .sound-toggle { background-color: var(--env-panel); border-color: var(--env-border); }
 .theme-picker { display: flex; align-items: center; gap: 12px; width: 100%; color: var(--env-muted); font-size: 12px; }
-.theme-picker select { border: 1px solid var(--env-border); background: var(--env-panel); color: var(--env-text); padding: 7px 28px 7px 10px; border-radius: 8px; cursor: pointer; }
+.theme-picker select { border: 1px solid var(--env-border); background: var(--env-select-background); color: var(--env-select-text); padding: 7px 28px 7px 10px; border-radius: 8px; cursor: pointer; }
 .theme-swatches { display: flex; gap: 6px; margin-left: auto; }
 .theme-swatches span { width: 9px; height: 9px; border-radius: 50%; transition: opacity 300ms; }
 .reliquary :is([class*="bg-slate-800"], [class*="bg-slate-700"]):not(.item-surface, .item-surface *) { background-color: var(--env-panel); }
@@ -445,7 +445,7 @@ html[data-theme="woody"] .reliquary {
 .mini-inventory { min-width: 0; padding: 20px; border: 1px solid var(--env-border); border-radius: 16px; background: var(--env-panel); color: var(--env-panel-text); display: flex; flex-direction: column; gap: 14px; }
 .mini-inventory-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--env-border); }
 .mini-inventory-heading h2 { display: flex; align-items: center; gap: 8px; font: bold 18px Georgia, serif; margin: 0; }
-.mini-inventory-heading select { max-width: 100%; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--env-border); background: var(--env-background); color: var(--env-panel-text); font-size: 12px; }
+.mini-inventory-heading select { max-width: 100%; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--env-border); background: var(--env-select-background); color: var(--env-select-text); font-size: 12px; }
 .mini-inventory-list { display: flex; flex-direction: column; gap: 10px; max-height: 340px; overflow-y: auto; }
 .mini-inventory-item { position: relative; border: 1px solid var(--env-border); border-radius: 10px; }
 .mini-inventory [role="group"] { padding: 0; }

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { normalizeTheme } from './themes';
+import { normalizeTheme } from './themes.js';
 export const useTheme = create(persist((set) => ({
   theme: 'midnight',
   setTheme: (theme) => set({ theme: normalizeTheme(theme) }),
