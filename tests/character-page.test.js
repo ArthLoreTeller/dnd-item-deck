@@ -13,12 +13,16 @@ globalThis.localStorage = { getItem: key => memoryStorage.get(key) ?? null, setI
 const { useCardStore } = await import('../src/store/useCardStore.js');
 
 const storeUrl = pathToFileURL(join(process.cwd(), 'src/store/useCardStore.js')).href;
-const bundle = await rolldown({ input: 'src/pages/CharacterPage.jsx', plugins: [{ name: 'character-test-dependencies', resolveId(id) {
+const bundle = await rolldown({ input: 'src/pages/CharacterPage.jsx', plugins: [{ name: 'character-test-dependencies', resolveId(id, importer) {
   if (id.endsWith('/store/useCardStore')) return 'character-test-store';
+  if (id === 'react' && importer?.endsWith('CharacterPage.jsx')) return 'character-test-hooks';
   if (id === storeUrl) return { id, external: true };
   if (/^(react(?:-dom)?|zustand|lucide-react)(\/|$)/.test(id)) return { id: import.meta.resolve(id), external: true };
 }, load(id) {
-  if (id === 'character-test-store') return `import { useStore } from 'zustand'; import { useCardStore as store } from '${storeUrl}'; export const useCardStore = selector => useStore({ ...store, getInitialState: store.getState }, selector);`;
+  if (id === 'character-test-store') return `import { useCardStore as store } from '${storeUrl}'; export const useCardStore = () => store.getState();`;
+  // As in the Shop interaction tests, adapt only local hooks so real handlers
+  // and store validation can run without a DOM runtime.
+  if (id === 'character-test-hooks') return `const state = []; let cursor = 0; globalThis.characterPageTestHooks = { reset: () => { state.length = 0; cursor = 0; }, begin: () => { cursor = 0; } }; export function useState(initial) { const index = cursor++; if (!(index in state)) state[index] = typeof initial === 'function' ? initial() : initial; return [state[index], next => { state[index] = typeof next === 'function' ? next(state[index]) : next; }]; } export const useEffect = () => {};`;
 } }] });
 const output = await bundle.generate({ format: 'esm' });
 await bundle.close();
@@ -28,6 +32,7 @@ await writeFile(modulePath, output.output[0].code);
 let CharacterPage;
 try { ({ CharacterPage } = await import(pathToFileURL(modulePath).href)); } finally { await rm(directory, { recursive: true }); }
 const renderCharacter = (profile = createPlayerProfile()) => {
+  globalThis.characterPageTestHooks.reset();
   useCardStore.setState({ profile, equipment: [] });
   return renderToStaticMarkup(React.createElement(CharacterPage));
 };
@@ -53,11 +58,48 @@ test('compact profile removes navigation and retired panels while keeping workin
   assert.match(html,/Coins are excluded from equipment load\./);
 });
 
-test('hidden notes and features survive editing the profile', () => {
-  const profile=createPlayerProfile();profile.notes='Remember the old road';profile.sheet.features='Action Surge';profile.sheet.languages='Common';
+function elements(node) {
+  if (!React.isValidElement(node)) return [];
+  if (typeof node.type === 'function' && node.type.name === 'CharacterStatBlock') return elements(node.type(node.props));
+  return [node, ...React.Children.toArray(node.props.children).flatMap(elements)];
+}
+function tree() { globalThis.characterPageTestHooks.begin(); return CharacterPage({}); }
+
+test('Character stat handlers and Save retain hidden fields while committing HP and overrides', () => {
+  const profile = createPlayerProfile();
+  profile.notes = 'Remember the old road';
+  profile.hp = { current: 8, max: 40, temp: 5 };
+  profile.sheet.features = 'Action Surge';
+  profile.sheet.languages = 'Common';
+  profile.sheet.skills.Arcana = { proficiency: 2, override: 9 };
+  profile.sheet.learnedSpells = ['fireball'];
   renderCharacter(profile);
-  useCardStore.getState().updateProfile({...profile,name:'A new name'});
-  assert.equal(useCardStore.getState().profile.notes,'Remember the old road');
-  assert.equal(useCardStore.getState().profile.sheet.features,'Action Surge');
-  assert.equal(useCardStore.getState().profile.sheet.languages,'Common');
+  for (const [label, value] of [['Current HP', '12'], ['Prof Bonus override', '4'], ['Initiative override', '-2'], ['AC', '17']]) {
+    const input = elements(tree()).find(element => element.type === 'input' && element.props['aria-label'] === label);
+    assert.ok(input, label);
+    input.props.onChange({ target: { value } });
+  }
+  elements(tree()).find(element => element.type === 'form').props.onSubmit({ preventDefault() {} });
+  const saved = useCardStore.getState().profile;
+  assert.deepEqual(saved.hp, { current: 12, max: 40, temp: 5 });
+  assert.equal(saved.ac, 17);
+  assert.equal(saved.sheet.proficiencyBonusOverride, 4);
+  assert.equal(saved.sheet.initiativeOverride, -2);
+  assert.equal(saved.notes, 'Remember the old road');
+  assert.equal(saved.sheet.features, 'Action Surge');
+  assert.equal(saved.sheet.languages, 'Common');
+  assert.deepEqual(saved.sheet.skills.Arcana, { proficiency: 2, override: 9 });
+  assert.deepEqual(saved.sheet.learnedSpells, ['fireball']);
+  assert.match(renderToStaticMarkup(tree()), /Character saved in this browser\./);
+});
+
+test('invalid Character HP edit reports validation and leaves the saved profile intact', () => {
+  const profile = createPlayerProfile();
+  profile.hp = { current: 8, max: 40, temp: 5 };
+  renderCharacter(profile);
+  elements(tree()).find(element => element.type === 'input' && element.props['aria-label'] === 'Current HP').props.onChange({ target: { value: '-1' } });
+  elements(tree()).find(element => element.type === 'form').props.onSubmit({ preventDefault() {} });
+  assert.deepEqual(useCardStore.getState().profile.hp, { current: 8, max: 40, temp: 5 });
+  assert.match(renderToStaticMarkup(tree()), /role="alert"/);
+  assert.doesNotMatch(renderToStaticMarkup(tree()), /Character saved in this browser\./);
 });

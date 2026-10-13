@@ -618,6 +618,10 @@ html[data-theme="woody"] .reliquary {
 .corner-tooltip { position: absolute; inset: auto auto calc(100% + 5px) 50%; transform: translateX(-50%); padding: 4px 7px; border: 1px solid var(--env-border); border-radius: 4px; background: var(--env-panel); color: var(--env-panel-text); font-size: 11px; line-height: 1.4; white-space: nowrap; opacity: 0; pointer-events: none; z-index: 2; }
 .orbit-shortcuts a:is(:hover,:focus-visible,:active) .corner-tooltip { opacity: 1; }
 .orbit-shortcuts { overflow: visible; }
+@media (max-height: 350px) {
+  .orbit-shortcuts { overflow-y: auto; overflow-x: hidden; padding: 6px; }
+  .corner-tooltip { display: none; }
+}
 .contextual-actions { width: 100%; display: flex; justify-content: flex-end; }
 .settings-page { max-width: 720px; }
 .settings-panel { padding: 0 18px; gap: 0; }
@@ -778,6 +782,7 @@ html[data-theme="woody"] .reliquary {
 .shop-facts { display: flex; flex-direction: column; gap: 4px; text-align: right; font-variant-numeric: tabular-nums; }
 .shop-row button { min-height: 44px; }
 .notes-page :is(textarea,button):focus-visible, .shop-page :is(input,select,button,a):focus-visible { outline: 2px solid var(--env-panel-accent); outline-offset: 3px; }
+.shop-page > .page-title-row > a:focus-visible { outline-color: var(--env-text); }
 @media (max-width: 520px) {
   .notes-repertoire { grid-template-columns: 1fr; }
   .shop-filters { grid-template-columns: 1fr; gap: 10px; }

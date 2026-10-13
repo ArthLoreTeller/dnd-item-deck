@@ -48,6 +48,16 @@ test('2024 spell text preserves revised healing, ritual, concentration, scaling 
   assert.match(spellById('telekinesis').description, /such as manipulating a simple tool,$/);
 });
 
+test('prismatic rules display plain text while preserving saving throw and spell references', () => {
+  for (const id of ['prismatic-spray', 'prismatic-wall']) {
+    const description = spellById(id).description;
+    assert.doesNotMatch(description, /\*/);
+    assert.match(description, /Failed Save: 12d6 Fire damage\. Successful Save: Half as much damage\./);
+    assert.match(description, /Greater Restoration spell/);
+  }
+  assert.match(spellById('prismatic-wall').description, /Additional Effects: This layer is destroyed by Dispel Magic\./);
+});
+
 test('mundane equipment has unique IDs, integer copper prices and known or unknown weights', () => {
   assert.ok(SRD_EQUIPMENT.length >= 150);
   assert.equal(new Set(SRD_EQUIPMENT.map(item => item.id)).size, SRD_EQUIPMENT.length);

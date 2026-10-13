@@ -3,7 +3,7 @@ import { useCardStore } from '../store/useCardStore';
 import { Card } from './Card';
 
 export default function MainDeck() {
-  const { deck = [], drawRandomCard, activeCard, setActiveCard, discardCard } = useCardStore();
+  const { deck = [], drawRandomCard, activeCard, discardCard } = useCardStore();
   const [isDrawn, setIsDrawn] = useState(false);
 
   const deckCount = deck.length;

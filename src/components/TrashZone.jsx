@@ -1,7 +1,7 @@
-import { DndContext, useDraggable, useDroppable } from '@dnd-kit/core';
+import { useDroppable } from '@dnd-kit/core';
 
 // Trash Target Component
-function TrashZone({acti}) {
+export function TrashZone() {
   const { isOver, setNodeRef } = useDroppable({ id: 'trash-zone' });
   
   return (

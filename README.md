@@ -1,16 +1,29 @@
 # The Reliquary — D&D Item Deck
 
-Version 1.2 is a browser-based homebrew item deck and inventory companion. Draw a random relic, find a specific item, create custom cards, attune magic items, and track three-stage item progression.
+Version 1.3.0 is a browser-based homebrew item deck and character companion. Draw relics, track equipment, edit a character, learn SRD spells, and buy mundane supplies with saved currency.
+
+## Version 1.3 routes and usage
+
+The Corner Menu opens Deck (`#/deck`), Inventory (`#/inventory`), Character (`#/character`), Skills (`#/skills`), Spells (`#/spells`), Notes (`#/notes`), Shop (`#/shop`), and Settings (`#/settings`). Spell Tome (`#/spell-tome`) opens from Spells. Old `#relic-deck` and `#relic-inventory` bookmarks still work. Open the menu with Enter/Space or a tap; Escape closes it and returns focus to the menu button. Short screens can scroll the open shortcuts.
+
+- Inventory combines relics and ordinary gear, with carried/attuned filters and stack quantities. Common and uncommon entries with matching names and rarity can group; relics must also have matching attunement, progression, and edited card state. Consume removes one unit of a consumable and offers Undo, including when the last unit disappears. Read Details sits beside the relic card. The collection scrolls by wheel, touch, and keyboard while its scrollbar stays hidden.
+- Character uses identity and two rows of combat stats, then classes, abilities, attacks, resources, conditions, currency, and carried load. Save character retains hidden notes, features, languages, skills, and spells. Equipment does not recalculate combat stats.
+- Skills provides 18 SRD descriptions through hover, keyboard focus, or a tap, with editable proficiency and bonus overrides. Save skills retains the character's other fields.
+- Spell Tome searches 339 local SRD spells by name and level. Expand a spell for its full rules and Learn it; Spells groups learned entries by level and supports forgetting them. Notes automatically saves adventure notes, features, proficiencies, and languages as you edit.
+- Shop searches 223 local purchase entries by name/category. Save currency before buying. Each Buy adds one unit and automatically pays from saved CP/SP/EP/GP/PP at copper-unit values. The remaining wallet is normalized from PP down to CP, providing change automatically. Insufficient funds change neither wallet nor equipment; purchase feedback explains the result. Shop and Character share currency and carried load.
+- Settings saves Midnight, Evergreen, Blossom, Mahogany, Parchment, or Noir, sound on/off, master SFX volume, and reduced motion. These preferences and character data survive reloads in the same browser.
+
+All new SFX are silent placeholders awaiting user-provided audio paths. See `src/audio/assets.js` and the handoff below. The release verification record is `docs/superpowers/verification/2026-10-13-version-1.3.md`.
 
 ## Player inventory and character sheet
 
-The three-line menu now opens dedicated Deck, Inventory, and Character pages (`#/deck`, `#/inventory`, `#/character`). Old `#relic-deck` and `#relic-inventory` bookmarks still work. Inventory displays relic artwork at its current attunement/progression stage and category placeholders for ordinary gear. Search, carried/attuned filters, name/rarity/weight sorting, and quantity/weight editing are available. Select a relic to inspect the original card; the menu’s Read details opens its journal.
+Inventory displays relic artwork at its current attunement/progression stage and category placeholders for ordinary gear. Search, carried/attuned filters, name/rarity/weight sorting, and quantity/weight editing are available. The row's Read details action opens a relic journal or ordinary equipment editor; Deck's mini inventory inspects the original card.
 
-Character tracks names, portrait URL, species, background, classes/levels, ability scores/modifiers, HP, AC, speed, size, currency, notes, and an optional capacity override. Save character commits valid edits; equipment never recalculates combat stats.
+Character tracks names, portrait URL or locally uploaded portrait, species, background, classes/levels, ability scores/modifiers, HP, AC, speed, size, currency, and an optional capacity override. Adventure notes now have a dedicated Notes page. Save character commits valid edits; equipment never recalculates combat stats.
 
 Carrying capacity uses the [2024 rules](https://www.dndbeyond.com/sources/dnd/br-2024/rules-glossary#CarryingCapacity): Strength × 7.5/15/15/30/60/120 for Tiny/Small/Medium/Large/Huge/Gargantuan. Push/drag/lift is twice capacity. Stored gear is excluded. Unknown weight remains unknown, with partial totals explicitly labeled. Coins are tracked separately and excluded from load. Containers and feature-specific capacity changes require manual tracking/override; 2014 variant encumbrance is not applied.
 
-Existing relic saves migrate to carried, quantity-one equipment with unknown weight. Draw/discard/recovery/reset keep linked weight metadata. Ordinary gear has separate removal undo. Version-two JSON backups include character/equipment and dormant relic weight metadata; version-one backups remain supported. Merge fills missing character values and adds missing equipment while retaining existing edits. Backups reference artwork URLs rather than storing images.
+Existing relic saves migrate to carried, quantity-one equipment with unknown weight. Draw/discard/recovery/reset keep linked weight metadata. Ordinary gear has separate removal undo. Version-three JSON backups include character/equipment, learned spells, consumable flags, and dormant relic weight metadata; version-one and version-two backups remain supported. Merge fills missing character values and adds missing equipment while retaining existing edits. Backups reference relic artwork URLs rather than storing those images; locally uploaded portraits are stored in character data.
 
 ## Local PDF import
 
@@ -40,13 +53,13 @@ npm run build
 npm run preview
 ```
 
-## Version 1.2
+## Retained deck and recovery features
 
-- The Read details icon in the circular collection menu opens a journal with readable lore, specifications, abilities, editable stats, and larger progression controls. The original card artwork remains intact, with an in-card Attune button that dissolves into the original top-right Unattune icon. Matching text spacing stays inside the painted boxes.
+- The card-adjacent Read details icon opens a journal with readable lore, specifications, abilities, editable stats, and larger progression controls. The original card artwork remains intact, with an in-card Attune button that dissolves into the original top-right Unattune icon. Matching text spacing stays inside the painted boxes.
 - Keep retains the relic in inventory and shows the card back. Discard offers undo; custom cards move into persistent recovery instead of being deleted.
 - Backup & recovery downloads a JSON copy of the deck, inventory, and recovery collection. Import validates the whole file before merging, preserves current edits across collections, and respects the three-item attunement limit. Images are referenced by URL rather than embedded.
 - Reset Deck explains that standard relic edits and progression reset, while custom cards and recovery remain. Download a backup first to preserve those edits.
-- A circular three-line menu on the left expands upward into Deck, Inventory, Read details, Roll a D20, and Sound icons on mobile and desktop. Search and custom-card fields have explicit labels, dialog focus stays inside the dialog, and dice effect test buttons are removed.
+- The circular Corner Menu opens the dedicated companion pages. Deck and Character keep their contextual D20 button; Deck keeps search and custom-card actions. Search and custom-card fields have explicit labels, dialog focus stays inside the dialog, and dice effect test buttons are removed.
 - Artwork loads as it is needed instead of preloading every relic and upgrade. The browser title identifies The Reliquary.
 
 ## Deck and atmosphere
@@ -54,9 +67,9 @@ npm run preview
 - Reset Deck restores the eleven built-in items and shows the card back. Custom inventory cards are preserved.
 - Each remaining card has a draw weight: Common 60, Uncommon 25, Rare 10, Epic 4, Legendary 1. Actual odds depend on the remaining deck; search selects an item directly.
 - Rarity badges and magical reveal effects accompany draws. A short lift leads into the reveal; keeping the item turns back to the deck, while Discard returns built-in items or moves custom cards into recovery. Outgoing artwork remains visible until the reverse flip finishes.
-- Synthesized button, draw, reveal, and attunement chimes require no remote assets. The sound toggle saves your preference.
+- Sound settings save your preference; actions remain silent while their new audio files are awaiting delivery.
 - Click artwork for a layered 2.5D inspection view with pointer/touch tilt and moving highlights. Reduced-motion settings disable movement. Existing artwork is a single image layer, with separate aura, runes, frame, and shine layers.
-- A fantasy interface emphasizes drawing and inventory, with desktop and mobile controls. The Atmosphere selector saves Midnight, Evergreen, Love, Woody, or Warm environment palettes.
+- A fantasy interface emphasizes drawing and inventory, with desktop and mobile controls. Settings saves one of the six environment palettes.
 - Attuning and unattuning crossfade the complete card face over 900ms with a gentle aura; reduced motion replaces the transition immediately.
 
 ## Data and behavior
@@ -73,20 +86,20 @@ Tests cover weighted draws, saved-data migration, reset/discard and recovery beh
 
 ## Sound effects
 
-All sounds are local Web Audio sine-wave chimes, not recorded samples.
+Version 1.3.0 replaces the synthesized chimes with an audio-path manifest at `src/audio/assets.js`. Every action and rarity currently uses `WAITING_FOR_NEW_SFX`. Waiting markers, empty paths, muted playback, and zero volume are silent and issue no audio request. Playback failures never prevent an action.
+
+To hand off the new SFX, supply a file path for each manifest slot: click, dice, draw, continue, reset, discard, attune, and common/uncommon/rare/epic/legendary reveal. Place supplied files under `public/` (for example `public/audio/click.mp3`) and replace only the corresponding waiting marker with its served path (`/audio/click.mp3`). Keep missing slots waiting. No replacement sounds ship with this release. Verify volume, mute, successful playback, and missing-file handling after assets are supplied.
 
 | Action | Sound |
 | --- | --- |
-| General buttons | Short, high two-note click |
-| Draw | Four-note ascending chime |
-| Common / Uncommon reveal | Two-note rarity chime |
-| Rare reveal | Three-note rising chime |
-| Epic reveal | Four-note major arpeggio |
-| Legendary reveal | Five-note major arpeggio with a high finish |
-| Continue | Soft descending two-note chime |
-| Reset | Three descending notes |
-| Discard / unattune | Lower descending two-note chime |
-| Successful attunement | Three-note ascending chime |
+| General buttons | Waiting for click asset |
+| Dice | Waiting for dice asset |
+| Draw | Waiting for draw asset |
+| Common / Uncommon / Rare / Epic / Legendary reveal | Waiting for each rarity asset |
+| Continue | Waiting for continue asset |
+| Reset | Waiting for reset asset |
+| Discard / unattune | Waiting for discard asset |
+| Successful attunement | Waiting for attune asset |
 | Sound toggle | Silent |
 
 Environment palettes use emerald and burnished gold (Evergreen), sakura pink, blush, petal white, sky blue, and branch brown (Love), aged oak and parchment (Woody), and golden parchment with crimson highlights. Decorative colors use the supplied palette; readable companion ink tones support controls and small labels. Existing Love/Warm saved preferences map to Love · Sakura/Golden Parchment.
@@ -95,4 +108,4 @@ Environment themes and their hover colors are isolated from the item cards. Card
 
 Optic adds a black-and-white atmosphere. Rarity badges and item-type icons use surface-specific contrast colors for all six themes; rarity hues and weapon/material shapes retain their original meaning.
 
-Click the atmosphere circles to switch themes directly. Roll a D20 in the circular menu opens a numbered 3D die with unbiased 1–20 rolls, a matching forward-facing result, roll/landing chimes, and natural 1/20 accents. Keyboard focus stays in the tray; Escape closes it. Reduced motion shows the result immediately. Dice rolls are independent of card drawing.
+Choose a theme in Settings. Roll D20 on Deck or Character opens a numbered 3D die with unbiased 1–20 rolls, a matching forward-facing result, and natural 1/20 accents. Keyboard focus stays in the tray; Escape closes it. Reduced motion shows the result immediately. Dice rolls are independent of card drawing and remain silent pending the dice audio asset.

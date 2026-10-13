@@ -151,7 +151,7 @@ export default function App() {
 
         <header className="w-full max-w-5xl mx-auto flex flex-col items-center gap-4 mb-2">
           <div className="reliquary-heading">
-            <div><p className="eyebrow">YOUR ADVENTURE, ENSHRINED · v1.2</p><h1>The Reliquary</h1><p className="heading-subtitle">Draw a relic. Discover its magic. Make it yours.</p></div>
+            <div><p className="eyebrow">YOUR ADVENTURE, ENSHRINED · v1.3.0</p><h1>The Reliquary</h1><p className="heading-subtitle">Draw a relic. Discover its magic. Make it yours.</p></div>
           </div>
           {['deck', 'character'].includes(page) && <div className="contextual-actions"><button type="button" className="journal-button" aria-label="Roll D20" aria-haspopup="dialog" onClick={() => setDiceOpen(true)}><Dices size={18} aria-hidden="true" />Roll D20</button></div>}
           {page === 'deck' && <><button type="button"
