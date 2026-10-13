@@ -1,6 +1,8 @@
 import { normalizeCard } from './rarity.js';
 import defaults from './defaultCards.json' with { type: 'json' };
 import { migratePlayerData, validateEquipment, validateProfile } from './player.js';
+import { migrateLearnedSpells } from './character-sheet.js';
+import { findSpellByName } from './srd/spells.js';
 
 export const MAX_BACKUP_BYTES = 5 * 1024 * 1024;
 const builtinIds = new Set(defaults.map(card => card.id));
@@ -52,7 +54,7 @@ export function parseBackup(text) {
   if (typeof text !== 'string' || new TextEncoder().encode(text).length > MAX_BACKUP_BYTES) throw new Error('Choose a JSON backup smaller than 5 MB.');
   let data;
   try { data = JSON.parse(text); } catch { throw new Error('This file is not valid JSON. Your inventory has not changed.'); }
-  if (data?.format !== 'reliquary-backup' || ![1, 2].includes(data.version)) throw new Error('Choose a supported Reliquary inventory backup.');
+  if (data?.format !== 'reliquary-backup' || ![1, 2, 3].includes(data.version)) throw new Error('Choose a supported Reliquary inventory backup.');
   const result = {};
   const ids = new Set();
   for (const key of ['inventory', 'deck', 'discardedCustom']) {
@@ -65,8 +67,9 @@ export function parseBackup(text) {
       return clean;
     });
   }
-  if (data.version === 2) {
+  if (data.version >= 2) {
     result.profile = validateProfile(data.profile);
+    if (data.version === 2) result.profile.sheet = migrateLearnedSpells(result.profile.sheet, findSpellByName);
     if (!Array.isArray(data.equipment) || data.equipment.length > 5000) throw new Error('Invalid equipment list.');
     result.equipment = data.equipment.map(validateEquipment);
     const equipmentIds = new Set(), links = new Set(), owned = new Set(result.inventory.map(card => card.id));
@@ -89,6 +92,6 @@ export function parseBackup(text) {
 export function serializeBackup(state) {
   const player = migratePlayerData(state);
   const cardIds = new Set([...state.deck, ...state.inventory, ...(state.discardedCustom ?? [])].map(card => String(card.id)));
-  const relicEquipmentCache = Object.fromEntries(Object.entries(state.relicEquipmentCache ?? {}).filter(([id]) => cardIds.has(id)));
-  return JSON.stringify({ format: 'reliquary-backup', version: 2, exportedAt: new Date().toISOString(), deck: state.deck, inventory: state.inventory, discardedCustom: state.discardedCustom ?? [], ...player, relicEquipmentCache }, null, 2);
+  const relicEquipmentCache = Object.fromEntries(Object.entries(state.relicEquipmentCache ?? {}).filter(([id]) => cardIds.has(id)).map(([id, entry]) => [id, validateEquipment(entry)]));
+  return JSON.stringify({ format: 'reliquary-backup', version: 3, exportedAt: new Date().toISOString(), deck: state.deck, inventory: state.inventory, discardedCustom: state.discardedCustom ?? [], ...player, relicEquipmentCache }, null, 2);
 }

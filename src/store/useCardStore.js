@@ -274,8 +274,15 @@ export const useCardStore = create(
     {
       name: 'dnd-item-deck-storage', // LocalStorage Key
       storage: createJSONStorage(() => localStorage),
-      version: 3,
-      migrate: persisted => applyGuidelineWeights({ ...persisted, ...migratePlayerData(persisted) }),
+      version: 4,
+      migrate: (persisted, version) => {
+        const migrated = {
+          ...persisted,
+          ...migratePlayerData(persisted, { migrateSpells: version < 4 }),
+          relicEquipmentCache: Object.fromEntries(Object.entries(persisted.relicEquipmentCache ?? {}).map(([id, entry]) => [id, validateEquipment(entry)])),
+        };
+        return version < 3 ? applyGuidelineWeights(migrated) : migrated;
+      },
       merge: (persisted, current) => ({
         ...current,
         ...persisted,

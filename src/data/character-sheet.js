@@ -1,13 +1,16 @@
 import { abilityModifier } from './weight.js';
+import { SRD_SPELLS } from './srd/spells.js';
+const spellNameKey = name => name.normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+const canonicalSpellNames = new Map(SRD_SPELLS.map(spell => [spellNameKey(spell.name), spell.name]));
 export const SKILLS = { Acrobatics:'dex', 'Animal Handling':'wis', Arcana:'int', Athletics:'str', Deception:'cha', History:'int', Insight:'wis', Intimidation:'cha', Investigation:'int', Medicine:'wis', Nature:'int', Perception:'wis', Performance:'cha', Persuasion:'cha', Religion:'int', 'Sleight of Hand':'dex', Stealth:'dex', Survival:'wis' };
 export const CONDITIONS = ['Blinded','Charmed','Deafened','Frightened','Grappled','Incapacitated','Invisible','Paralyzed','Petrified','Poisoned','Prone','Restrained','Stunned','Unconscious'];
 const abilities = ['str','dex','con','int','wis','cha'];
 export function emptySheet() {
-  return { skills:Object.fromEntries(Object.keys(SKILLS).map(name=>[name,{proficiency:null,override:null}])), savingThrows:Object.fromEntries(abilities.map(key=>[key,{proficient:null,override:null}])), hitDice:[], resources:[], attacks:[], spells:[], conditions:[], exhaustion:0, inspiration:false, deathSaves:{successes:0,failures:0}, spellcastingAbility:null, proficiencyBonusOverride:null, initiativeOverride:null, features:'', languages:'' };
+  return { skills:Object.fromEntries(Object.keys(SKILLS).map(name=>[name,{proficiency:null,override:null}])), savingThrows:Object.fromEntries(abilities.map(key=>[key,{proficient:null,override:null}])), hitDice:[], resources:[], attacks:[], spells:[], learnedSpellIds:[], conditions:[], exhaustion:0, inspiration:false, deathSaves:{successes:0,failures:0}, spellcastingAbility:null, proficiencyBonusOverride:null, initiativeOverride:null, features:'', languages:'' };
 }
 export function hasSheetData(sheet) {
   if (!sheet) return false;
-  return Boolean(sheet.features || sheet.languages || sheet.inspiration || sheet.exhaustion || sheet.deathSaves?.successes || sheet.deathSaves?.failures || sheet.spellcastingAbility || sheet.proficiencyBonusOverride != null || sheet.initiativeOverride != null || ['hitDice','resources','attacks','spells','conditions'].some(key=>sheet[key]?.length) || Object.values(sheet.skills??{}).some(entry=>entry.proficiency!=null||entry.override!=null) || Object.values(sheet.savingThrows??{}).some(entry=>entry.proficient!=null||entry.override!=null));
+  return Boolean(sheet.features || sheet.languages || sheet.inspiration || sheet.exhaustion || sheet.deathSaves?.successes || sheet.deathSaves?.failures || sheet.spellcastingAbility || sheet.proficiencyBonusOverride != null || sheet.initiativeOverride != null || ['hitDice','resources','attacks','spells','learnedSpellIds','conditions'].some(key=>sheet[key]?.length) || Object.values(sheet.skills??{}).some(entry=>entry.proficiency!=null||entry.override!=null) || Object.values(sheet.savingThrows??{}).some(entry=>entry.proficient!=null||entry.override!=null));
 }
 export function validateSheet(input) {
   const sheet = { ...emptySheet(), ...input };
@@ -15,11 +18,12 @@ export function validateSheet(input) {
   const text=value=>{if(typeof value!=='string'||value.length>20000)throw new Error('Invalid character-sheet text.');return value;};
   sheet.skills=Object.fromEntries(Object.keys(SKILLS).map(name=>{const value=sheet.skills?.[name]??{};if(![null,0,.5,1,2].includes(value.proficiency??null))throw new Error('Invalid skill proficiency.');return[name,{proficiency:value.proficiency??null,override:num(value.override,-100,100,true)}];}));
   sheet.savingThrows=Object.fromEntries(abilities.map(key=>{const value=sheet.savingThrows?.[key]??{};if(![null,true,false].includes(value.proficient??null))throw new Error('Invalid saving throw proficiency.');return[key,{proficient:value.proficient??null,override:num(value.override,-100,100,true)}];}));
-  const list=(value)=>{if(!Array.isArray(value)||value.length>200)throw new Error('Too many character-sheet entries.');return value;};
+  const list=(value,max=200)=>{if(!Array.isArray(value)||value.length>max)throw new Error('Too many character-sheet entries.');return value;};
   sheet.hitDice=list(sheet.hitDice).map(entry=>{const max=num(entry.max,0,100),current=num(entry.current,0,max);if(![6,8,10,12].includes(entry.die))throw new Error('Choose d6, d8, d10, or d12.');return{name:text(entry.name),die:entry.die,max,current};});
   sheet.resources=list(sheet.resources).map(entry=>{if(!['short','long','manual'].includes(entry.recovery))throw new Error('Invalid recovery rule.');const max=num(entry.max,0,999);return{name:text(entry.name),max,current:num(entry.current,0,max),recovery:entry.recovery};});
   sheet.attacks=list(sheet.attacks).map(entry=>({name:text(entry.name),bonus:num(entry.bonus,-100,100,true),damage:text(entry.damage),notes:text(entry.notes)}));
   sheet.spells=list(sheet.spells).map(entry=>({name:text(entry.name),level:num(entry.level,0,9),prepared:Boolean(entry.prepared),concentration:Boolean(entry.concentration),notes:text(entry.notes)}));
+  sheet.learnedSpellIds=[...new Set(list(sheet.learnedSpellIds,500).map(id=>{if(typeof id!=='string'||!id.trim()||id.length>500)throw new Error('Invalid learned spell ID.');return id;}))];
   if(list(sheet.conditions).some(name=>!CONDITIONS.includes(name)))throw new Error('Invalid condition.');sheet.conditions=[...new Set(sheet.conditions)];
   sheet.exhaustion=num(sheet.exhaustion,0,6);sheet.inspiration=Boolean(sheet.inspiration);
   sheet.deathSaves={successes:num(sheet.deathSaves?.successes,0,3),failures:num(sheet.deathSaves?.failures,0,3)};
@@ -27,6 +31,18 @@ export function validateSheet(input) {
   sheet.proficiencyBonusOverride=num(sheet.proficiencyBonusOverride,0,20,true);sheet.initiativeOverride=num(sheet.initiativeOverride,-100,100,true);
   sheet.features=text(sheet.features);sheet.languages=text(sheet.languages);
   return sheet;
+}
+export function migrateLearnedSpells(input, findSpellByName) {
+  const sheet = validateSheet(input);
+  const learnedSpellIds = new Set(sheet.learnedSpellIds);
+  const spells = sheet.spells.filter(entry => {
+    const canonicalName = canonicalSpellNames.get(spellNameKey(entry.name));
+    const spell = findSpellByName(entry.name) ?? (canonicalName ? findSpellByName(canonicalName) : undefined);
+    if (!spell) return true;
+    learnedSpellIds.add(spell.id);
+    return false;
+  });
+  return validateSheet({ ...sheet, spells, learnedSpellIds: [...learnedSpellIds] });
 }
 export function proficiencyBonus(profile) { const level=profile.classes.reduce((total,entry)=>total+entry.level,0);return profile.sheet?.proficiencyBonusOverride??(level?2+Math.floor((level-1)/4):null); }
 export function checkBonus(profile, ability, proficiency, override=null) { if(override!==null)return override;const mod=abilityModifier(profile.abilities[ability]),pb=proficiencyBonus(profile);return mod===null||proficiency===null||(proficiency!==0&&pb===null)?null:mod+Math.floor((pb??0)*proficiency); }

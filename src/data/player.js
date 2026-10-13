@@ -1,5 +1,6 @@
-import { emptySheet, validateSheet } from './character-sheet.js';
+import { emptySheet, migrateLearnedSpells, validateSheet } from './character-sheet.js';
 import { guidelineWeightLb } from './equipment-weights.js';
+import { findSpellByName } from './srd/spells.js';
 
 export const SIZES = ['Tiny', 'Small', 'Medium', 'Large', 'Huge', 'Gargantuan'];
 export const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
@@ -61,6 +62,8 @@ export function validateEquipment(value) {
   clean.unitWeightLb = number(value.unitWeightLb, 'Unit weight', 0, 999999999);
   if (typeof value.carried !== 'boolean') throw new Error('Choose carried or stored.');
   clean.carried = value.carried;
+  if (value.consumable !== undefined && typeof value.consumable !== 'boolean') throw new Error('Choose whether equipment is consumable.');
+  clean.consumable = value.consumable ?? false;
   clean.category = string(value.category ?? 'Gear', 'Category');
   clean.imageUrl = safeImageUrl(value.imageUrl ?? '');
   clean.relicCardId = value.relicCardId == null ? null : string(value.relicCardId, 'Relic ID');
@@ -69,10 +72,10 @@ export function validateEquipment(value) {
   return clean;
 }
 export function relicEquipment(card, characterId) {
-  return { id: `relic:${card.id}`, characterId, name: card.name || 'Relic', quantity: 1, unitWeightLb: guidelineWeightLb(card.id), carried: true, category: 'Relic', imageUrl: '', relicCardId: String(card.id), source: null };
+  return { id: `relic:${card.id}`, characterId, name: card.name || 'Relic', quantity: 1, unitWeightLb: guidelineWeightLb(card.id), carried: true, consumable: false, category: 'Relic', imageUrl: '', relicCardId: String(card.id), source: null };
 }
-export function migratePlayerData(savedState) {
-  const profile = savedState.profile ? validateProfile(savedState.profile) : createPlayerProfile();
+export function migratePlayerData(savedState, { migrateSpells = !Object.hasOwn(savedState.profile?.sheet ?? {}, 'learnedSpellIds') } = {}) {
+  const profile = savedState.profile ? validateProfile({ ...savedState.profile, sheet: migrateSpells ? migrateLearnedSpells(savedState.profile.sheet, findSpellByName) : savedState.profile.sheet }) : createPlayerProfile();
   const cards = savedState.inventory ?? [];
   const owned = new Set(cards.map(card => String(card.id)));
   const seen = new Set(), links = new Set();

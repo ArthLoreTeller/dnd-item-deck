@@ -1,9 +1,42 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import defaults from '../src/data/defaultCards.json' with { type: 'json' };
+import { createPlayerProfile } from '../src/data/player.js';
 const saved = new Map();
 globalThis.localStorage = { getItem: (key) => saved.get(key) ?? null, setItem: (key, value) => saved.set(key, value), removeItem: (key) => saved.delete(key) };
 const { useCardStore: store } = await import('../src/store/useCardStore.js');
+
+test('version three storage upgrades spells and consumables once without changing player or relic edits', async () => {
+  const profile = { ...createPlayerProfile(), name: 'Legacy hero', notes: 'Old journal', currency: { cp: 12, sp: 2, ep: null, gp: 100, pp: 0 }, capacityOverrideLb: 150, capacityOverrideReason: 'Pack' };
+  delete profile.sheet.learnedSpellIds;
+  profile.sheet.spells = [{ name: 'MAGIC-MISSILE', level: 1, prepared: true, concentration: false, notes: '' }, { name: 'Custom Ward', level: 2, prepared: true, concentration: true, notes: 'Keep' }];
+  const card = { ...defaults[0], stats: { hit: '+9' } };
+  const entry = { id: `relic:${card.id}`, characterId: profile.id, name: card.name, quantity: 1, unitWeightLb: null, carried: false, category: 'Relic', imageUrl: '', relicCardId: card.id, source: null };
+  localStorage.setItem('dnd-item-deck-storage', JSON.stringify({ version: 3, state: { profile, equipment: [entry], relicEquipmentCache: { [card.id]: entry }, inventory: [card], deck: [], discardedCustom: [] } }));
+  await store.persist.rehydrate();
+  const state = store.getState();
+  assert.deepEqual(state.profile.sheet.learnedSpellIds, ['magic-missile']);
+  assert.deepEqual(state.profile.sheet.spells, [profile.sheet.spells[1]]);
+  for (const key of ['name', 'notes', 'currency', 'capacityOverrideLb', 'capacityOverrideReason']) assert.deepEqual(state.profile[key], profile[key]);
+  assert.deepEqual(state.equipment[0], { ...entry, consumable: false });
+  assert.deepEqual(state.relicEquipmentCache[card.id], { ...entry, consumable: false });
+  assert.equal(state.inventory[0].stats.hit, '+9');
+  assert.equal(JSON.parse(localStorage.getItem('dnd-item-deck-storage')).version, 4);
+  store.getState().updateProfile({ sheet: { ...state.profile.sheet, learnedSpellIds: [] } });
+  await store.persist.rehydrate();
+  assert.deepEqual(store.getState().profile.sheet.learnedSpellIds, []);
+});
+
+test('backup import respects an existing learned spell selection and persists consumables', () => {
+  const profile = createPlayerProfile();
+  profile.sheet.learnedSpellIds = ['shield'];
+  store.setState({ profile, inventory: [], deck: [], equipment: [], discardedCustom: [], relicEquipmentCache: {} });
+  const imported = createPlayerProfile();
+  imported.sheet.learnedSpellIds = ['magic-missile'];
+  store.getState().importBackup(JSON.stringify({ format: 'reliquary-backup', version: 3, profile: imported, equipment: [{ id: 'potion', characterId: imported.id, name: 'Potion', quantity: 2, unitWeightLb: 0.5, carried: true, consumable: true }], inventory: [], deck: [] }));
+  assert.deepEqual(store.getState().profile.sheet.learnedSpellIds, ['shield']);
+  assert.equal(store.getState().equipment[0].consumable, true);
+});
 
 test('linked equipment survives discard, reload, redraw and reset', async () => {
   store.setState({ deck: [defaults[0]], inventory: [], equipment: [], relicEquipmentCache: {} });
