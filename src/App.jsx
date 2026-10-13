@@ -2,6 +2,8 @@ import { DeckPage } from './pages/DeckPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { CharacterPage } from './pages/CharacterPage';
 import { SkillsPage } from './pages/SkillsPage';
+import { SpellsPage } from './pages/SpellsPage';
+import { SpellTomePage } from './pages/SpellTomePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { CharacterImportDialog } from './components/CharacterImportDialog';
 import { usePageRoute } from './navigation/usePageRoute';
@@ -23,7 +25,7 @@ import { ItemDetails } from "./components/ItemDetails";
 import { InventoryTools } from "./components/InventoryTools";
 import { CollectionNavigation } from "./components/CollectionNavigation";
 
-const pendingPages = { spells: 'Spells', 'spell-tome': 'Spell Tome', notes: 'Notes', shop: 'Shop' };
+const pendingPages = { notes: 'Notes', shop: 'Shop' };
 
 export default function App() {
   const { motion, reveal, select, returnToDeck, reconcileInventory } = useDeckMotion();
@@ -264,6 +266,8 @@ export default function App() {
         {page === 'inventory' && <InventoryPage onInspect={card => setDetailsCardId(card.id)} onTools={() => setToolsOpen(true)} onCharacter={() => navigate('character')} onDeck={() => navigate('deck')} />}
         {page === 'character' && <CharacterPage onImport={() => setImportOpen(true)} />}
         {page === 'skills' && <SkillsPage />}
+        {page === 'spells' && <SpellsPage />}
+        {page === 'spell-tome' && <SpellTomePage />}
         {page === 'settings' && <SettingsPage />}
         {pendingPages[page] && <main className="player-page page-unavailable" aria-labelledby="pending-page-title"><div className="page-title-row"><div><p className="eyebrow">YOUR ADVENTURE COMPANION</p><h2 id="pending-page-title">{pendingPages[page]}</h2><p className="muted">This page is not available yet.</p></div></div><a className="journal-button" href="#/deck">Back to Deck</a></main>}
 

@@ -9,6 +9,7 @@ import { applyGuidelineWeights } from '../data/equipment-weights.js';
 import { hasSheetData } from '../data/character-sheet.js';
 import { SRD_EQUIPMENT } from '../data/srd/equipment.js';
 import { purchaseEquipment } from '../data/currency.js';
+import { spellById } from '../data/srd/spells.js';
 const defaultCards = rawDefaultCards.map(normalizeCard);
 
 function safeRestore(card, inventory) {
@@ -48,6 +49,17 @@ export const useCardStore = create(
       lastConsumption: null,
       applyCharacterImport: (draft, selection) => set(state => ({ ...mergeCharacterDraft(state, draft, selection), toastMessage: 'Reviewed character import saved.' })),
       updateProfile: patch => set(state => ({ profile: validateProfile({ ...state.profile, ...patch }) })),
+      learnSpell: id => {
+        const spell = spellById(id);
+        if (!spell) throw new Error('Spell not found in the SRD Spell Tome.');
+        if (get().profile.sheet.learnedSpellIds.includes(spell.id)) return;
+        set(state => ({ profile: validateProfile({ ...state.profile, sheet: { ...state.profile.sheet, learnedSpellIds: [...state.profile.sheet.learnedSpellIds, spell.id] } }) }));
+      },
+      forgetSpell: id => {
+        const spellId = spellById(id)?.id ?? id;
+        if (!get().profile.sheet.learnedSpellIds.includes(spellId)) return;
+        set(state => ({ profile: { ...state.profile, sheet: { ...state.profile.sheet, learnedSpellIds: state.profile.sheet.learnedSpellIds.filter(knownId => knownId !== spellId) } } }));
+      },
       purchaseItem: (catalogId, quantity = 1) => {
         let result;
         set(state => {
