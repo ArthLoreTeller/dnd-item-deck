@@ -3,6 +3,7 @@ import { useCardStore } from '../store/useCardStore';
 import { checkBonus } from '../data/character-sheet';
 import { SRD_SKILLS } from '../data/srd/skills';
 import { changeSkill } from '../data/skill-profile';
+import { createSkillDescriptions } from '../data/skill-descriptions';
 
 const numeric = value => value === '' ? null : Number(value);
 const signed = value => value === null ? '—' : `${value >= 0 ? '+' : ''}${value}`;
@@ -13,11 +14,11 @@ export function SkillsPage() {
   const [draft, setDraft] = useState(profile);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
-  const [activeDescription, setActiveDescription] = useState(null);
-  const [pinnedDescription, setPinnedDescription] = useState(null);
+  const [visibleDescription, setVisibleDescription] = useState(null);
+  const [descriptions] = useState(() => createSkillDescriptions(setVisibleDescription));
   useEffect(() => { setDraft(profile); }, [profile]);
+  useEffect(() => () => descriptions.dispose(), [descriptions]);
   const change = (name, patch) => { setDraft(old => changeSkill(old, name, patch)); setSaved(false); };
-  const dismissDescription = () => { setActiveDescription(null); setPinnedDescription(null); };
   const save = event => {
     event.preventDefault();
     try { updateProfile(draft); setError(''); setSaved(true); }
@@ -31,13 +32,13 @@ export function SkillsPage() {
         {SRD_SKILLS.map(skill => {
           const entry = draft.sheet.skills[skill.name];
           const bonus = checkBonus(draft, skill.ability, entry.proficiency, entry.override);
-          const described = activeDescription === skill.id || pinnedDescription === skill.id;
+          const described = visibleDescription === skill.id;
           return <li className="skill-row" key={skill.id}>
-            <div className="skill-summary" onMouseEnter={() => setActiveDescription(skill.id)} onMouseLeave={() => setActiveDescription(null)}>
+            <div className="skill-summary" onMouseEnter={() => descriptions.enter(skill.id)} onMouseLeave={descriptions.leave}>
               <button type="button" className="skill-description-trigger" aria-describedby={`skill-description-${skill.id}`} aria-expanded={described}
-                onFocus={() => setActiveDescription(skill.id)} onBlur={dismissDescription}
-                onClick={() => { setPinnedDescription(old => old === skill.id ? null : skill.id); setActiveDescription(null); }}
-                onKeyDown={event => { if (event.key === 'Escape') dismissDescription(); }}>
+                onFocus={() => descriptions.focus(skill.id)} onBlur={descriptions.blur}
+                onClick={() => descriptions.toggle(skill.id)}
+                onKeyDown={event => { if (event.key === 'Escape') descriptions.dismiss(); }}>
                 {skill.name} ({skill.ability.toUpperCase()})
               </button>
               <p id={`skill-description-${skill.id}`} role="tooltip" className="skill-tooltip" hidden={!described}>{skill.description}</p>

@@ -10,6 +10,7 @@ import { rolldown } from 'rolldown';
 import { createPlayerProfile } from '../src/data/player.js';
 import { SRD_SKILLS } from '../src/data/srd/skills.js';
 import { changeSkill } from '../src/data/skill-profile.js';
+import { createSkillDescriptions } from '../src/data/skill-descriptions.js';
 
 const memoryStorage = new Map();
 globalThis.localStorage = { getItem: key => memoryStorage.get(key) ?? null, setItem: (key, value) => memoryStorage.set(key, value), removeItem: key => memoryStorage.delete(key) };
@@ -97,4 +98,54 @@ test('skill edits preserve hidden character data and persist through the existin
   useCardStore.getState().updateProfile(draft);
   assert.deepEqual(useCardStore.getState().profile.sheet.skills.Stealth, { proficiency: 0, override: null });
   assert.throws(() => useCardStore.getState().updateProfile(changeSkill(draft, 'Stealth', { override: 101 })), /Invalid character-sheet number/);
+});
+
+// Catches immediate hover dismissal while crossing from a trigger to its tooltip.
+test('hover descriptions survive the trigger gap and dismiss after leaving the combined region', context => {
+  context.mock.timers.enable({ apis: ['setTimeout'] });
+  let visible = null;
+  const descriptions = createSkillDescriptions(value => { visible = value; });
+  descriptions.enter('acrobatics');
+  assert.equal(visible, 'acrobatics');
+  descriptions.leave(); // Pointer leaves the trigger into the uncovered gap.
+  context.mock.timers.tick(50);
+  assert.equal(visible, 'acrobatics');
+  descriptions.enter('acrobatics'); // Pointer reaches the tooltip before dismissal.
+  context.mock.timers.tick(500);
+  assert.equal(visible, 'acrobatics');
+  descriptions.leave(); // Pointer now leaves the trigger and tooltip region.
+  context.mock.timers.tick(500);
+  assert.equal(visible, null);
+  descriptions.dispose();
+});
+
+test('focus and tap descriptions retain Escape, blur, toggle, and pending timer semantics', context => {
+  context.mock.timers.enable({ apis: ['setTimeout'] });
+  let visible = null;
+  const descriptions = createSkillDescriptions(value => { visible = value; });
+  descriptions.focus('acrobatics');
+  descriptions.enter('acrobatics');
+  descriptions.leave();
+  context.mock.timers.tick(500);
+  assert.equal(visible, 'acrobatics', 'focus retains the description when the pointer leaves');
+  descriptions.dismiss(); // Escape keeps DOM focus but dismisses the description.
+  assert.equal(visible, null);
+  descriptions.toggle('arcana');
+  descriptions.leave();
+  context.mock.timers.tick(500);
+  assert.equal(visible, 'arcana', 'a tapped description stays pinned');
+  descriptions.toggle('arcana');
+  assert.equal(visible, null, 'a second tap closes the description');
+  descriptions.focus('history');
+  descriptions.leave();
+  descriptions.blur();
+  assert.equal(visible, null);
+  descriptions.focus('insight');
+  context.mock.timers.tick(500);
+  assert.equal(visible, 'insight', 'an old hover dismissal cannot close a newly focused description');
+  descriptions.enter('medicine');
+  descriptions.leave();
+  descriptions.dispose();
+  context.mock.timers.tick(500);
+  assert.equal(visible, 'insight', 'unmount cancels pending callbacks');
 });
