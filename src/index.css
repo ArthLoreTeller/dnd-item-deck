@@ -758,6 +758,34 @@ html[data-theme="woody"] .reliquary {
   .spell-filters { grid-template-columns: minmax(0,1fr) 100px; gap: 10px; }
   .spell-facts > div { grid-template-columns: 1fr; gap: 0; }
 }
+/* Notes and mundane supplies use compact journal editors and catalog rows. */
+.notes-page, .shop-page { max-width: 780px; }
+.notes-editors { display: grid; gap: 14px; }
+.notes-editors .sheet-panel { padding: 16px; gap: 14px; border-radius: 6px; }
+.notes-repertoire { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+.notes-editors textarea { min-height: 140px; resize: vertical; padding: 10px; border-radius: 4px; line-height: 1.6; }
+.shop-wallet { display: grid; gap: 10px; margin-bottom: 14px; }
+.shop-wallet > button { justify-self: start; }
+.shop-filters { display: grid; grid-template-columns: minmax(0,1fr) 200px; gap: 14px; margin-top: 18px; }
+.shop-feedback { margin-top: 12px; font-size: 13px; }
+.shop-result-count { margin: 12px 0; font-size: 12px; }
+.shop-list { --env-text: var(--env-panel-text); --env-muted: var(--env-panel-muted); color: var(--env-text); padding: 0 16px; list-style: none; background: var(--env-panel); border: 1px solid var(--env-border); border-radius: 6px; }
+.shop-row { display: grid; grid-template-columns: minmax(0,1fr) auto auto; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--env-border); }
+.shop-row:last-child { border-bottom: 0; }
+.shop-item { min-width: 0; overflow-wrap: anywhere; }
+.shop-item h3 { font: 16px/1.4 Georgia,serif; margin: 0 0 4px; }
+.shop-item p, .shop-facts { font-size: 12px; }
+.shop-facts { display: flex; flex-direction: column; gap: 4px; text-align: right; font-variant-numeric: tabular-nums; }
+.shop-row button { min-height: 44px; }
+.notes-page :is(textarea,button):focus-visible, .shop-page :is(input,select,button,a):focus-visible { outline: 2px solid var(--env-panel-accent); outline-offset: 3px; }
+@media (max-width: 520px) {
+  .notes-repertoire { grid-template-columns: 1fr; }
+  .shop-filters { grid-template-columns: 1fr; gap: 10px; }
+  .shop-list { padding: 0 12px; }
+  .shop-row { grid-template-columns: minmax(0,1fr) auto; gap: 8px 12px; }
+  .shop-row button { grid-column: 2; }
+}
+
 /* Skills: a compact ledger with directly editable character bonuses. */
 .skills-page { max-width: 780px; }
 .skill-list { --env-text: var(--env-panel-text); --env-muted: var(--env-panel-muted); --env-accent: var(--env-panel-accent); color: var(--env-text); border: 1px solid var(--env-border); border-radius: 6px; background: var(--env-panel); padding: 0 16px; list-style: none; }
