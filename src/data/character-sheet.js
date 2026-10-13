@@ -45,6 +45,19 @@ export function migrateLearnedSpells(input, findSpellByName) {
   return validateSheet({ ...sheet, spells, learnedSpellIds: [...learnedSpellIds] });
 }
 export function proficiencyBonus(profile) { const level=profile.classes.reduce((total,entry)=>total+entry.level,0);return profile.sheet?.proficiencyBonusOverride??(level?2+Math.floor((level-1)/4):null); }
+export function characterStats(profile) {
+  const pool = profile.sheet?.hitDice[0];
+  return {
+    hp: profile.hp.current,
+    maxHp: profile.hp.max,
+    tempHp: profile.hp.temp,
+    hitDie: pool ? `d${pool.die} · ${pool.current}/${pool.max}` : '—',
+    proficiencyBonus: proficiencyBonus(profile),
+    speed: profile.speed,
+    initiative: profile.sheet?.initiativeOverride ?? abilityModifier(profile.abilities.dex),
+    ac: profile.ac,
+  };
+}
 export function checkBonus(profile, ability, proficiency, override=null) { if(override!==null)return override;const mod=abilityModifier(profile.abilities[ability]),pb=proficiencyBonus(profile);return mod===null||proficiency===null||(proficiency!==0&&pb===null)?null:mod+Math.floor((pb??0)*proficiency); }
 export function finishRest(profile, kind) {
   if(!['short','long'].includes(kind))throw new Error('Invalid rest.');
