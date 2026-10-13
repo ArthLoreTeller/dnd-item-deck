@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import React from 'react';
-import { mkdtemp, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, writeFile, rm, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -9,6 +9,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { rolldown } from 'rolldown';
 import { createPlayerProfile } from '../src/data/player.js';
 import { spellById } from '../src/data/srd/spells.js';
+import { THEMES } from '../src/theme/themes.js';
+import postcss from 'postcss';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 const { useCardStore } = await import('../src/store/useCardStore.js');
@@ -96,4 +98,31 @@ test('tome results combine case-insensitive search with level selection', () => 
   assert.match(leveled, /Daylight \(Level 3\)/);
   assert.doesNotMatch(leveled, />Light \(Cantrip\)/);
   assert.match(render(SpellTomeResults, { query: 'unknown spell', level: 9 }), /No spells match/);
+});
+
+// Catches light page tokens leaking into the light panel during global hover/focus.
+test('Mahogany spell list tokens keep hover text and keyboard focus readable on the panel', async () => {
+  const stylesheet = postcss.parse(await readFile(new URL('../src/index.css', import.meta.url), 'utf8'));
+  const tokens = Object.fromEntries(Object.entries(THEMES.woody).map(([key, value]) => [`--env-${key}`, value]));
+  let background;
+  stylesheet.walkRules('.spell-list', rule => {
+    rule.walkDecls(declaration => {
+      if (declaration.prop.startsWith('--')) tokens[declaration.prop] = declaration.value;
+      if (['background', 'background-color'].includes(declaration.prop)) background = declaration.value;
+    });
+  });
+  const resolve = value => value.replace(/var\((--[\w-]+)\)/g, (_, token) => resolve(tokens[token]));
+  const luminance = color => {
+    assert.match(color, /^#[0-9a-f]{6}$/i);
+    const linear = color.slice(1).match(/../g).map(channel => parseInt(channel, 16) / 255).map(channel => channel <= .04045 ? channel / 12.92 : ((channel + .055) / 1.055) ** 2.4);
+    return linear[0] * .2126 + linear[1] * .7152 + linear[2] * .0722;
+  };
+  const contrast = (foreground, surface) => {
+    const values = [luminance(resolve(foreground)), luminance(resolve(surface))].sort((a, b) => b - a);
+    return (values[0] + .05) / (values[1] + .05);
+  };
+  // The shared summary:hover rule consumes env-accent; global focus consumes env-text.
+  assert.ok(contrast('var(--env-accent)', background) >= 4.5, 'hover spell names need readable contrast');
+  assert.ok(contrast('var(--env-text)', background) >= 3, 'keyboard focus outline must remain visible');
+  assert.ok(contrast('var(--env-muted)', background) >= 4.5, 'muted rules text needs readable contrast');
 });
