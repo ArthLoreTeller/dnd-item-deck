@@ -58,7 +58,9 @@ export const useCardStore = create(
         set(state => ({ equipment: state.equipment.filter(item => item.id !== id), lastEquipmentRemoval: entry }));
       },
       undoEquipmentRemoval: () => set(state => ({ equipment: state.lastEquipmentRemoval && !state.equipment.some(item => item.id === state.lastEquipmentRemoval.id) ? [...state.equipment, state.lastEquipmentRemoval] : state.equipment, lastEquipmentRemoval: null })),
-      consumeEquipment: id => set(state => {
+      // These actions already update ownership and equipment together. Preserve
+      // their exact records and order instead of rebuilding linked equipment.
+      consumeEquipment: id => rawSet(state => {
         const index = state.equipment.findIndex(entry => entry.id === id);
         const entry = state.equipment[index];
         if (!entry) return { toastMessage: 'Item not found.' };
@@ -76,6 +78,7 @@ export const useCardStore = create(
           if (cardIndex < 0) return { toastMessage: 'Linked relic not found.' };
           snapshot.card = structuredClone(state.inventory[cardIndex]);
           snapshot.cardIndex = cardIndex;
+          patch.relicEquipmentCache = { ...state.relicEquipmentCache, [entry.relicCardId]: snapshot.entry };
           patch.inventory = state.inventory.filter((_, index) => index !== cardIndex);
           if (String(state.activeCard?.id) === entry.relicCardId) {
             snapshot.activeCard = structuredClone(state.activeCard);
@@ -86,12 +89,13 @@ export const useCardStore = create(
       }),
       undoConsume: () => {
         if (!get().lastConsumption) return;
-        set(state => {
+        rawSet(state => {
           const { entry, index, card, cardIndex, activeCard } = state.lastConsumption;
           const equipment = state.equipment.filter(item => item.id !== entry.id);
           equipment.splice(index, 0, structuredClone(entry));
           const patch = { equipment, lastConsumption: null, toastMessage: `Restored "${entry.name}".` };
           if (card) {
+            patch.relicEquipmentCache = { ...state.relicEquipmentCache, [entry.relicCardId]: structuredClone(entry) };
             patch.inventory = state.inventory.filter(item => item.id !== card.id);
             patch.inventory.splice(cardIndex, 0, structuredClone(card));
             if (activeCard) patch.activeCard = structuredClone(activeCard);

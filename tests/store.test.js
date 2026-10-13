@@ -84,6 +84,36 @@ test('consuming a linked relic removes ownership atomically and Undo restores ex
   }
 });
 
+test('linked consumption Undo preserves an equipment name edited independently of its card', async () => {
+  store.setState({ deck: [], inventory: [], equipment: [], relicEquipmentCache: {}, discardedCustom: [], lastConsumption: null, activeCard: null });
+  store.getState().addToInventory({ id: 'custom-renamed-potion', name: 'Relic potion', rarity: 'common' });
+  const entryId = store.getState().equipment[0].id;
+  store.getState().updateEquipment(entryId, { name: 'Potion packed by Mira', consumable: true, unitWeightLb: 0.5, carried: false });
+  const original = structuredClone(store.getState().equipment[0]);
+  store.getState().consumeEquipment(entryId);
+  store.getState().undoConsume();
+  assert.deepEqual(store.getState().equipment, [original]);
+  assert.equal(store.getState().inventory[0].name, 'Relic potion');
+  await store.persist.rehydrate();
+  assert.deepEqual(store.getState().equipment, [original]);
+});
+
+test('linked consumption and Undo preserve mixed linked and ordinary equipment arrangement', async () => {
+  store.setState({ deck: [], inventory: [], equipment: [], relicEquipmentCache: {}, discardedCustom: [], lastConsumption: null, activeCard: null });
+  store.getState().addToInventory({ id: 'custom-first-potion', name: 'Potion', rarity: 'common' });
+  store.getState().updateEquipment(store.getState().equipment[0].id, { consumable: true });
+  store.getState().addToInventory({ id: 'custom-kept-relic', name: 'Kept relic', rarity: 'rare' });
+  store.getState().addEquipment({ name: 'Rope', quantity: 1, unitWeightLb: 10, carried: true });
+  const original = structuredClone(store.getState().equipment);
+  assert.deepEqual(original.map(entry => entry.name), ['Kept relic', 'Potion', 'Rope']);
+  store.getState().consumeEquipment(original[1].id);
+  assert.deepEqual(store.getState().equipment, [original[0], original[2]]);
+  store.getState().undoConsume();
+  assert.deepEqual(store.getState().equipment, original);
+  await store.persist.rehydrate();
+  assert.deepEqual(store.getState().equipment, original);
+});
+
 test('version three storage upgrades spells and consumables once without changing player or relic edits', async () => {
   const profile = { ...createPlayerProfile(), name: 'Legacy hero', notes: 'Old journal', currency: { cp: 12, sp: 2, ep: null, gp: 100, pp: 0 }, capacityOverrideLb: 150, capacityOverrideReason: 'Pack' };
   delete profile.sheet.learnedSpellIds;
