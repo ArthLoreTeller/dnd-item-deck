@@ -1,0 +1,2009 @@
+[
+  {
+    "id": "acid",
+    "name": "Acid",
+    "category": "Adventuring Gear",
+    "priceCp": 2500,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "airship",
+    "name": "Airship",
+    "category": "Mounts and Vehicles",
+    "priceCp": 4000000,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "alchemists-fire",
+    "name": "Alchemist's Fire",
+    "category": "Adventuring Gear",
+    "priceCp": 5000,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "alchemists-supplies",
+    "name": "Alchemist's Supplies",
+    "category": "Tools",
+    "priceCp": 5000,
+    "weightLb": 8,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "ale-mug",
+    "name": "Ale (mug)",
+    "category": "Adventuring Gear",
+    "priceCp": 4,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "antitoxin",
+    "name": "Antitoxin",
+    "category": "Adventuring Gear",
+    "priceCp": 5000,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "arcane-focus-crystal",
+    "name": "Arcane Focus: Crystal",
+    "category": "Spellcasting Focuses",
+    "priceCp": 1000,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "arcane-focus-orb",
+    "name": "Arcane Focus: Orb",
+    "category": "Spellcasting Focuses",
+    "priceCp": 2000,
+    "weightLb": 3,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "arcane-focus-rod",
+    "name": "Arcane Focus: Rod",
+    "category": "Spellcasting Focuses",
+    "priceCp": 1000,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "arcane-focus-staff-also-a-quarterstaff",
+    "name": "Arcane Focus: Staff (also a Quarterstaff)",
+    "category": "Spellcasting Focuses",
+    "priceCp": 500,
+    "weightLb": 4,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "arcane-focus-wand",
+    "name": "Arcane Focus: Wand",
+    "category": "Spellcasting Focuses",
+    "priceCp": 1000,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "arrows-20",
+    "name": "Arrows (20)",
+    "category": "Ammunition",
+    "priceCp": 100,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "backpack",
+    "name": "Backpack",
+    "category": "Adventuring Gear",
+    "priceCp": 200,
+    "weightLb": 5,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "bagpipes",
+    "name": "Bagpipes",
+    "category": "Tools",
+    "priceCp": 3000,
+    "weightLb": 6,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "ball-bearings",
+    "name": "Ball Bearings",
+    "category": "Adventuring Gear",
+    "priceCp": 100,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "barrel",
+    "name": "Barrel",
+    "category": "Adventuring Gear",
+    "priceCp": 200,
+    "weightLb": 70,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "basket",
+    "name": "Basket",
+    "category": "Adventuring Gear",
+    "priceCp": 40,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "battleaxe",
+    "name": "Battleaxe",
+    "category": "Weapons",
+    "priceCp": 1000,
+    "weightLb": 4,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "bedroll",
+    "name": "Bedroll",
+    "category": "Adventuring Gear",
+    "priceCp": 100,
+    "weightLb": 7,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "bell",
+    "name": "Bell",
+    "category": "Adventuring Gear",
+    "priceCp": 100,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "blanket",
+    "name": "Blanket",
+    "category": "Adventuring Gear",
+    "priceCp": 50,
+    "weightLb": 3,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "block-and-tackle",
+    "name": "Block and Tackle",
+    "category": "Adventuring Gear",
+    "priceCp": 100,
+    "weightLb": 5,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "blowgun",
+    "name": "Blowgun",
+    "category": "Weapons",
+    "priceCp": 1000,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "bolts-20",
+    "name": "Bolts (20)",
+    "category": "Ammunition",
+    "priceCp": 100,
+    "weightLb": 1.5,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "book",
+    "name": "Book",
+    "category": "Adventuring Gear",
+    "priceCp": 2500,
+    "weightLb": 5,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "bottle-glass",
+    "name": "Bottle, Glass",
+    "category": "Adventuring Gear",
+    "priceCp": 200,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "bread-loaf",
+    "name": "Bread (loaf)",
+    "category": "Adventuring Gear",
+    "priceCp": 2,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "breastplate",
+    "name": "Breastplate",
+    "category": "Armor",
+    "priceCp": 40000,
+    "weightLb": 20,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "breastplate-barding",
+    "name": "Breastplate Barding",
+    "category": "Mounts and Vehicles",
+    "priceCp": 160000,
+    "weightLb": 40,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "brewers-supplies",
+    "name": "Brewer's Supplies",
+    "category": "Tools",
+    "priceCp": 2000,
+    "weightLb": 9,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "bucket",
+    "name": "Bucket",
+    "category": "Adventuring Gear",
+    "priceCp": 5,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "bullets-firearm-10",
+    "name": "Bullets, Firearm (10)",
+    "category": "Ammunition",
+    "priceCp": 300,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "bullets-sling-20",
+    "name": "Bullets, Sling (20)",
+    "category": "Ammunition",
+    "priceCp": 4,
+    "weightLb": 1.5,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "burglars-pack",
+    "name": "Burglar's Pack",
+    "category": "Adventuring Gear",
+    "priceCp": 1600,
+    "weightLb": 42,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "calligraphers-supplies",
+    "name": "Calligrapher's Supplies",
+    "category": "Tools",
+    "priceCp": 1000,
+    "weightLb": 5,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "caltrops",
+    "name": "Caltrops",
+    "category": "Adventuring Gear",
+    "priceCp": 100,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "camel",
+    "name": "Camel",
+    "category": "Mounts and Vehicles",
+    "priceCp": 5000,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "candle",
+    "name": "Candle",
+    "category": "Adventuring Gear",
+    "priceCp": 1,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "carpenters-tools",
+    "name": "Carpenter's Tools",
+    "category": "Tools",
+    "priceCp": 800,
+    "weightLb": 6,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "carriage",
+    "name": "Carriage",
+    "category": "Mounts and Vehicles",
+    "priceCp": 10000,
+    "weightLb": 600,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "cart",
+    "name": "Cart",
+    "category": "Mounts and Vehicles",
+    "priceCp": 1500,
+    "weightLb": 200,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "cartographers-tools",
+    "name": "Cartographer's Tools",
+    "category": "Tools",
+    "priceCp": 1500,
+    "weightLb": 6,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "case-crossbow-bolt",
+    "name": "Case, Crossbow Bolt",
+    "category": "Adventuring Gear",
+    "priceCp": 100,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "case-map-or-scroll",
+    "name": "Case, Map or Scroll",
+    "category": "Adventuring Gear",
+    "priceCp": 100,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "chain",
+    "name": "Chain",
+    "category": "Adventuring Gear",
+    "priceCp": 500,
+    "weightLb": 10,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "chain-mail",
+    "name": "Chain Mail",
+    "category": "Armor",
+    "priceCp": 7500,
+    "weightLb": 55,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "chain-mail-barding",
+    "name": "Chain Mail Barding",
+    "category": "Mounts and Vehicles",
+    "priceCp": 30000,
+    "weightLb": 110,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "chain-shirt",
+    "name": "Chain Shirt",
+    "category": "Armor",
+    "priceCp": 5000,
+    "weightLb": 20,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "chain-shirt-barding",
+    "name": "Chain Shirt Barding",
+    "category": "Mounts and Vehicles",
+    "priceCp": 20000,
+    "weightLb": 40,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "chariot",
+    "name": "Chariot",
+    "category": "Mounts and Vehicles",
+    "priceCp": 25000,
+    "weightLb": 100,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "cheese-wedge",
+    "name": "Cheese (wedge)",
+    "category": "Adventuring Gear",
+    "priceCp": 10,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "chest",
+    "name": "Chest",
+    "category": "Adventuring Gear",
+    "priceCp": 500,
+    "weightLb": 25,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "climbers-kit",
+    "name": "Climber's Kit",
+    "category": "Adventuring Gear",
+    "priceCp": 2500,
+    "weightLb": 12,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "clothes-fine",
+    "name": "Clothes, Fine",
+    "category": "Adventuring Gear",
+    "priceCp": 1500,
+    "weightLb": 6,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "clothes-travelers",
+    "name": "Clothes, Traveler's",
+    "category": "Adventuring Gear",
+    "priceCp": 200,
+    "weightLb": 4,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "club",
+    "name": "Club",
+    "category": "Weapons",
+    "priceCp": 10,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "cobblers-tools",
+    "name": "Cobbler's Tools",
+    "category": "Tools",
+    "priceCp": 500,
+    "weightLb": 5,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "component-pouch",
+    "name": "Component Pouch",
+    "category": "Adventuring Gear",
+    "priceCp": 2500,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "cooks-utensils",
+    "name": "Cook's Utensils",
+    "category": "Tools",
+    "priceCp": 100,
+    "weightLb": 8,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "costume",
+    "name": "Costume",
+    "category": "Adventuring Gear",
+    "priceCp": 500,
+    "weightLb": 4,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "crowbar",
+    "name": "Crowbar",
+    "category": "Adventuring Gear",
+    "priceCp": 200,
+    "weightLb": 5,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "dagger",
+    "name": "Dagger",
+    "category": "Weapons",
+    "priceCp": 200,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "dart",
+    "name": "Dart",
+    "category": "Weapons",
+    "priceCp": 5,
+    "weightLb": 0.25,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "dice",
+    "name": "Dice",
+    "category": "Tools",
+    "priceCp": 10,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "diplomats-pack",
+    "name": "Diplomat's Pack",
+    "category": "Adventuring Gear",
+    "priceCp": 3900,
+    "weightLb": 39,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "disguise-kit",
+    "name": "Disguise Kit",
+    "category": "Tools",
+    "priceCp": 2500,
+    "weightLb": 3,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "dragonchess",
+    "name": "Dragonchess",
+    "category": "Tools",
+    "priceCp": 100,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "druidic-focus-sprig-of-mistletoe",
+    "name": "Druidic Focus: Sprig of mistletoe",
+    "category": "Spellcasting Focuses",
+    "priceCp": 100,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "druidic-focus-wooden-staff-also-a-quarterstaff",
+    "name": "Druidic Focus: Wooden staff (also a Quarterstaff)",
+    "category": "Spellcasting Focuses",
+    "priceCp": 500,
+    "weightLb": 4,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "druidic-focus-yew-wand",
+    "name": "Druidic Focus: Yew wand",
+    "category": "Spellcasting Focuses",
+    "priceCp": 1000,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "drum",
+    "name": "Drum",
+    "category": "Tools",
+    "priceCp": 600,
+    "weightLb": 3,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "dulcimer",
+    "name": "Dulcimer",
+    "category": "Tools",
+    "priceCp": 2500,
+    "weightLb": 10,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "dungeoneers-pack",
+    "name": "Dungeoneer's Pack",
+    "category": "Adventuring Gear",
+    "priceCp": 1200,
+    "weightLb": 55,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "elephant",
+    "name": "Elephant",
+    "category": "Mounts and Vehicles",
+    "priceCp": 20000,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "entertainers-pack",
+    "name": "Entertainer's Pack",
+    "category": "Adventuring Gear",
+    "priceCp": 4000,
+    "weightLb": 58.5,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "exotic-saddle",
+    "name": "Exotic Saddle",
+    "category": "Mounts and Vehicles",
+    "priceCp": 6000,
+    "weightLb": 40,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "explorers-pack",
+    "name": "Explorer's Pack",
+    "category": "Adventuring Gear",
+    "priceCp": 1000,
+    "weightLb": 55,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "feed-per-day",
+    "name": "Feed per day",
+    "category": "Mounts and Vehicles",
+    "priceCp": 5,
+    "weightLb": 10,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "flail",
+    "name": "Flail",
+    "category": "Weapons",
+    "priceCp": 1000,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "flask",
+    "name": "Flask",
+    "category": "Adventuring Gear",
+    "priceCp": 2,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "flute",
+    "name": "Flute",
+    "category": "Tools",
+    "priceCp": 200,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "forgery-kit",
+    "name": "Forgery Kit",
+    "category": "Tools",
+    "priceCp": 1500,
+    "weightLb": 5,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "galley",
+    "name": "Galley",
+    "category": "Mounts and Vehicles",
+    "priceCp": 3000000,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "glaive",
+    "name": "Glaive",
+    "category": "Weapons",
+    "priceCp": 2000,
+    "weightLb": 6,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "glassblowers-tools",
+    "name": "Glassblower's Tools",
+    "category": "Tools",
+    "priceCp": 3000,
+    "weightLb": 5,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "grappling-hook",
+    "name": "Grappling Hook",
+    "category": "Adventuring Gear",
+    "priceCp": 200,
+    "weightLb": 4,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "greataxe",
+    "name": "Greataxe",
+    "category": "Weapons",
+    "priceCp": 3000,
+    "weightLb": 7,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "greatclub",
+    "name": "Greatclub",
+    "category": "Weapons",
+    "priceCp": 20,
+    "weightLb": 10,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "greatsword",
+    "name": "Greatsword",
+    "category": "Weapons",
+    "priceCp": 5000,
+    "weightLb": 6,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "halberd",
+    "name": "Halberd",
+    "category": "Weapons",
+    "priceCp": 2000,
+    "weightLb": 6,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "half-plate-armor",
+    "name": "Half Plate Armor",
+    "category": "Armor",
+    "priceCp": 75000,
+    "weightLb": 40,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "half-plate-armor-barding",
+    "name": "Half Plate Armor Barding",
+    "category": "Mounts and Vehicles",
+    "priceCp": 300000,
+    "weightLb": 80,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "hand-crossbow",
+    "name": "Hand Crossbow",
+    "category": "Weapons",
+    "priceCp": 7500,
+    "weightLb": 3,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "handaxe",
+    "name": "Handaxe",
+    "category": "Weapons",
+    "priceCp": 500,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "healers-kit",
+    "name": "Healer's Kit",
+    "category": "Adventuring Gear",
+    "priceCp": 500,
+    "weightLb": 3,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "heavy-crossbow",
+    "name": "Heavy Crossbow",
+    "category": "Weapons",
+    "priceCp": 5000,
+    "weightLb": 18,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "herbalism-kit",
+    "name": "Herbalism Kit",
+    "category": "Tools",
+    "priceCp": 500,
+    "weightLb": 3,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "hide-armor",
+    "name": "Hide Armor",
+    "category": "Armor",
+    "priceCp": 1000,
+    "weightLb": 12,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "hide-armor-barding",
+    "name": "Hide Armor Barding",
+    "category": "Mounts and Vehicles",
+    "priceCp": 4000,
+    "weightLb": 24,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "holy-symbol-amulet-worn-or-held",
+    "name": "Holy Symbol: Amulet (worn or held)",
+    "category": "Spellcasting Focuses",
+    "priceCp": 500,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "holy-symbol-emblem-borne-on-fabric-or-a-shield",
+    "name": "Holy Symbol: Emblem (borne on fabric or a Shield)",
+    "category": "Spellcasting Focuses",
+    "priceCp": 500,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "holy-symbol-reliquary-held",
+    "name": "Holy Symbol: Reliquary (held)",
+    "category": "Spellcasting Focuses",
+    "priceCp": 500,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "holy-water",
+    "name": "Holy Water",
+    "category": "Adventuring Gear",
+    "priceCp": 2500,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "horn",
+    "name": "Horn",
+    "category": "Tools",
+    "priceCp": 300,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "horse-draft",
+    "name": "Horse, Draft",
+    "category": "Mounts and Vehicles",
+    "priceCp": 5000,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "horse-riding",
+    "name": "Horse, Riding",
+    "category": "Mounts and Vehicles",
+    "priceCp": 7500,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "hunting-trap",
+    "name": "Hunting Trap",
+    "category": "Adventuring Gear",
+    "priceCp": 500,
+    "weightLb": 25,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "ink",
+    "name": "Ink",
+    "category": "Adventuring Gear",
+    "priceCp": 1000,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "ink-pen",
+    "name": "Ink Pen",
+    "category": "Adventuring Gear",
+    "priceCp": 2,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "javelin",
+    "name": "Javelin",
+    "category": "Weapons",
+    "priceCp": 50,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "jewelers-tools",
+    "name": "Jeweler's Tools",
+    "category": "Tools",
+    "priceCp": 2500,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "jug",
+    "name": "Jug",
+    "category": "Adventuring Gear",
+    "priceCp": 2,
+    "weightLb": 4,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "keelboat",
+    "name": "Keelboat",
+    "category": "Mounts and Vehicles",
+    "priceCp": 300000,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "ladder",
+    "name": "Ladder",
+    "category": "Adventuring Gear",
+    "priceCp": 10,
+    "weightLb": 25,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "lamp",
+    "name": "Lamp",
+    "category": "Adventuring Gear",
+    "priceCp": 50,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "lance",
+    "name": "Lance",
+    "category": "Weapons",
+    "priceCp": 1000,
+    "weightLb": 6,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "lantern-bullseye",
+    "name": "Lantern, Bullseye",
+    "category": "Adventuring Gear",
+    "priceCp": 1000,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "lantern-hooded",
+    "name": "Lantern, Hooded",
+    "category": "Adventuring Gear",
+    "priceCp": 500,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "leather-armor",
+    "name": "Leather Armor",
+    "category": "Armor",
+    "priceCp": 1000,
+    "weightLb": 10,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "leather-armor-barding",
+    "name": "Leather Armor Barding",
+    "category": "Mounts and Vehicles",
+    "priceCp": 4000,
+    "weightLb": 20,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "leatherworkers-tools",
+    "name": "Leatherworker's Tools",
+    "category": "Tools",
+    "priceCp": 500,
+    "weightLb": 5,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "light-crossbow",
+    "name": "Light Crossbow",
+    "category": "Weapons",
+    "priceCp": 2500,
+    "weightLb": 5,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "light-hammer",
+    "name": "Light Hammer",
+    "category": "Weapons",
+    "priceCp": 200,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "lock",
+    "name": "Lock",
+    "category": "Adventuring Gear",
+    "priceCp": 1000,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "longbow",
+    "name": "Longbow",
+    "category": "Weapons",
+    "priceCp": 5000,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "longship",
+    "name": "Longship",
+    "category": "Mounts and Vehicles",
+    "priceCp": 1000000,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "longsword",
+    "name": "Longsword",
+    "category": "Weapons",
+    "priceCp": 1500,
+    "weightLb": 3,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "lute",
+    "name": "Lute",
+    "category": "Tools",
+    "priceCp": 3500,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "lyre",
+    "name": "Lyre",
+    "category": "Tools",
+    "priceCp": 3000,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "mace",
+    "name": "Mace",
+    "category": "Weapons",
+    "priceCp": 500,
+    "weightLb": 4,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "magnifying-glass",
+    "name": "Magnifying Glass",
+    "category": "Adventuring Gear",
+    "priceCp": 10000,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "manacles",
+    "name": "Manacles",
+    "category": "Adventuring Gear",
+    "priceCp": 200,
+    "weightLb": 6,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "map",
+    "name": "Map",
+    "category": "Adventuring Gear",
+    "priceCp": 100,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "masons-tools",
+    "name": "Mason's Tools",
+    "category": "Tools",
+    "priceCp": 1000,
+    "weightLb": 8,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "mastiff",
+    "name": "Mastiff",
+    "category": "Mounts and Vehicles",
+    "priceCp": 2500,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "maul",
+    "name": "Maul",
+    "category": "Weapons",
+    "priceCp": 1000,
+    "weightLb": 10,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "military-saddle",
+    "name": "Military Saddle",
+    "category": "Mounts and Vehicles",
+    "priceCp": 2000,
+    "weightLb": 30,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "mirror",
+    "name": "Mirror",
+    "category": "Adventuring Gear",
+    "priceCp": 500,
+    "weightLb": 0.5,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "morningstar",
+    "name": "Morningstar",
+    "category": "Weapons",
+    "priceCp": 1500,
+    "weightLb": 4,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "mule",
+    "name": "Mule",
+    "category": "Mounts and Vehicles",
+    "priceCp": 800,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "musket",
+    "name": "Musket",
+    "category": "Weapons",
+    "priceCp": 50000,
+    "weightLb": 10,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "navigators-tools",
+    "name": "Navigator's Tools",
+    "category": "Tools",
+    "priceCp": 2500,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "needles-50",
+    "name": "Needles (50)",
+    "category": "Ammunition",
+    "priceCp": 100,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "net",
+    "name": "Net",
+    "category": "Adventuring Gear",
+    "priceCp": 100,
+    "weightLb": 3,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "oil",
+    "name": "Oil",
+    "category": "Adventuring Gear",
+    "priceCp": 10,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "padded-armor",
+    "name": "Padded Armor",
+    "category": "Armor",
+    "priceCp": 500,
+    "weightLb": 8,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "padded-armor-barding",
+    "name": "Padded Armor Barding",
+    "category": "Mounts and Vehicles",
+    "priceCp": 2000,
+    "weightLb": 16,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "painters-supplies",
+    "name": "Painter's Supplies",
+    "category": "Tools",
+    "priceCp": 1000,
+    "weightLb": 5,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "pan-flute",
+    "name": "Pan flute",
+    "category": "Tools",
+    "priceCp": 1200,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "paper",
+    "name": "Paper",
+    "category": "Adventuring Gear",
+    "priceCp": 20,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "parchment",
+    "name": "Parchment",
+    "category": "Adventuring Gear",
+    "priceCp": 10,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "perfume",
+    "name": "Perfume",
+    "category": "Adventuring Gear",
+    "priceCp": 500,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "pike",
+    "name": "Pike",
+    "category": "Weapons",
+    "priceCp": 500,
+    "weightLb": 18,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "pistol",
+    "name": "Pistol",
+    "category": "Weapons",
+    "priceCp": 25000,
+    "weightLb": 3,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "plate-armor",
+    "name": "Plate Armor",
+    "category": "Armor",
+    "priceCp": 150000,
+    "weightLb": 65,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "plate-armor-barding",
+    "name": "Plate Armor Barding",
+    "category": "Mounts and Vehicles",
+    "priceCp": 600000,
+    "weightLb": 130,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "playing-cards",
+    "name": "Playing cards",
+    "category": "Tools",
+    "priceCp": 50,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "poison-basic",
+    "name": "Poison, Basic",
+    "category": "Adventuring Gear",
+    "priceCp": 10000,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "poisoners-kit",
+    "name": "Poisoner's Kit",
+    "category": "Tools",
+    "priceCp": 5000,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "pole",
+    "name": "Pole",
+    "category": "Adventuring Gear",
+    "priceCp": 5,
+    "weightLb": 7,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "pony",
+    "name": "Pony",
+    "category": "Mounts and Vehicles",
+    "priceCp": 3000,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "pot-iron",
+    "name": "Pot, Iron",
+    "category": "Adventuring Gear",
+    "priceCp": 200,
+    "weightLb": 10,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "potion-of-healing",
+    "name": "Potion of Healing",
+    "category": "Adventuring Gear",
+    "priceCp": 5000,
+    "weightLb": 0.5,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "potters-tools",
+    "name": "Potter's Tools",
+    "category": "Tools",
+    "priceCp": 1000,
+    "weightLb": 3,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "pouch",
+    "name": "Pouch",
+    "category": "Adventuring Gear",
+    "priceCp": 50,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "priests-pack",
+    "name": "Priest's Pack",
+    "category": "Adventuring Gear",
+    "priceCp": 3300,
+    "weightLb": 29,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "quarterstaff",
+    "name": "Quarterstaff",
+    "category": "Weapons",
+    "priceCp": 20,
+    "weightLb": 4,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "quiver",
+    "name": "Quiver",
+    "category": "Adventuring Gear",
+    "priceCp": 100,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "ram-portable",
+    "name": "Ram, Portable",
+    "category": "Adventuring Gear",
+    "priceCp": 400,
+    "weightLb": 35,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "rapier",
+    "name": "Rapier",
+    "category": "Weapons",
+    "priceCp": 2500,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "rations",
+    "name": "Rations",
+    "category": "Adventuring Gear",
+    "priceCp": 50,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "riding-saddle",
+    "name": "Riding Saddle",
+    "category": "Mounts and Vehicles",
+    "priceCp": 1000,
+    "weightLb": 25,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "ring-mail",
+    "name": "Ring Mail",
+    "category": "Armor",
+    "priceCp": 3000,
+    "weightLb": 40,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "ring-mail-barding",
+    "name": "Ring Mail Barding",
+    "category": "Mounts and Vehicles",
+    "priceCp": 12000,
+    "weightLb": 80,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "robe",
+    "name": "Robe",
+    "category": "Adventuring Gear",
+    "priceCp": 100,
+    "weightLb": 4,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "rope",
+    "name": "Rope",
+    "category": "Adventuring Gear",
+    "priceCp": 100,
+    "weightLb": 5,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "rowboat",
+    "name": "Rowboat",
+    "category": "Mounts and Vehicles",
+    "priceCp": 5000,
+    "weightLb": 100,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "sack",
+    "name": "Sack",
+    "category": "Adventuring Gear",
+    "priceCp": 1,
+    "weightLb": 0.5,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "sailing-ship",
+    "name": "Sailing Ship",
+    "category": "Mounts and Vehicles",
+    "priceCp": 1000000,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "scale-mail",
+    "name": "Scale Mail",
+    "category": "Armor",
+    "priceCp": 5000,
+    "weightLb": 45,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "scale-mail-barding",
+    "name": "Scale Mail Barding",
+    "category": "Mounts and Vehicles",
+    "priceCp": 20000,
+    "weightLb": 90,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "scholars-pack",
+    "name": "Scholar's Pack",
+    "category": "Adventuring Gear",
+    "priceCp": 4000,
+    "weightLb": 22,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "scimitar",
+    "name": "Scimitar",
+    "category": "Weapons",
+    "priceCp": 2500,
+    "weightLb": 3,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "shawm",
+    "name": "Shawm",
+    "category": "Tools",
+    "priceCp": 200,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "shield",
+    "name": "Shield",
+    "category": "Armor",
+    "priceCp": 1000,
+    "weightLb": 6,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "shortbow",
+    "name": "Shortbow",
+    "category": "Weapons",
+    "priceCp": 2500,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "shortsword",
+    "name": "Shortsword",
+    "category": "Weapons",
+    "priceCp": 1000,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "shovel",
+    "name": "Shovel",
+    "category": "Adventuring Gear",
+    "priceCp": 200,
+    "weightLb": 5,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "sickle",
+    "name": "Sickle",
+    "category": "Weapons",
+    "priceCp": 100,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "signal-whistle",
+    "name": "Signal Whistle",
+    "category": "Adventuring Gear",
+    "priceCp": 5,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "sled",
+    "name": "Sled",
+    "category": "Mounts and Vehicles",
+    "priceCp": 2000,
+    "weightLb": 300,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "sling",
+    "name": "Sling",
+    "category": "Weapons",
+    "priceCp": 10,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "smiths-tools",
+    "name": "Smith's Tools",
+    "category": "Tools",
+    "priceCp": 2000,
+    "weightLb": 8,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "spear",
+    "name": "Spear",
+    "category": "Weapons",
+    "priceCp": 100,
+    "weightLb": 3,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "spell-scroll-cantrip",
+    "name": "Spell Scroll (Cantrip)",
+    "category": "Adventuring Gear",
+    "priceCp": 3000,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "spell-scroll-level-1",
+    "name": "Spell Scroll (Level 1)",
+    "category": "Adventuring Gear",
+    "priceCp": 5000,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "spikes-iron",
+    "name": "Spikes, Iron",
+    "category": "Adventuring Gear",
+    "priceCp": 100,
+    "weightLb": 5,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "splint-armor",
+    "name": "Splint Armor",
+    "category": "Armor",
+    "priceCp": 20000,
+    "weightLb": 60,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "splint-armor-barding",
+    "name": "Splint Armor Barding",
+    "category": "Mounts and Vehicles",
+    "priceCp": 80000,
+    "weightLb": 120,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "spyglass",
+    "name": "Spyglass",
+    "category": "Adventuring Gear",
+    "priceCp": 100000,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "string",
+    "name": "String",
+    "category": "Adventuring Gear",
+    "priceCp": 10,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "studded-leather-armor",
+    "name": "Studded Leather Armor",
+    "category": "Armor",
+    "priceCp": 4500,
+    "weightLb": 13,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "studded-leather-armor-barding",
+    "name": "Studded Leather Armor Barding",
+    "category": "Mounts and Vehicles",
+    "priceCp": 18000,
+    "weightLb": 26,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "tent",
+    "name": "Tent",
+    "category": "Adventuring Gear",
+    "priceCp": 200,
+    "weightLb": 20,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "thieves-tools",
+    "name": "Thieves' Tools",
+    "category": "Tools",
+    "priceCp": 2500,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "three-dragon-ante",
+    "name": "Three-dragon ante",
+    "category": "Tools",
+    "priceCp": 100,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "tinderbox",
+    "name": "Tinderbox",
+    "category": "Adventuring Gear",
+    "priceCp": 50,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "tinkers-tools",
+    "name": "Tinker's Tools",
+    "category": "Tools",
+    "priceCp": 5000,
+    "weightLb": 10,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "torch",
+    "name": "Torch",
+    "category": "Adventuring Gear",
+    "priceCp": 1,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "trident",
+    "name": "Trident",
+    "category": "Weapons",
+    "priceCp": 500,
+    "weightLb": 4,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "vial",
+    "name": "Vial",
+    "category": "Adventuring Gear",
+    "priceCp": 100,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "viol",
+    "name": "Viol",
+    "category": "Tools",
+    "priceCp": 3000,
+    "weightLb": 1,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "wagon",
+    "name": "Wagon",
+    "category": "Mounts and Vehicles",
+    "priceCp": 3500,
+    "weightLb": 400,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "war-pick",
+    "name": "War Pick",
+    "category": "Weapons",
+    "priceCp": 500,
+    "weightLb": 2,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "warhammer",
+    "name": "Warhammer",
+    "category": "Weapons",
+    "priceCp": 1500,
+    "weightLb": 5,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "warhorse",
+    "name": "Warhorse",
+    "category": "Mounts and Vehicles",
+    "priceCp": 40000,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "warship",
+    "name": "Warship",
+    "category": "Mounts and Vehicles",
+    "priceCp": 2500000,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "waterskin",
+    "name": "Waterskin",
+    "category": "Adventuring Gear",
+    "priceCp": 20,
+    "weightLb": 5,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "weavers-tools",
+    "name": "Weaver's Tools",
+    "category": "Tools",
+    "priceCp": 100,
+    "weightLb": 5,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "whip",
+    "name": "Whip",
+    "category": "Weapons",
+    "priceCp": 200,
+    "weightLb": 3,
+    "rarity": "Common",
+    "consumable": false
+  },
+  {
+    "id": "wine-common-bottle",
+    "name": "Wine, Common (bottle)",
+    "category": "Adventuring Gear",
+    "priceCp": 20,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "wine-fine-bottle",
+    "name": "Wine, Fine (bottle)",
+    "category": "Adventuring Gear",
+    "priceCp": 1000,
+    "weightLb": null,
+    "rarity": "Common",
+    "consumable": true
+  },
+  {
+    "id": "woodcarvers-tools",
+    "name": "Woodcarver's Tools",
+    "category": "Tools",
+    "priceCp": 100,
+    "weightLb": 5,
+    "rarity": "Common",
+    "consumable": false
+  }
+]
