@@ -18,9 +18,10 @@ export function MiniInventory({ inventory, activeId, disabled, onInspect, onDisc
       {items.length ? items.map(item => <div key={item.id} role="group" aria-label={`Inventory card: ${item.name}`} className={`mini-inventory-item ${activeId === item.id ? 'is-active' : ''}`}>
         <button className="mini-inventory-select" disabled={disabled} aria-label={`Inspect ${item.name}`} onClick={() => onInspect(item)}>
           <span className="mini-inventory-name">{item.name}</span>
-          <span className="inventory-meta"><RarityBadge card={item} />{item.type !== 'normal' && <span className="inventory-attunement">{item.isAttuned ? '✦ Attuned' : '✧ Unattuned'}</span>}{item.type === 'progressive' && <span className="inventory-level">Lv. {item.currentLevel || 1}</span>}</span>
+          <span className="inventory-meta"><RarityBadge card={item} />{item.type !== 'normal' && <span className="inventory-attunement">{item.isAttuned ? '✦ Attuned' : '✧ Unattuned'}</span>}</span>
         </button>
         <button className="close-control" disabled={disabled} aria-label={`Discard ${item.name}`} onClick={() => onDiscard(item.id)}>✕</button>
+        {item.type === 'progressive' && <span className="inventory-level mini-inventory-level">Lv. {item.currentLevel || 1}</span>}
       </div>) : <p className="mini-inventory-empty">Draw a relic to start your collection.</p>}
     </div>
     <button className="text-link" onClick={onOpenInventory}>Open full inventory →</button>

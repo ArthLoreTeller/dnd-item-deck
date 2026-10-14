@@ -103,13 +103,13 @@ button:focus-visible, select:focus-visible, summary:focus-visible, input:focus-v
 .item-surface { animation: veil-in 180ms ease-out both; }
 
 /* Complete faces dissolve together; the old face stays until the new one is readable. */
-.attunement-outgoing { position: absolute; inset: 0; z-index: 60; pointer-events: none; will-change: opacity; animation: attunement-out 450ms cubic-bezier(.2,.6,.3,1) both; }
+.attunement-outgoing { position: absolute; inset: 0; z-index: 60; pointer-events: none; will-change: opacity,transform,filter; animation: attunement-out 640ms cubic-bezier(.2,.6,.3,1) both; }
 .attunement-outgoing .item-surface { animation: none; }
-.attunement-incoming { will-change: opacity; animation: attunement-in 450ms cubic-bezier(.2,.6,.3,1) both; }
-.attunement-aura { position: absolute; inset: -12px; z-index: 70; pointer-events: none; border-radius: 20px; box-shadow: inset 0 0 30px #ffd07844, 0 0 35px #ffd07833; will-change: opacity; animation: attunement-aura 450ms ease-in-out both; }
-@keyframes attunement-out { 0%, 15% { opacity: 1; } 100% { opacity: 0; } }
-@keyframes attunement-in { 0% { opacity: 0; } 100% { opacity: 1; } }
-@keyframes attunement-aura { 0%, 100% { opacity: 0; } 45% { opacity: .65; } }
+.attunement-incoming { will-change: opacity,transform,filter; animation: attunement-in 640ms cubic-bezier(.16,.8,.25,1) both; }
+.attunement-aura { position: absolute; inset: -18px; z-index: 70; pointer-events: none; border-radius: 24px; background: radial-gradient(circle at 50% 48%, #fff8cf 0%, #ffd56ee8 24%, #f59e0bd9 43%, #78350f66 66%, transparent 84%); backdrop-filter: blur(3px); box-shadow: inset 0 0 55px #fff2a677, 0 0 58px #f59e0b88, 0 0 110px #f59e0b44; will-change: opacity,transform,filter; animation-name: attunement-aura; animation-duration: 640ms; animation-timing-function: cubic-bezier(.2,.65,.25,1); animation-fill-mode: both; }
+@keyframes attunement-out { 0%, 18% { opacity: 1; filter: blur(0) brightness(1); transform: scale(1); } 46% { opacity: .18; filter: blur(2px) brightness(1.7); transform: scale(1.035); } 100% { opacity: 0; filter: blur(4px) brightness(1.25); transform: scale(1.055); } }
+@keyframes attunement-in { 0%, 38% { opacity: 0; filter: blur(3px) brightness(1.8); transform: scale(.96); } 58% { opacity: .38; filter: blur(1.5px) brightness(1.35); transform: scale(.985); } 100% { opacity: 1; filter: blur(0) brightness(1); transform: scale(1); } }
+@keyframes attunement-aura { 0%, 100% { opacity: 0; transform: scale(.9); filter: saturate(1); } 46% { opacity: 1; transform: scale(1.04); filter: saturate(1.3); } 62% { opacity: .72; transform: scale(1.08); filter: saturate(1.15); } }
 .attune-control { min-width: 73px; transition: background-color 200ms, box-shadow 300ms; }
 .attune-control:hover { background-color: #d8bb84; box-shadow: 0 0 12px #aa782633; }
 .attune-control:disabled { opacity: .7; }
@@ -483,7 +483,7 @@ html[data-theme="woody"] .reliquary {
 .card-stat-field input { text-overflow: ellipsis; }
 .card-shelf p, .card-shelf [role="button"] { line-height: inherit; }
 .card-shelf { font-family: ui-serif, Georgia, Cambria, 'Times New Roman', serif; }
-.card-attune-control { position: absolute; bottom: 26px; right: 16px; z-index: 30; height: 20px; min-height: 20px; min-width: 54px; display: flex; align-items: center; justify-content: center; padding: 2px 7px; border: 1px solid #aa7826; border-radius: 4px; background: #e8d5b7; color: #451a03; font: bold 9px Georgia,serif; text-transform: uppercase; letter-spacing: .06em; cursor: pointer; transition: background-color 180ms; }
+.card-attune-control { position: absolute; bottom: 34px; right: 16px; z-index: 30; height: 20px; min-height: 20px; min-width: 54px; display: flex; align-items: center; justify-content: center; padding: 2px 7px; border: 1px solid #aa7826; border-radius: 4px; background: #e8d5b7; color: #451a03; font: bold 9px Georgia,serif; text-transform: uppercase; letter-spacing: .06em; cursor: pointer; transition: background-color 180ms, transform 180ms, box-shadow 180ms; }
 .card-attune-icon { top: 25px; bottom: auto; right: 20px; min-width: 28px; width: 28px; padding: 0; border-color: transparent; background: transparent; }
 .card-attune-icon:hover { background: #aa782622; }
 .card-attune-transform { animation: attune-control-pulse 450ms ease-in-out both; }
@@ -496,7 +496,8 @@ html[data-theme="woody"] .reliquary {
 .collection-orbit .orbit-toggle { position: relative; z-index: 1; }
 .orbit-toggle svg { transition: transform 260ms ease; }
 .is-open .orbit-toggle { box-shadow: 0 0 0 2px var(--env-panel-accent), 0 4px 18px #0004; }
-.orbit-shortcuts { position: absolute; bottom: 56px; left: 0; display: grid; grid-template-columns: repeat(2, 46px); gap: 8px; padding: 5px; opacity: 0; visibility: hidden; transform: translateY(18px) scale(.9); transform-origin: bottom left; transition: opacity 240ms, transform 240ms, visibility 240ms; }
+.orbit-shortcuts { position: absolute; bottom: 56px; left: 0; display: grid; grid-template-columns: repeat(2, 46px); gap: 8px; padding: 0; opacity: 0; visibility: hidden; transform: translateY(18px) scale(.9); transform-origin: bottom left; transition: opacity 240ms, transform 240ms, visibility 240ms; }
+.collection-orbit svg { display: block; flex: 0 0 auto; }
 .is-open .orbit-shortcuts { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
 .collection-orbit :is(a,button):focus-visible, .card-attune-control:focus-visible { outline: 2px solid var(--env-panel-accent,#aa7826); outline-offset: 3px; }
 .collection-orbit button:disabled { opacity: .4; cursor: default; }
@@ -506,6 +507,7 @@ html[data-theme="woody"] .reliquary {
 .inventory-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; min-height: 24px; }
 .inventory-attunement { font-size: 12px; color: var(--env-panel-muted); white-space: nowrap; }
 .inventory-level { margin-left: auto; font: 11px ui-monospace, monospace; color: var(--env-panel-accent); white-space: nowrap; }
+.mini-inventory-level { position: absolute; top: 48px; right: 9px; width: 34px; margin: 0; text-align: center; pointer-events: none; }
 .inventory-panel [role="group"] { gap: 8px; padding: 14px; }
 @media (max-width: 767px) {
   .reliquary { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
@@ -619,7 +621,7 @@ html[data-theme="woody"] .reliquary {
 .orbit-shortcuts a:is(:hover,:focus-visible,:active) .corner-tooltip { opacity: 1; }
 .orbit-shortcuts { overflow: visible; }
 @media (max-height: 350px) {
-  .orbit-shortcuts { overflow-y: auto; overflow-x: hidden; padding: 6px; }
+  .orbit-shortcuts { overflow-y: auto; overflow-x: hidden; padding: 0; }
   .corner-tooltip { display: none; }
 }
 .contextual-actions { width: 100%; display: flex; justify-content: flex-end; }
@@ -634,7 +636,7 @@ html[data-theme="woody"] .reliquary {
 .settings-volume-control input { width: 100%; min-width: 0; min-height: 44px; accent-color: var(--env-panel-accent); cursor: pointer; }
 .settings-volume-control output { min-width: 4ch; color: var(--env-panel-text); font-size: 13px; font-variant-numeric: tabular-nums; text-align: right; }
 .settings-hint { margin: 14px 0; font-size: 12px; line-height: 1.6; }
-.settings-attribution { gap: 8px; padding: 16px 18px; }
+.settings-attribution { gap: 8px; margin-top: 16px; padding: 16px 18px; }
 .settings-attribution h3 { margin: 0; font-size: 14px; }
 .settings-attribution p { margin: 0; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
 .settings-attribution-links { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 12px; }
