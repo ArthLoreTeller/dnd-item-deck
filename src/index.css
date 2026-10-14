@@ -759,6 +759,7 @@ html[data-theme="woody"] .reliquary {
 .spell-filters { display: grid; grid-template-columns: minmax(0,1fr) 140px; gap: 16px; }
 .spell-result-count { font-size: 12px; margin: 12px 0; }
 .spells-page :is(a,button,summary,select):focus-visible, .spell-tome-page :is(a,button,summary,input,select):focus-visible { outline: 2px solid var(--env-panel-accent); outline-offset: 3px; }
+.spells-page > .spell-tome-navigation > a:focus-visible, .spell-tome-page > .page-title-row > a:focus-visible { outline-color: var(--env-text); }
 @media (max-width: 420px) {
   .spell-list { padding-inline: 10px; }
   .spell-row { gap: 8px; }

@@ -9,6 +9,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { rolldown } from 'rolldown';
 import { createPlayerProfile } from '../src/data/player.js';
 import { parseBackup } from '../src/data/backup.js';
+import { SRD_EQUIPMENT } from '../src/data/srd/equipment.js';
 
 const saved = new Map();
 globalThis.localStorage = { getItem: key => saved.get(key) ?? null, setItem: (key, value) => saved.set(key, value), removeItem: key => saved.delete(key) };
@@ -50,6 +51,50 @@ function editor(equipment = null) {
 function fixture() {
   store.setState({ profile: createPlayerProfile(), equipment: [], inventory: [], deck: [], discardedCustom: [], relicEquipmentCache: {}, lastConsumption: null });
 }
+
+test('every purchased SRD category renders as the selected equipment option', () => {
+  for (const category of new Set(SRD_EQUIPMENT.map(item => item.category))) {
+    fixture();
+    store.getState().updateProfile({ currency: { ...store.getState().profile.currency, gp: 1000000 } });
+    const item = SRD_EQUIPMENT.find(entry => entry.category === category);
+    assert.equal(store.getState().purchaseItem(item.id).ok, true);
+    const edit = editor(store.getState().equipment[0]);
+    assert.equal(edit.input('Category').props.value, category);
+    assert.ok(renderToStaticMarkup(edit.tree()).includes(`<option selected="">${category}</option>`), `${category} must be visibly selected`);
+  }
+});
+
+test('purchased category survives unrelated edits and can be changed through the selector', async () => {
+  fixture();
+  store.getState().updateProfile({ currency: { ...store.getState().profile.currency, gp: 10 } });
+  assert.equal(store.getState().purchaseItem('backpack').ok, true);
+  const edit = editor(store.getState().equipment[0]);
+  assert.match(renderToStaticMarkup(edit.tree()), /<option selected="">Adventuring Gear<\/option>/);
+  edit.input('Name').props.onChange({ target: { value: 'Travel backpack' } });
+  edit.save();
+  assert.equal(store.getState().equipment[0].category, 'Adventuring Gear');
+  edit.input('Category').props.onChange({ target: { value: 'Treasure' } });
+  assert.match(renderToStaticMarkup(edit.tree()), /<option selected="">Treasure<\/option>/);
+  edit.save();
+  await store.persist.rehydrate();
+  assert.equal(store.getState().equipment[0].category, 'Treasure');
+  assert.equal(store.getState().equipment[0].name, 'Travel backpack');
+});
+
+test('existing custom categories stay visibly selected alongside the original choices', () => {
+  fixture();
+  store.getState().addEquipment({ name: 'Survey kit', quantity: 1, unitWeightLb: null, carried: true, category: 'Expedition Supplies', imageUrl: '' });
+  const edit = editor(store.getState().equipment[0]);
+  const html = renderToStaticMarkup(edit.tree());
+  assert.match(html, /<option selected="">Expedition Supplies<\/option>/);
+  for (const category of ['Gear', 'Weapon', 'Armor', 'Consumable', 'Treasure']) assert.ok(html.includes(`>${category}</option>`));
+  edit.save();
+  assert.equal(store.getState().equipment[0].category, 'Expedition Supplies');
+  edit.input('Category').props.onChange({ target: { value: 'x'.repeat(501) } });
+  edit.save();
+  assert.match(renderToStaticMarkup(edit.tree()), /role="alert"/);
+  assert.equal(store.getState().equipment[0].category, 'Expedition Supplies');
+});
 
 test('custom equipment can be marked consumable in the editor, persisted, edited and consumed', async () => {
   fixture();
