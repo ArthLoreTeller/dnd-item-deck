@@ -60,7 +60,7 @@ test('every purchased SRD category renders as the selected equipment option', ()
     assert.equal(store.getState().purchaseItem(item.id).ok, true);
     const edit = editor(store.getState().equipment[0]);
     assert.equal(edit.input('Category').props.value, category);
-    assert.ok(renderToStaticMarkup(edit.tree()).includes(`<option selected="">${category}</option>`), `${category} must be visibly selected`);
+    assert.ok(renderToStaticMarkup(edit.tree()).includes(`selected="">${category}</option>`), `${category} must be visibly selected`);
   }
 });
 
@@ -69,12 +69,12 @@ test('purchased category survives unrelated edits and can be changed through the
   store.getState().updateProfile({ currency: { ...store.getState().profile.currency, gp: 10 } });
   assert.equal(store.getState().purchaseItem('backpack').ok, true);
   const edit = editor(store.getState().equipment[0]);
-  assert.match(renderToStaticMarkup(edit.tree()), /<option selected="">Adventuring Gear<\/option>/);
+  assert.match(renderToStaticMarkup(edit.tree()), /<option\b[^>]*selected="">Adventuring Gear<\/option>/);
   edit.input('Name').props.onChange({ target: { value: 'Travel backpack' } });
   edit.save();
   assert.equal(store.getState().equipment[0].category, 'Adventuring Gear');
   edit.input('Category').props.onChange({ target: { value: 'Treasure' } });
-  assert.match(renderToStaticMarkup(edit.tree()), /<option selected="">Treasure<\/option>/);
+  assert.match(renderToStaticMarkup(edit.tree()), /<option\b[^>]*selected="">Treasure<\/option>/);
   edit.save();
   await store.persist.rehydrate();
   assert.equal(store.getState().equipment[0].category, 'Treasure');
@@ -86,7 +86,7 @@ test('existing custom categories stay visibly selected alongside the original ch
   store.getState().addEquipment({ name: 'Survey kit', quantity: 1, unitWeightLb: null, carried: true, category: 'Expedition Supplies', imageUrl: '' });
   const edit = editor(store.getState().equipment[0]);
   const html = renderToStaticMarkup(edit.tree());
-  assert.match(html, /<option selected="">Expedition Supplies<\/option>/);
+  assert.match(html, /<option\b[^>]*selected="">Expedition Supplies<\/option>/);
   for (const category of ['Gear', 'Weapon', 'Armor', 'Consumable', 'Treasure']) assert.ok(html.includes(`>${category}</option>`));
   edit.save();
   assert.equal(store.getState().equipment[0].category, 'Expedition Supplies');
@@ -95,6 +95,29 @@ test('existing custom categories stay visibly selected alongside the original ch
   assert.match(renderToStaticMarkup(edit.tree()), /role="alert"/);
   assert.equal(store.getState().equipment[0].category, 'Expedition Supplies');
 });
+
+for (const category of [' Expedition Supplies ', 'Expedition  Supplies']) {
+  test(`native category option values preserve whitespace in ${JSON.stringify(category)}`, async () => {
+    fixture();
+    store.getState().addEquipment({ name: 'Survey kit', quantity: 1, unitWeightLb: null, carried: true, category, imageUrl: '' });
+    const edit = editor(store.getState().equipment[0]);
+    const select = edit.input('Category');
+    const options = elements(select).filter(node => node.type === 'option');
+    // HTML option.value uses an explicit value verbatim; without one, native
+    // option text strips leading/trailing ASCII whitespace and collapses runs.
+    // SSR selected attributes alone cannot catch the controlled-select mismatch.
+    const nativeValue = option => option.props.value ?? String(option.props.children).replace(/[\t\n\f\r ]+/g, ' ').trim();
+    const selected = options.find(option => nativeValue(option) === select.props.value) ?? options[0];
+    assert.equal(nativeValue(selected), category, 'The controlled select must match the stored category instead of falling back to Gear');
+    assert.ok(renderToStaticMarkup(select).includes(`value="${category}" selected=""`), 'Rendered markup must preserve the category value for the browser');
+    select.props.onChange({ target: { value: nativeValue(selected) } });
+    edit.input('Name').props.onChange({ target: { value: 'Travel survey kit' } });
+    edit.save();
+    await store.persist.rehydrate();
+    assert.equal(store.getState().equipment[0].category, category);
+    assert.equal(store.getState().equipment[0].name, 'Travel survey kit');
+  });
+}
 
 test('custom equipment can be marked consumable in the editor, persisted, edited and consumed', async () => {
   fixture();
