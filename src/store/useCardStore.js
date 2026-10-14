@@ -123,6 +123,9 @@ export const useCardStore = create(
           if (cardIndex < 0) return { toastMessage: 'Linked relic not found.' };
           snapshot.card = structuredClone(state.inventory[cardIndex]);
           snapshot.cardIndex = cardIndex;
+          // Redrawing and editing a relic makes its earlier discard snapshot
+          // obsolete. Only Consume Undo may restore this owned version now.
+          if (String(state.lastDiscard?.id) === entry.relicCardId) patch.lastDiscard = null;
           patch.relicEquipmentCache = { ...state.relicEquipmentCache, [entry.relicCardId]: snapshot.entry };
           patch.inventory = state.inventory.filter((_, index) => index !== cardIndex);
           if (String(state.activeCard?.id) === entry.relicCardId) {

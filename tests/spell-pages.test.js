@@ -8,6 +8,7 @@ import { pathToFileURL } from 'node:url';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { rolldown } from 'rolldown';
 import { createPlayerProfile } from '../src/data/player.js';
+import { parseBackup } from '../src/data/backup.js';
 import { spellById } from '../src/data/srd/spells.js';
 import { THEMES } from '../src/theme/themes.js';
 import postcss from 'postcss';
@@ -59,6 +60,20 @@ test('Known Spells renders one stat row, centered tome navigation, ordered group
   assert.match(html, /Custom spell/);
   assert.match(html, /aria-label="Forget Shield"/);
   assert.doesNotMatch(html, /Roll|Forget Amber Ward/);
+});
+
+test('imported case variants render one catalog row and retain separate custom notes', () => {
+  const profile = createPlayerProfile();
+  profile.sheet.learnedSpellIds = ['FIREBALL', 'fireball'];
+  profile.sheet.spells = [{ name: 'Moonlit Door', level: 2, prepared: true, concentration: false, notes: 'Keep my homebrew.' }];
+  const imported = parseBackup(JSON.stringify({ format: 'reliquary-backup', version: 3, deck: [], inventory: [], equipment: [], profile }));
+  useCardStore.setState({ profile: imported.profile });
+  const html = render(SpellsPage);
+  assert.equal((html.match(/<summary>Fireball \(Level 3\)<\/summary>/g) ?? []).length, 1);
+  assert.equal((html.match(/aria-label="Forget Fireball"/g) ?? []).length, 1);
+  assert.match(html, /Moonlit Door/);
+  assert.match(html, /Keep my homebrew\./);
+  assert.match(render(SpellTomePage), /aria-label="Fireball learned"[^>]*disabled=""/);
 });
 
 test('blank profiles show unknown stats and an actionable empty learned spell list', () => {

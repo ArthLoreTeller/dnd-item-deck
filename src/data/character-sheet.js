@@ -1,5 +1,5 @@
 import { abilityModifier } from './weight.js';
-import { SRD_SPELLS } from './srd/spells.js';
+import { SRD_SPELLS, spellById } from './srd/spells.js';
 const spellNameKey = name => name.normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 const canonicalSpellNames = new Map(SRD_SPELLS.map(spell => [spellNameKey(spell.name), spell.name]));
 export const SKILLS = { Acrobatics:'dex', 'Animal Handling':'wis', Arcana:'int', Athletics:'str', Deception:'cha', History:'int', Insight:'wis', Intimidation:'cha', Investigation:'int', Medicine:'wis', Nature:'int', Perception:'wis', Performance:'cha', Persuasion:'cha', Religion:'int', 'Sleight of Hand':'dex', Stealth:'dex', Survival:'wis' };
@@ -23,7 +23,12 @@ export function validateSheet(input) {
   sheet.resources=list(sheet.resources).map(entry=>{if(!['short','long','manual'].includes(entry.recovery))throw new Error('Invalid recovery rule.');const max=num(entry.max,0,999);return{name:text(entry.name),max,current:num(entry.current,0,max),recovery:entry.recovery};});
   sheet.attacks=list(sheet.attacks).map(entry=>({name:text(entry.name),bonus:num(entry.bonus,-100,100,true),damage:text(entry.damage),notes:text(entry.notes)}));
   sheet.spells=list(sheet.spells).map(entry=>({name:text(entry.name),level:num(entry.level,0,9),prepared:Boolean(entry.prepared),concentration:Boolean(entry.concentration),notes:text(entry.notes)}));
-  sheet.learnedSpellIds=[...new Set(list(sheet.learnedSpellIds,500).map(id=>{if(typeof id!=='string'||!id.trim()||id.length>500)throw new Error('Invalid learned spell ID.');return id;}))];
+  sheet.learnedSpellIds=[...new Set(list(sheet.learnedSpellIds,500).map(id=>{
+    if(typeof id!=='string'||!id.trim()||id.length>500)throw new Error('Invalid learned spell ID.');
+    const spell=spellById(id);
+    if(!spell)throw new Error(`Unsupported learned spell ID "${id}". Choose a spell from the SRD Spell Tome; keep custom spells in spell notes.`);
+    return spell.id;
+  }))];
   if(list(sheet.conditions).some(name=>!CONDITIONS.includes(name)))throw new Error('Invalid condition.');sheet.conditions=[...new Set(sheet.conditions)];
   sheet.exhaustion=num(sheet.exhaustion,0,6);sheet.inspiration=Boolean(sheet.inspiration);
   sheet.deathSaves={successes:num(sheet.deathSaves?.successes,0,3),failures:num(sheet.deathSaves?.failures,0,3)};

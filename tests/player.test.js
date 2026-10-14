@@ -32,6 +32,24 @@ test('learned spells can retain the complete SRD catalog', () => {
   assert.equal(validateProfile(profile).sheet.learnedSpellIds.length, 339);
 });
 
+test('profile validation resolves learned references before deduplication and rejects noncatalog IDs', () => {
+  const profile = createPlayerProfile();
+  profile.sheet.learnedSpellIds = ['FIREBALL', 'fireball', ' Shield '];
+  assert.deepEqual(validateProfile(profile).sheet.learnedSpellIds, ['fireball', 'shield']);
+  profile.sheet.learnedSpellIds = ['moonlit-door'];
+  assert.throws(() => validateProfile(profile), /Unsupported learned spell ID.*moonlit-door.*SRD Spell Tome/i);
+});
+
+test('legacy player migration preserves homebrew spells with canonical learned IDs', () => {
+  const profile = createPlayerProfile();
+  profile.sheet.learnedSpellIds = ['FIREBALL', 'fireball'];
+  const custom = { name: 'Moonlit Door', level: 2, prepared: true, concentration: true, notes: 'Keep these notes.' };
+  profile.sheet.spells = [{ name: 'Fireball', level: 3, prepared: false, concentration: false, notes: '' }, custom];
+  const migrated = migratePlayerData({ profile, inventory: [] }, { migrateSpells: true });
+  assert.deepEqual(migrated.profile.sheet.learnedSpellIds, ['fireball']);
+  assert.deepEqual(migrated.profile.sheet.spells, [custom]);
+});
+
 test('equipment defaults legacy consumable to false and validates explicit choices', () => {
   const equipment = { id: 'potion', characterId: 'hero', name: 'Potion', quantity: 2, carried: true, unitWeightLb: 0.5 };
   assert.equal(validateEquipment(equipment).consumable, false);

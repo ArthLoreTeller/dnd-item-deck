@@ -48,6 +48,32 @@ test('version three roundtrip retains learned IDs, custom spells, currency, capa
   assert.deepEqual(restored.relicEquipmentCache, { [card.id]: cached });
   assert.equal(restored.deck[0].stats.hit, '+8');
 });
+test('version three imports canonical unique spell IDs while preserving separate custom spell notes', () => {
+  const profile = createPlayerProfile();
+  profile.sheet.learnedSpellIds = ['FIREBALL', 'fireball', ' Shield ', 'SHIELD'];
+  profile.sheet.spells = [{ name: 'Fireball', level: 3, prepared: true, concentration: false, notes: 'My custom variant.' }, { name: 'Moonlit Door', level: 2, prepared: false, concentration: true, notes: 'Homebrew notes.' }];
+  const restored = parseBackup(JSON.stringify({ format: 'reliquary-backup', version: 3, deck: [], inventory: [], equipment: [], profile }));
+  assert.deepEqual(restored.profile.sheet.learnedSpellIds, ['fireball', 'shield']);
+  assert.deepEqual(restored.profile.sheet.spells, profile.sheet.spells);
+  assert.deepEqual(profile.sheet.learnedSpellIds, ['FIREBALL', 'fireball', ' Shield ', 'SHIELD']);
+});
+
+test('version three rejects unsupported learned spell references with an actionable error', () => {
+  const profile = createPlayerProfile();
+  profile.sheet.learnedSpellIds = ['fireball', 'moonlit-door'];
+  assert.throws(() => parseBackup(JSON.stringify({ format: 'reliquary-backup', version: 3, deck: [], inventory: [], equipment: [], profile })), /Unsupported learned spell ID.*moonlit-door.*SRD Spell Tome/i);
+});
+
+test('version two migration dedupes canonical IDs against legacy spell names and retains custom notes', () => {
+  const profile = createPlayerProfile();
+  profile.sheet.learnedSpellIds = ['FIREBALL', 'fireball'];
+  const custom = { name: 'Moonlit Door', level: 2, prepared: true, concentration: true, notes: 'Keep homebrew notes.' };
+  profile.sheet.spells = [{ name: 'Fireball', level: 3, prepared: false, concentration: false, notes: '' }, { name: ' MAGIC-MISSILE! ', level: 1, prepared: false, concentration: false, notes: '' }, custom];
+  const restored = parseBackup(JSON.stringify({ format: 'reliquary-backup', version: 2, deck: [], inventory: [], equipment: [], profile }));
+  assert.deepEqual(restored.profile.sheet.learnedSpellIds, ['fireball', 'magic-missile']);
+  assert.deepEqual(restored.profile.sheet.spells, [custom]);
+});
+
 test('version one backups leave player merge decisions to current state', () => {
   const restored = parseBackup(JSON.stringify({ format: 'reliquary-backup', version: 1, deck: [], inventory: [] }));
   assert.equal(restored.profile, undefined);

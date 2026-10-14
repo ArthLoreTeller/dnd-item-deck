@@ -373,6 +373,61 @@ test('a changed nested card value still updates the preview and invalidates cons
   assert.equal(store.getState().lastConsumption, null);
 });
 
+test('consuming a redrawn relic invalidates its obsolete discard Undo and preserves edited Consume Undo', () => {
+  const card = defaults[0];
+  store.setState({ profile: createPlayerProfile(), deck: [card], inventory: [], equipment: [], relicEquipmentCache: {}, discardedCustom: [], activeCard: null, lastConsumption: null, lastDiscard: null });
+  store.getState().drawCardById(card.id);
+  const entryId = store.getState().equipment[0].id;
+  store.getState().updateEquipment(entryId, { consumable: true, unitWeightLb: 7, carried: false });
+  store.getState().discardCard(card.id);
+  store.getState().drawCardById(card.id);
+  store.getState().updateCard(card.id, { name: 'Edited relic after redraw', stats: { hit: '+12', damage: '3d8' } });
+  const original = structuredClone({ inventory: store.getState().inventory, equipment: store.getState().equipment, activeCard: store.getState().activeCard });
+  store.getState().consumeEquipment(entryId);
+  assert.equal(store.getState().lastDiscard, null);
+  const consumption = store.getState().lastConsumption;
+  store.getState().undoDiscard();
+  assert.deepEqual(store.getState().inventory, []);
+  assert.deepEqual(store.getState().equipment, []);
+  assert.equal(store.getState().lastConsumption, consumption);
+  store.getState().undoConsume();
+  assert.deepEqual(store.getState().inventory, original.inventory);
+  assert.deepEqual(store.getState().equipment, original.equipment);
+  assert.deepEqual(store.getState().activeCard, original.activeCard);
+  assert.deepEqual(store.getState().deck, []);
+});
+
+test('consuming equipment preserves an unrelated relic discard Undo', () => {
+  for (const linked of [false, true]) {
+    store.setState({ profile: createPlayerProfile(), deck: defaults.slice(0, 2), inventory: [], equipment: [], relicEquipmentCache: {}, discardedCustom: [], activeCard: null, lastConsumption: null, lastDiscard: null });
+    store.getState().drawCardById(defaults[0].id);
+    store.getState().discardCard(defaults[0].id);
+    const discarded = store.getState().lastDiscard;
+    if (linked) {
+      store.getState().drawCardById(defaults[1].id);
+      store.getState().updateEquipment(store.getState().equipment[0].id, { consumable: true });
+    } else store.getState().addEquipment({ name: 'Potion', quantity: 1, carried: true, consumable: true, unitWeightLb: 0.5 });
+    store.getState().consumeEquipment(store.getState().equipment[0].id);
+    assert.equal(store.getState().lastDiscard, discarded);
+    store.getState().undoDiscard();
+    assert.deepEqual(store.getState().inventory.map(card => card.id), [defaults[0].id]);
+    assert.equal(store.getState().inventory[0].name, discarded.name);
+    assert.equal(store.getState().deck.some(card => card.id === defaults[0].id), false);
+  }
+});
+
+test('failed consumption leaves the matching relic discard Undo available', () => {
+  store.setState({ profile: createPlayerProfile(), deck: [defaults[0]], inventory: [], equipment: [], relicEquipmentCache: {}, discardedCustom: [], activeCard: null, lastConsumption: null, lastDiscard: null });
+  store.getState().drawCardById(defaults[0].id);
+  store.getState().discardCard(defaults[0].id);
+  store.getState().drawCardById(defaults[0].id);
+  const discarded = store.getState().lastDiscard;
+  store.getState().consumeEquipment(store.getState().equipment[0].id);
+  assert.equal(store.getState().lastDiscard, discarded);
+  assert.equal(store.getState().inventory.length, 1);
+  assert.equal(store.getState().lastConsumption, null);
+});
+
 test('version three storage upgrades spells and consumables once without changing player or relic edits', async () => {
   const profile = { ...createPlayerProfile(), name: 'Legacy hero', notes: 'Old journal', currency: { cp: 12, sp: 2, ep: null, gp: 100, pp: 0 }, capacityOverrideLb: 150, capacityOverrideReason: 'Pack' };
   delete profile.sheet.learnedSpellIds;
