@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import defaults from '../src/data/defaultCards.json' with { type: 'json' };
 import { createPlayerProfile } from '../src/data/player.js';
+import { parseBackup } from '../src/data/backup.js';
 const saved = new Map();
 globalThis.localStorage = { getItem: (key) => saved.get(key) ?? null, setItem: (key, value) => saved.set(key, value), removeItem: (key) => saved.delete(key) };
 const { useCardStore: store } = await import('../src/store/useCardStore.js');
@@ -236,6 +237,88 @@ test('linked consumption and Undo preserve mixed linked and ordinary equipment a
   store.getState().undoConsume();
   assert.deepEqual(store.getState().equipment, original);
   await store.persist.rehydrate();
+  assert.deepEqual(store.getState().equipment, original);
+});
+
+test('deck reset invalidates consumption Undo without duplicating a built-in card or breaking backup', () => {
+  const card = defaults[0];
+  store.setState({ profile: createPlayerProfile(), deck: [card], inventory: [], equipment: [], relicEquipmentCache: {}, discardedCustom: [], lastConsumption: null, activeCard: null });
+  store.getState().drawCardById(card.id);
+  store.getState().updateEquipment(store.getState().equipment[0].id, { consumable: true });
+  store.getState().consumeEquipment(store.getState().equipment[0].id);
+  store.getState().resetDeck();
+  const reset = store.getState();
+  store.getState().undoConsume();
+  assert.equal(store.getState().inventory.length, 0);
+  assert.equal(store.getState().deck.filter(item => item.id === card.id).length, 1);
+  assert.equal(store.getState().equipment, reset.equipment);
+  assert.equal(store.getState().activeCard, reset.activeCard);
+  assert.equal(store.getState().lastConsumption, null);
+  assert.doesNotThrow(() => parseBackup(store.getState().exportBackup()));
+});
+
+test('later attunement invalidates consumption Undo and keeps the three-item limit', () => {
+  store.setState({ profile: createPlayerProfile(), deck: [], inventory: [], equipment: [], relicEquipmentCache: {}, discardedCustom: [], lastConsumption: null, activeCard: null });
+  for (let i = 1; i <= 4; i++) store.getState().addToInventory({ id: `custom-consume-attune-${i}`, name: `Relic ${i}`, type: 'standard', isAttuned: i <= 3 });
+  const consumed = store.getState().equipment.find(entry => entry.relicCardId === 'custom-consume-attune-1');
+  store.getState().updateEquipment(consumed.id, { consumable: true });
+  store.getState().consumeEquipment(consumed.id);
+  store.getState().updateCard('custom-consume-attune-4', { isAttuned: true, stats: { hit: '+8' } });
+  const attuned = store.getState();
+  store.getState().undoConsume();
+  assert.equal(store.getState().inventory.filter(card => card.isAttuned).length, 3);
+  assert.equal(store.getState().inventory, attuned.inventory);
+  assert.equal(store.getState().equipment, attuned.equipment);
+  assert.equal(store.getState().activeCard, attuned.activeCard);
+  assert.equal(store.getState().lastConsumption, null);
+  assert.equal(parseBackup(store.getState().exportBackup()).inventory.filter(card => card.isAttuned).length, 3);
+});
+
+test('drawing a consumed built-in again invalidates Undo and preserves its later edits', () => {
+  const card = defaults[0];
+  store.setState({ profile: createPlayerProfile(), deck: [card], inventory: [], equipment: [], relicEquipmentCache: {}, discardedCustom: [], lastConsumption: null, activeCard: null });
+  store.getState().drawCardById(card.id);
+  store.getState().updateEquipment(store.getState().equipment[0].id, { consumable: true });
+  store.getState().consumeEquipment(store.getState().equipment[0].id);
+  store.getState().resetDeck();
+  store.getState().drawCardById(card.id);
+  store.getState().updateEquipment(store.getState().equipment[0].id, { unitWeightLb: 42, carried: false });
+  const later = store.getState();
+  store.getState().undoConsume();
+  assert.equal(store.getState().equipment[0].unitWeightLb, 42);
+  assert.equal(store.getState().equipment, later.equipment);
+  assert.equal(store.getState().inventory, later.inventory);
+  assert.doesNotThrow(() => parseBackup(store.getState().exportBackup()));
+});
+
+test('a later preview selection is not overwritten by linked consumption Undo', () => {
+  store.setState({ profile: createPlayerProfile(), deck: [], inventory: [], equipment: [], relicEquipmentCache: {}, discardedCustom: [], lastConsumption: null, activeCard: null });
+  for (const name of ['First', 'Second', 'Potion']) store.getState().addToInventory({ id: `custom-preview-${name}`, name, type: 'standard' });
+  const entry = store.getState().equipment.find(item => item.name === 'Potion');
+  store.getState().updateEquipment(entry.id, { consumable: true });
+  store.getState().consumeEquipment(entry.id);
+  const first = store.getState().inventory.find(card => card.name === 'First');
+  store.getState().setActiveCard(first);
+  store.getState().undoConsume();
+  assert.equal(store.getState().activeCard, first);
+  assert.equal(store.getState().lastConsumption, null);
+});
+
+test('failed deck actions and rejected attunement retain consumption Undo', () => {
+  store.setState({ profile: createPlayerProfile(), deck: [], inventory: [], equipment: [], relicEquipmentCache: {}, discardedCustom: [], lastConsumption: null, activeCard: null });
+  for (let i = 1; i <= 4; i++) store.getState().addToInventory({ id: `custom-rejected-attune-${i}`, name: `Relic ${i}`, type: 'standard', isAttuned: i <= 3 });
+  store.getState().addEquipment({ name: 'Potion', quantity: 2, unitWeightLb: 0.5, carried: true, consumable: true });
+  const original = structuredClone(store.getState().equipment);
+  const id = original.at(-1).id;
+  store.getState().consumeEquipment(id);
+  const snapshot = store.getState().lastConsumption;
+  store.getState().drawCardById('missing');
+  store.getState().drawRandomCard();
+  store.getState().discardCard('missing');
+  store.getState().restoreCustomCard('missing');
+  store.getState().updateCard('custom-rejected-attune-4', { isAttuned: true });
+  assert.equal(store.getState().lastConsumption, snapshot);
+  store.getState().undoConsume();
   assert.deepEqual(store.getState().equipment, original);
 });
 

@@ -29,6 +29,12 @@ export const useCardStore = create(
       // Reconcile every card lifecycle change in the same persisted transaction.
       const set = update => rawSet(state => {
         const patch = typeof update === 'function' ? update(state) : update;
+        // Like purchases, later card transactions invalidate the exact consume
+        // snapshot. Restoring it could duplicate ownership, exceed attunement
+        // slots, or replace a preview the player selected after consuming.
+        if ((patch.deck && patch.deck !== state.deck) || (patch.inventory && patch.inventory !== state.inventory) || (state.lastConsumption?.activeCard && Object.hasOwn(patch, 'activeCard') && patch.activeCard !== state.activeCard)) {
+          patch.lastConsumption = null;
+        }
         if (!patch.inventory) return patch;
         const profile = patch.profile ?? state.profile;
         const cache = { ...state.relicEquipmentCache, ...patch.relicEquipmentCache };
