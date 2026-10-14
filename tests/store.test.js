@@ -322,6 +322,57 @@ test('failed deck actions and rejected attunement retain consumption Undo', () =
   assert.deepEqual(store.getState().equipment, original);
 });
 
+test('updating a missing card preserves consumption Undo and every saved domain reference', () => {
+  store.setState({ profile: createPlayerProfile(), deck: [], inventory: [], equipment: [], relicEquipmentCache: {}, discardedCustom: [], lastConsumption: null, activeCard: null });
+  store.getState().addToInventory({ id: 'custom-noop-kept', name: 'Kept relic', type: 'standard', isAttuned: false });
+  store.getState().addEquipment({ name: 'Potion', quantity: 2, unitWeightLb: 0.5, carried: true, consumable: true });
+  const original = structuredClone(store.getState().equipment);
+  store.getState().consumeEquipment(original.at(-1).id);
+  const before = store.getState();
+  const persisted = localStorage.getItem('dnd-item-deck-storage');
+  store.getState().updateCard('missing', { isAttuned: true, stats: { hit: '+8' } });
+  assert.equal(store.getState().lastConsumption, before.lastConsumption);
+  for (const key of ['inventory', 'deck', 'equipment', 'activeCard', 'relicEquipmentCache', 'profile', 'discardedCustom']) assert.equal(store.getState()[key], before[key]);
+  assert.equal(localStorage.getItem('dnd-item-deck-storage'), persisted);
+  store.getState().undoConsume();
+  assert.deepEqual(store.getState().equipment, original);
+});
+
+test('identical card updates preserve consumption Undo, including new equal nested values', () => {
+  store.setState({ profile: createPlayerProfile(), deck: [], inventory: [], equipment: [], relicEquipmentCache: {}, discardedCustom: [], lastConsumption: null, activeCard: null });
+  store.getState().addToInventory({ id: 'custom-noop-kept', name: 'Kept relic', type: 'progressive', isAttuned: false, stats: { hit: '+2', damage: '1d6' }, progress: { level1: 2, level2: 0 }, abilities: [{ title: 'Glow', description: 'Light nearby.' }] });
+  store.getState().addToInventory({ id: 'custom-noop-consumed', name: 'Relic tonic', type: 'standard' });
+  const consumed = store.getState().equipment.find(entry => entry.relicCardId === 'custom-noop-consumed');
+  store.getState().updateEquipment(consumed.id, { consumable: true });
+  const original = structuredClone({ inventory: store.getState().inventory, equipment: store.getState().equipment, activeCard: store.getState().activeCard });
+  store.getState().consumeEquipment(consumed.id);
+  const before = store.getState();
+  const persisted = localStorage.getItem('dnd-item-deck-storage');
+  for (const updates of [{ isAttuned: false }, {}, { stats: { damage: '1d6', hit: '+2' }, progress: { level2: 0, level1: 2 }, abilities: [{ description: 'Light nearby.', title: 'Glow' }] }]) {
+    store.getState().updateCard('custom-noop-kept', updates);
+    assert.equal(store.getState().lastConsumption, before.lastConsumption);
+    for (const key of ['inventory', 'deck', 'equipment', 'activeCard', 'relicEquipmentCache', 'profile', 'discardedCustom']) assert.equal(store.getState()[key], before[key]);
+    assert.equal(localStorage.getItem('dnd-item-deck-storage'), persisted);
+  }
+  store.getState().undoConsume();
+  assert.deepEqual(store.getState().inventory, original.inventory);
+  assert.deepEqual(store.getState().equipment, original.equipment);
+  assert.deepEqual(store.getState().activeCard, original.activeCard);
+});
+
+test('a changed nested card value still updates the preview and invalidates consumption Undo', () => {
+  store.setState({ profile: createPlayerProfile(), deck: [], inventory: [], equipment: [], relicEquipmentCache: {}, discardedCustom: [], lastConsumption: null, activeCard: null });
+  store.getState().addToInventory({ id: 'custom-noop-kept', name: 'Kept relic', type: 'standard', stats: { hit: '+2', damage: '1d6' } });
+  store.getState().addEquipment({ name: 'Potion', quantity: 2, unitWeightLb: 0.5, carried: true, consumable: true });
+  store.getState().consumeEquipment(store.getState().equipment.at(-1).id);
+  store.getState().updateCard('custom-noop-kept', { stats: { hit: '+2', damage: '2d6' } });
+  store.getState().undoConsume();
+  assert.equal(store.getState().inventory[0].stats.damage, '2d6');
+  assert.equal(store.getState().activeCard.stats.damage, '2d6');
+  assert.equal(store.getState().equipment.at(-1).quantity, 1);
+  assert.equal(store.getState().lastConsumption, null);
+});
+
 test('version three storage upgrades spells and consumables once without changing player or relic edits', async () => {
   const profile = { ...createPlayerProfile(), name: 'Legacy hero', notes: 'Old journal', currency: { cp: 12, sp: 2, ep: null, gp: 100, pp: 0 }, capacityOverrideLb: 150, capacityOverrideReason: 'Pack' };
   delete profile.sheet.learnedSpellIds;

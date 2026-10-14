@@ -12,6 +12,15 @@ import { purchaseEquipment } from '../data/currency.js';
 import { spellById } from '../data/srd/spells.js';
 const defaultCards = rawDefaultCards.map(normalizeCard);
 
+// Card fields are saved as plain objects/arrays. Equal replacement values
+// should not publish a transaction or dismiss the pending consume Undo.
+function sameCardValue(left, right) {
+  if (Object.is(left, right)) return true;
+  if (!left || !right || typeof left !== 'object' || typeof right !== 'object' || Array.isArray(left) !== Array.isArray(right)) return false;
+  const keys = Object.keys(left);
+  return keys.length === Object.keys(right).length && keys.every(key => Object.hasOwn(right, key) && sameCardValue(left[key], right[key]));
+}
+
 function safeRestore(card, inventory) {
   return { ...card, isAttuned: Boolean(card.isAttuned) && inventory.filter(item => item.isAttuned).length < 3 };
 }
@@ -211,6 +220,7 @@ export const useCardStore = create(
       updateCard: (id, updates) => {
         const { inventory } = get();
         const currentCard = inventory.find((c) => c.id === id);
+        if (!currentCard || Object.entries(updates).every(([key, value]) => sameCardValue(currentCard[key], value))) return;
 
         // Attunement Rule: Limit to maximum 3 attuned items
         if (updates.isAttuned === true && currentCard && !currentCard.isAttuned) {
