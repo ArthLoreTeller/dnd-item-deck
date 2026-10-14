@@ -17,7 +17,7 @@ import { useDeckMotion } from "./motion/useDeckMotion";
 
 
 import { playSound, useSoundSettings } from "./audio/sound";
-import { Search, Dices } from "lucide-react";
+import { Search } from "lucide-react";
 import { useCardStore } from "./store/useCardStore";
 import { DiceTray } from "./components/DiceTray";
 
@@ -153,7 +153,6 @@ export default function App() {
           <div className="reliquary-heading">
             <div><p className="eyebrow">YOUR ADVENTURE, ENSHRINED · v1.3.0</p><h1>The Reliquary</h1><p className="heading-subtitle">Draw a relic. Discover its magic. Make it yours.</p></div>
           </div>
-          {['deck', 'character'].includes(page) && <div className="contextual-actions"><button type="button" className="journal-button" aria-label="Roll D20" aria-haspopup="dialog" onClick={() => setDiceOpen(true)}><Dices size={18} aria-hidden="true" />Roll D20</button></div>}
           {page === 'deck' && <><button type="button"
             onClick={() => setIsSearchModalOpen(true)}
             className="w-full bg-slate-800/80 hover:bg-slate-700/90 border-2 border-amber-500/50 hover:border-amber-400 text-slate-300 px-6 py-3.5 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.15)] flex items-center gap-3 cursor-pointer transition-all"
@@ -272,7 +271,7 @@ export default function App() {
         {page === 'shop' && <ShopPage />}
         {page === 'settings' && <SettingsPage />}
 
-        <CollectionNavigation page={page} />
+        <CollectionNavigation page={page} onRoll={['deck', 'character'].includes(page) ? () => setDiceOpen(true) : undefined} />
 
         <ItemSearchModal
           isOpen={isSearchModalOpen}

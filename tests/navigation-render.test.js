@@ -58,6 +58,14 @@ test('Corner Menu starts collapsed and excludes contextual D20 actions', () => {
   }
 });
 
+test('Corner Menu accepts a contextual icon-only D20 action', () => {
+  const html = renderToStaticMarkup(React.createElement(CollectionNavigation, { page: 'deck', onRoll: () => {} }));
+  const nav = html.match(/<nav class="collection-orbit[\s\S]*?<\/nav>/)?.[0];
+  assert.ok(nav);
+  assert.match(nav, /<button[^>]*aria-label="Roll D20"[^>]*title="Roll D20"[^>]*aria-haspopup="dialog"/);
+  assert.match(nav, /<svg[^>]*aria-hidden="true"/);
+});
+
 test('Settings renders the persisted theme and sound preferences with labelled controls', () => {
   assert.equal(typeof SettingsPage, 'function', 'Settings page must be available');
   useTheme.setState({ theme: 'woody' });
@@ -97,14 +105,14 @@ test('unfinished companion routes render a focused page shell instead of an empt
   } finally { globalThis.window = previousWindow; }
 });
 
-test('Deck retains its D20 action outside the Corner Menu', () => {
+test('Deck moves its D20 action into the Corner Menu', () => {
   const previousWindow = globalThis.window;
   try {
     globalThis.window = { location: { hash: '#/deck' } };
     const html = renderToStaticMarkup(React.createElement(App));
-    assert.match(html, /<button[^>]*aria-label="Roll D20"[^>]*>/);
     const nav = html.match(/<nav class="collection-orbit[\s\S]*?<\/nav>/)?.[0];
     assert.ok(nav);
-    assert.doesNotMatch(nav, /Roll D20|Roll a D20/);
+    assert.match(nav, /<button[^>]*aria-label="Roll D20"[^>]*aria-haspopup="dialog"/);
+    assert.doesNotMatch(html, /class="contextual-actions"/);
   } finally { globalThis.window = previousWindow; }
 });

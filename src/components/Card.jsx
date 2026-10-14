@@ -126,7 +126,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
     setIsFlipped(false);
     setIsEnhancing(true);
     const reduced = prefersReducedMotion();
-    const timer = setTimeout(() => { setOutgoingCard(null); setIsEnhancing(false); }, reduced ? 0 : 680);
+    const timer = setTimeout(() => { setOutgoingCard(null); setIsEnhancing(false); }, reduced ? 0 : 800);
     return () => clearTimeout(timer);
   }, [isAttuned, currentLevel, snapshot]);
   useEffect(() => { previousCardRef.current = card; });

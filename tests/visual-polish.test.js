@@ -20,6 +20,8 @@ test('Corner Menu icons share the toggle alignment axis', () => {
   const icons = declarations('.collection-orbit svg');
   assert.equal(shortcuts.left, '0');
   assert.equal(shortcuts.padding, '0');
+  assert.equal(shortcuts['grid-template-columns'], '46px');
+  assert.match(shortcuts['max-height'], /100dvh/);
   assert.equal(icons.display, 'block');
 });
 
@@ -34,14 +36,21 @@ test('mini inventory level is positioned beneath the discard control', () => {
   assert.equal(level.top, '48px');
 });
 
-test('attunement uses a raised control and an opaque midpoint veil', () => {
+test('attunement uses a raised control and an edge-burn transition', () => {
   assert.equal(declarations('.card-attune-control').bottom, '34px');
   const aura = declarations('.attunement-aura');
-  assert.match(aura.background, /radial-gradient/);
+  assert.equal(aura.background, 'transparent');
   assert.match(aura['backdrop-filter'], /blur/);
-  assert.equal(aura['animation-duration'], '640ms');
+  assert.equal(aura['animation-duration'], '760ms');
 
-  assert.match(stylesheet, /@keyframes attunement-out[\s\S]*blur\(2px\)[\s\S]*scale\(1\.035\)/);
-  assert.match(stylesheet, /@keyframes attunement-in[\s\S]*blur\(3px\)[\s\S]*scale\(\.96\)/);
-  assert.match(stylesheet, /@keyframes attunement-aura[\s\S]*4[456]%\s*\{\s*opacity:\s*1/);
+  const fire = declarations('.attunement-aura::before');
+  const embers = declarations('.attunement-aura::after');
+  assert.match(fire.background, /conic-gradient/);
+  assert.match(fire.animation, /attunement-fire-edge/);
+  assert.match(embers.background, /radial-gradient/);
+  assert.match(embers.animation, /attunement-embers/);
+
+  assert.match(stylesheet, /@keyframes attunement-fire-edge/);
+  assert.match(stylesheet, /@keyframes attunement-embers/);
+  assert.match(stylesheet, /@keyframes attunement-aura[\s\S]*4[456]%\s*\{[^}]*background-color:\s*#[0-9a-f]{8}/i);
 });
