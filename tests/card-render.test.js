@@ -8,6 +8,7 @@ import { pathToFileURL } from 'node:url';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { rolldown } from 'rolldown';
 import defaultCards from '../src/data/defaultCards.json' with { type: 'json' };
+import { enhancementKindFor } from '../src/components/cardTransition.js';
 const bundle = await rolldown({ input: { card: 'src/components/Card.jsx', deck: 'src/pages/DeckPage.jsx', navigation: 'src/components/CollectionNavigation.jsx', miniInventory: 'src/components/MiniInventory.jsx' }, plugins: [{ name: 'external-dependencies', resolveId(id) { if (/^(react(?:-dom)?|zustand|lucide-react)(\/|$)/.test(id)) return { id: import.meta.resolve(id), external: true }; } }] });
 const output = await bundle.generate({ format: 'esm', entryFileNames: '[name].mjs', chunkFileNames: '[name]-[hash].mjs' });
 await bundle.close();
@@ -40,6 +41,11 @@ test('progressive cards expose named keyboard-operable progression buttons', () 
   const html = renderToStaticMarkup(React.createElement(Card, { card: { ...card, isAttuned: true } }));
   assert.match(html, /<button[^>]*aria-label="Level 1 progress 1 of 20"/);
   assert.match(html, /aria-pressed="false"/);
+});
+
+test('level changes select the compact progression effect instead of the full attunement effect', () => {
+  assert.equal(enhancementKindFor({ isAttuned: true, currentLevel: 1 }, { isAttuned: true, currentLevel: 2 }), 'progression');
+  assert.equal(enhancementKindFor({ isAttuned: false, currentLevel: 1 }, { isAttuned: true, currentLevel: 1 }), 'attunement');
 });
 
 test('the visible deck card offers an accessible Read Details action', () => {

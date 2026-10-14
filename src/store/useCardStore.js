@@ -248,6 +248,9 @@ export const useCardStore = create(
           return {
             inventory: updatedInventory,
             activeCard: updatedActive,
+            ...(typeof updates.isAttuned === 'boolean' && updates.isAttuned !== currentCard.isAttuned
+              ? { toastMessage: `“${currentCard.name}” ${updates.isAttuned ? 'attuned' : 'unattuned'}.` }
+              : {}),
           };
         });
       },

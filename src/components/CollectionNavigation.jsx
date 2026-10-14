@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Menu, Layers, Backpack, UserRound, ListChecks, Sparkles, NotebookPen, Store, Settings, Dices } from 'lucide-react';
 
-const shortcuts = [
-  ['deck', 'Deck', Layers], ['inventory', 'Inventory', Backpack],
-  ['character', 'Character', UserRound], ['skills', 'Skills', ListChecks],
-  ['spells', 'Spells', Sparkles], ['notes', 'Notes', NotebookPen],
-  ['shop', 'Shop', Store], ['settings', 'Settings', Settings],
+const shortcutGroups = [
+  [['deck', 'Deck', Layers], ['inventory', 'Inventory', Backpack]],
+  [['character', 'Character', UserRound], ['skills', 'Skills', ListChecks],
+    ['spells', 'Spells', Sparkles], ['notes', 'Notes', NotebookPen]],
+  [['shop', 'Shop', Store], ['settings', 'Settings', Settings]],
 ];
 
 export function CollectionNavigation({ page, onRoll }) {
@@ -26,12 +26,16 @@ export function CollectionNavigation({ page, onRoll }) {
           <Dices size={20} aria-hidden="true" />
           <span className="corner-tooltip" aria-hidden="true">Roll D20</span>
         </button>}
-        {shortcuts.map(([route, label, Icon]) => <a key={route} href={`#/${route}`}
-          aria-current={page === route || (route === 'spells' && page === 'spell-tome') ? 'page' : undefined}
-          aria-label={label} title={label} onClick={close}>
-          <Icon size={20} aria-hidden="true" />
-          <span className="corner-tooltip" aria-hidden="true">{label}</span>
-        </a>)}
+        {onRoll && <span className="orbit-divider" role="separator" aria-hidden="true" />}
+        {shortcutGroups.map((group, groupIndex) => <React.Fragment key={groupIndex}>
+          {group.map(([route, label, Icon]) => <a key={route} href={`#/${route}`}
+            aria-current={page === route || (route === 'spells' && page === 'spell-tome') ? 'page' : undefined}
+            aria-label={label} title={label} onClick={close}>
+            <Icon size={20} aria-hidden="true" />
+            <span className="corner-tooltip" aria-hidden="true">{label}</span>
+          </a>)}
+          {groupIndex < shortcutGroups.length - 1 && <span className="orbit-divider" role="separator" aria-hidden="true" />}
+        </React.Fragment>)}
       </div>
       <button type="button" className="orbit-toggle" aria-label={open ? 'Close Corner Menu' : 'Open Corner Menu'}
         aria-expanded={open} aria-controls="collection-shortcuts" onClick={() => setOpen(value => !value)}>

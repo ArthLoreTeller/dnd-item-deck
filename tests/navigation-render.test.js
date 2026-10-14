@@ -9,6 +9,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { rolldown } from 'rolldown';
 import { useTheme } from '../src/theme/useTheme.js';
 import { useSoundSettings } from '../src/audio/sound.js';
+import { isDiscardNotification } from '../src/notifications/discardNotification.js';
 
 const inputs = { navigation: 'src/components/CollectionNavigation.jsx', app: 'src/App.jsx', settings: 'src/pages/SettingsPage.jsx' };
 const stores = {
@@ -27,10 +28,10 @@ const output = await bundle.generate({ format: 'esm', entryFileNames: '[name].mj
 await bundle.close();
 const directory = await mkdtemp(join(tmpdir(), 'reliquary-navigation-render-'));
 await Promise.all(output.output.map(file => writeFile(join(directory, file.fileName), file.code)));
-let CollectionNavigation, SettingsPage, App;
+let CollectionNavigation, SettingsPage, App, LoadingDialog;
 try {
   ({ CollectionNavigation } = await import(pathToFileURL(join(directory, 'navigation.mjs')).href));
-  ({ default: App } = await import(pathToFileURL(join(directory, 'app.mjs')).href));
+  ({ default: App, LoadingDialog } = await import(pathToFileURL(join(directory, 'app.mjs')).href));
   ({ SettingsPage } = await import(pathToFileURL(join(directory, 'settings.mjs')).href));
 } finally { await rm(directory, { recursive: true }); }
 const renderNavigation = page => renderToStaticMarkup(React.createElement(CollectionNavigation, { page }));
@@ -64,6 +65,31 @@ test('Corner Menu accepts a contextual icon-only D20 action', () => {
   assert.ok(nav);
   assert.match(nav, /<button[^>]*aria-label="Roll D20"[^>]*title="Roll D20"[^>]*aria-haspopup="dialog"/);
   assert.match(nav, /<svg[^>]*aria-hidden="true"/);
+});
+
+test('Corner Menu separates actions, character tools, and utilities without extra controls', () => {
+  const html = renderToStaticMarkup(React.createElement(CollectionNavigation, { page: 'deck', onRoll: () => {} }));
+  assert.equal((html.match(/role="separator"/g) || []).length, 3);
+  assert.equal((html.match(/<button/g) || []).length, 2);
+  assert.match(html, /aria-label="Roll D20"[\s\S]*role="separator"[\s\S]*href="#\/deck"/);
+  assert.match(html, /href="#\/inventory"[\s\S]*role="separator"[\s\S]*href="#\/character"/);
+  assert.match(html, /href="#\/notes"[\s\S]*role="separator"[\s\S]*href="#\/shop"/);
+});
+
+test('lazy dialogs provide a blocking announced loading state', () => {
+  const html = renderToStaticMarkup(React.createElement(LoadingDialog, { title: 'Dice tray' }));
+  assert.match(html, /role="dialog"/);
+  assert.match(html, /aria-modal="true"/);
+  assert.match(html, /aria-busy="true"/);
+  assert.match(html, /tabindex="0"/);
+  assert.match(html, /role="status"[^>]*>Preparing Dice tray…/);
+});
+
+test('discard Undo appears only with the matching discard notification', () => {
+  const discarded = { id: 'relic-1', name: 'Sunward Blade' };
+  assert.equal(isDiscardNotification('Returned "Sunward Blade" to the deck.', discarded), true);
+  assert.equal(isDiscardNotification('Moved "Sunward Blade" to recovery.', discarded), true);
+  assert.equal(isDiscardNotification('“Moon Blade” attuned.', discarded), false);
 });
 
 test('Settings renders the persisted theme and sound preferences with labelled controls', () => {

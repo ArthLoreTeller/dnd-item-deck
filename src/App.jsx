@@ -3,14 +3,12 @@ import { InventoryPage } from './pages/InventoryPage';
 import { CharacterPage } from './pages/CharacterPage';
 import { SkillsPage } from './pages/SkillsPage';
 import { SpellsPage } from './pages/SpellsPage';
-import { SpellTomePage } from './pages/SpellTomePage';
 import { NotesPage } from './pages/NotesPage';
 import { ShopPage } from './pages/ShopPage';
 import { SettingsPage } from './pages/SettingsPage';
-import { CharacterImportDialog } from './components/CharacterImportDialog';
 import { usePageRoute } from './navigation/usePageRoute';
 import { createPortal } from "react-dom";
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, { lazy, Suspense, useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useTheme } from "./theme/useTheme";
 import { THEMES } from "./theme/themes";
 import { useDeckMotion } from "./motion/useDeckMotion";
@@ -19,13 +17,30 @@ import { useDeckMotion } from "./motion/useDeckMotion";
 import { playSound, useSoundSettings } from "./audio/sound";
 import { Search } from "lucide-react";
 import { useCardStore } from "./store/useCardStore";
-import { DiceTray } from "./components/DiceTray";
-
 import { ItemSearchModal } from "./components/ItemSearchModal";
 import { CustomCardModal } from "./components/CustomCardModal";
 import { ItemDetails } from "./components/ItemDetails";
 import { InventoryTools } from "./components/InventoryTools";
 import { CollectionNavigation } from "./components/CollectionNavigation";
+import { isDiscardNotification } from './notifications/discardNotification';
+import { useDialogFocus } from './hooks/useDialogFocus';
+
+const LazyCharacterImportDialog = lazy(() => import('./components/CharacterImportDialog').then(module => ({ default: module.CharacterImportDialog })));
+const LazyDiceTray = lazy(() => import('./components/DiceTray').then(module => ({ default: module.DiceTray })));
+const LazySpellTomePage = lazy(() => import('./pages/SpellTomePage').then(module => ({ default: module.SpellTomePage })));
+
+function PageLoadFallback({ title }) {
+  return <main className="player-page page-loading" aria-busy="true"><div className="page-title-row"><div><p className="eyebrow">OPENING THE ARCHIVES</p><h2>{title}</h2><p className="muted" role="status">Preparing this page…</p></div></div></main>;
+}
+
+export function LoadingDialog({ title }) {
+  const ref = useRef(null);
+  useDialogFocus(ref, true, () => {});
+  const id = `loading-${title.toLowerCase().replaceAll(/[^a-z0-9]+/g, '-')}`;
+  return <div ref={ref} className="player-overlay"><section className="player-dialog loading-dialog" role="dialog" aria-modal="true" aria-busy="true" aria-labelledby={id} tabIndex="0">
+    <h2 id={id}>{title}</h2><p className="muted" role="status">Preparing {title}…</p>
+  </section></div>;
+}
 
 export default function App() {
   const { motion, reveal, select, returnToDeck, reconcileInventory } = useDeckMotion();
@@ -62,6 +77,7 @@ export default function App() {
 
   const lastDiscard = useCardStore((state) => state.lastDiscard);
   const undoDiscard = useCardStore((state) => state.undoDiscard);
+  const canUndoDiscard = isDiscardNotification(toastMessage, lastDiscard);
 
   useEffect(() => {
     const cardBackImg = new Image();
@@ -71,11 +87,11 @@ export default function App() {
 
   useEffect(() => {
     if (toastMessage) {
-      if (lastDiscard) return;
+      if (canUndoDiscard) return;
       const t = setTimeout(clearToast, 6000);
       return () => clearTimeout(t);
     }
-  }, [toastMessage, clearToast, lastDiscard]);
+  }, [toastMessage, clearToast, canUndoDiscard]);
 
   const attunedCount = useMemo(
     () => inventory.filter((item) => item.isAttuned).length,
@@ -131,14 +147,14 @@ export default function App() {
       <div onClickCapture={(event) => {
         if (event.target.closest("button, select, [role=button]") && !event.target.closest("[data-silent]")) playSound("click");
       }} className="reliquary min-h-screen bg-slate-900 text-white flex flex-col items-center p-4 sm:p-6 gap-6 relative">
-        {diceOpen && <DiceTray onClose={closeDice} />}
+        {diceOpen && <Suspense fallback={<LoadingDialog title="Dice tray" />}><LazyDiceTray onClose={closeDice} /></Suspense>}
         {detailsCard && <ItemDetails card={detailsCard} onClose={() => setDetailsCardId(null)} />}
-        {importOpen && <CharacterImportDialog onClose={() => setImportOpen(false)} />}
+        {importOpen && <Suspense fallback={<LoadingDialog title="Character import" />}><LazyCharacterImportDialog onClose={() => setImportOpen(false)} /></Suspense>}
         {toolsOpen && <InventoryTools onClose={() => setToolsOpen(false)} onRestored={card => { if (card) select(card); }} />}
         {toastMessage && createPortal(
           <div role="status" className="notification-toast toast-enter">
             <span>{toastMessage}</span>
-            {lastDiscard && <button className="journal-button" onClick={() => { undoDiscard(); const restored = useCardStore.getState().activeCard; if (restored) select(restored); }}>Undo discard</button>}
+            {canUndoDiscard && <button className="journal-button" onClick={() => { undoDiscard(); const restored = useCardStore.getState().activeCard; if (restored) select(restored); }}>Undo discard</button>}
             <button
               aria-label="Dismiss notification"
               onClick={clearToast}
@@ -266,7 +282,7 @@ export default function App() {
         {page === 'character' && <CharacterPage onImport={() => setImportOpen(true)} />}
         {page === 'skills' && <SkillsPage />}
         {page === 'spells' && <SpellsPage />}
-        {page === 'spell-tome' && <SpellTomePage />}
+        {page === 'spell-tome' && <Suspense fallback={<PageLoadFallback title="Spell Tome" />}><LazySpellTomePage /></Suspense>}
         {page === 'notes' && <NotesPage />}
         {page === 'shop' && <ShopPage />}
         {page === 'settings' && <SettingsPage />}

@@ -5,6 +5,7 @@ import { playSound } from "../audio/sound";
 import { prefersReducedMotion } from '../motion/preference';
 import { FLIP_MS } from '../motion/deckMotion';
 import { RotateCcw, Unlink } from "lucide-react";
+import { enhancementKindFor } from './cardTransition';
 
 // StatInput component for rendering individual stat input fields
 function StatInput({
@@ -50,6 +51,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
   const updateCard = useCardStore((state) => state.updateCard);
   const updateProgress = useCardStore((state) => state.updateProgress);
   const [isEnhancing, setIsEnhancing] = useState(false);
+  const [enhancementKind, setEnhancementKind] = useState('attunement');
   const [isFlipped, setIsFlipped] = useState(initialFlipped);
   const [flipAnim, setFlipAnim] = useState("");
   const flipTimers = useRef([]);
@@ -122,8 +124,10 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
     previousCardRef.current = card;
     if (snapshot || !previous || !card) return;
     if (previous.isAttuned === card.isAttuned && previous.currentLevel === card.currentLevel) return;
-    setOutgoingCard({ card: previous, flipped: flippedRef.current });
-    setIsFlipped(false);
+    const kind = enhancementKindFor(previous, card);
+    setEnhancementKind(kind);
+    setOutgoingCard(kind === 'attunement' ? { card: previous, flipped: flippedRef.current } : null);
+    if (kind === 'attunement') setIsFlipped(false);
     setIsEnhancing(true);
     const reduced = prefersReducedMotion();
     const timer = setTimeout(() => { setOutgoingCard(null); setIsEnhancing(false); }, reduced ? 0 : 800);
@@ -428,7 +432,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
     <div className="item-surface relative flex flex-col items-center gap-4 w-full h-full">
       {/* OUTER WRAPPER: Handles drop-shadow transition and maintains a strict 100% scale */}
       <div
-        className={`attunement-current ${isEnhancing ? "attunement-incoming" : ""} relative w-full h-full scale-100 ${
+        className={`attunement-current ${isEnhancing && enhancementKind === 'attunement' ? "attunement-incoming" : ""} relative w-full h-full scale-100 ${
           isAttunable && isAttuned
             ? "drop-shadow-[0_0_25px_rgba(245,158,11,0.5)]"
             : "drop-shadow-2xl"
@@ -761,7 +765,7 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
         </div>
       </div>
       {!snapshot && outgoingCard && <div className="attunement-outgoing" inert aria-hidden="true"><Card card={outgoingCard.card} snapshot initialFlipped={outgoingCard.flipped} /></div>}
-      {!snapshot && isEnhancing && <div className="attunement-aura" aria-hidden="true" />}
+      {!snapshot && isEnhancing && <div className={enhancementKind === 'progression' ? 'progression-aura' : 'attunement-aura'} aria-hidden="true" />}
       {expandedImage && <ArtworkViewer src={expandedImage} card={card} onClose={closeArtwork} />}
     </div>
   );

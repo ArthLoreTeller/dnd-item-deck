@@ -274,6 +274,16 @@ test('later attunement invalidates consumption Undo and keeps the three-item lim
   assert.equal(parseBackup(store.getState().exportBackup()).inventory.filter(card => card.isAttuned).length, 3);
 });
 
+test('successful attunement changes announce the relic state', () => {
+  store.setState({ profile: createPlayerProfile(), deck: [], inventory: [], equipment: [], relicEquipmentCache: {}, discardedCustom: [], lastConsumption: null, activeCard: null, toastMessage: null });
+  store.getState().addToInventory({ id: 'custom-toast-relic', name: 'Sunward Blade', type: 'standard', isAttuned: false });
+  store.getState().clearToast();
+  store.getState().updateCard('custom-toast-relic', { isAttuned: true });
+  assert.equal(store.getState().toastMessage, '“Sunward Blade” attuned.');
+  store.getState().updateCard('custom-toast-relic', { isAttuned: false });
+  assert.equal(store.getState().toastMessage, '“Sunward Blade” unattuned.');
+});
+
 test('drawing a consumed built-in again invalidates Undo and preserves its later edits', () => {
   const card = defaults[0];
   store.setState({ profile: createPlayerProfile(), deck: [card], inventory: [], equipment: [], relicEquipmentCache: {}, discardedCustom: [], lastConsumption: null, activeCard: null });
