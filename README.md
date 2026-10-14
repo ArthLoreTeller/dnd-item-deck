@@ -11,7 +11,7 @@ The Corner Menu opens Deck (`#/deck`), Inventory (`#/inventory`), Character (`#/
 - Skills provides 18 SRD descriptions through hover, keyboard focus, or a tap, with editable proficiency and bonus overrides. Save skills retains the character's other fields.
 - Spell Tome searches 339 local SRD spells by name and level. Expand a spell for its full rules and Learn it; Spells groups learned entries by level and supports forgetting them. Notes automatically saves adventure notes, features, proficiencies, and languages as you edit.
 - Shop searches 223 local purchase entries by name/category. Save currency before buying. Each Buy adds one unit and automatically pays from saved CP/SP/EP/GP/PP at copper-unit values. The remaining wallet is normalized from PP down to CP, providing change automatically. Insufficient funds change neither wallet nor equipment; purchase feedback explains the result. Shop and Character share currency and carried load.
-- Settings saves Midnight, Evergreen, Blossom, Mahogany, Parchment, or Noir, sound on/off, master SFX volume, and reduced motion. These preferences and character data survive reloads in the same browser.
+- Settings saves Midnight, Evergreen, Blossom, Mahogany, Parchment, or Noir, sound on/off, master SFX volume, and reduced motion. These preferences and character data survive reloads in the same browser. Its SRD attribution section displays the approved notice and links to the source PDF and CC BY 4.0 license.
 
 All new SFX are silent placeholders awaiting user-provided audio paths. See `src/audio/assets.js` and the handoff below. The release verification record is `docs/superpowers/verification/2026-10-13-version-1.3.md`.
 
@@ -23,7 +23,7 @@ Character tracks names, portrait URL or locally uploaded portrait, species, back
 
 Carrying capacity uses the [2024 rules](https://www.dndbeyond.com/sources/dnd/br-2024/rules-glossary#CarryingCapacity): Strength × 7.5/15/15/30/60/120 for Tiny/Small/Medium/Large/Huge/Gargantuan. Push/drag/lift is twice capacity. Stored gear is excluded. Unknown weight remains unknown, with partial totals explicitly labeled. Coins are tracked separately and excluded from load. Containers and feature-specific capacity changes require manual tracking/override; 2014 variant encumbrance is not applied.
 
-Existing relic saves migrate to carried, quantity-one equipment with unknown weight. Draw/discard/recovery/reset keep linked weight metadata. Ordinary gear has separate removal undo. Version-three JSON backups include character/equipment, learned spells, consumable flags, and dormant relic weight metadata; version-one and version-two backups remain supported. Merge fills missing character values and adds missing equipment while retaining existing edits. Backups reference relic artwork URLs rather than storing those images; locally uploaded portraits are stored in character data.
+Existing relic saves migrate to carried, quantity-one equipment with unknown weight. Draw/discard/recovery/reset keep linked weight metadata. Ordinary gear has separate removal undo. Version-three JSON backups include character/equipment, learned spells, consumable flags, and dormant relic weight metadata; version-one and version-two backups remain supported. Merge fills missing character values and adds missing equipment while retaining existing edits. Backups reference relic artwork URLs rather than storing those images; locally uploaded portraits may be embedded in character data.
 
 ## Local PDF import
 
@@ -57,7 +57,7 @@ npm run preview
 
 - The card-adjacent Read details icon opens a journal with readable lore, specifications, abilities, editable stats, and larger progression controls. The original card artwork remains intact, with an in-card Attune button that dissolves into the original top-right Unattune icon. Matching text spacing stays inside the painted boxes.
 - Keep retains the relic in inventory and shows the card back. Discard offers undo; custom cards move into persistent recovery instead of being deleted.
-- Backup & recovery downloads a JSON copy of the deck, inventory, and recovery collection. Import validates the whole file before merging, preserves current edits across collections, and respects the three-item attunement limit. Images are referenced by URL rather than embedded.
+- Backup & recovery downloads a JSON copy of the deck, inventory, and recovery collection. Import validates the whole file before merging, preserves current edits across collections, and respects the three-item attunement limit. Relic artwork is referenced by URL; locally uploaded portraits may be embedded in character data.
 - Reset Deck explains that standard relic edits and progression reset, while custom cards and recovery remain. Download a backup first to preserve those edits.
 - The circular Corner Menu opens the dedicated companion pages. Deck and Character keep their contextual D20 button; Deck keeps search and custom-card actions. Search and custom-card fields have explicit labels, dialog focus stays inside the dialog, and dice effect test buttons are removed.
 - Artwork loads as it is needed instead of preloading every relic and upgrade. The browser title identifies The Reliquary.
@@ -102,10 +102,10 @@ To hand off the new SFX, supply a file path for each manifest slot: click, dice,
 | Successful attunement | Waiting for attune asset |
 | Sound toggle | Silent |
 
-Environment palettes use emerald and burnished gold (Evergreen), sakura pink, blush, petal white, sky blue, and branch brown (Love), aged oak and parchment (Woody), and golden parchment with crimson highlights. Decorative colors use the supplied palette; readable companion ink tones support controls and small labels. Existing Love/Warm saved preferences map to Love · Sakura/Golden Parchment.
+Environment palettes use emerald and burnished gold (Evergreen), sakura pink, blush, petal white, sky blue, and branch brown (Blossom), aged oak and parchment (Mahogany), and golden parchment with crimson highlights (Parchment). Decorative colors use the supplied palette; readable companion ink tones support controls and small labels. Legacy storage keys `love`, `woody`, `warm`, and `optic` remain compatible and display as Blossom, Mahogany, Parchment, and Noir respectively.
 
 Environment themes and their hover colors are isolated from the item cards. Card artwork, parchment, ink, controls, and internal hover colors retain their original styling in every theme.
 
-Optic adds a black-and-white atmosphere. Rarity badges and item-type icons use surface-specific contrast colors for all six themes; rarity hues and weapon/material shapes retain their original meaning.
+Noir adds a black-and-white atmosphere. Rarity badges and item-type icons use surface-specific contrast colors for all six themes; rarity hues and weapon/material shapes retain their original meaning.
 
 Choose a theme in Settings. Roll D20 on Deck or Character opens a numbered 3D die with unbiased 1–20 rolls, a matching forward-facing result, and natural 1/20 accents. Keyboard focus stays in the tray; Escape closes it. Reduced motion shows the result immediately. Dice rolls are independent of card drawing and remain silent pending the dice audio asset.

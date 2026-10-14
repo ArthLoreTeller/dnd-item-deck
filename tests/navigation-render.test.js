@@ -74,6 +74,16 @@ test('Settings renders the persisted theme and sound preferences with labelled c
   assert.match(html, /id="settings-motion"[^>]*aria-checked="true"/);
 });
 
+test('Settings displays the exact approved SRD attribution with source and license links', () => {
+  const html = renderToStaticMarkup(React.createElement(SettingsPage));
+  const section = html.match(/<section[^>]*aria-label="SRD attribution"[^>]*>([\s\S]*?)<\/section>/)?.[1];
+  assert.ok(section, 'SRD attribution must be visible in the application');
+  const text = section.match(/<p[^>]*>([\s\S]*?)<\/p>/)?.[1].replaceAll('&quot;', '"');
+  assert.equal(text, 'This work includes material taken from the System Reference Document 5.2.1 ("SRD 5.2.1") by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.');
+  assert.match(section, /href="https:\/\/media\.dndbeyond\.com\/compendium-images\/srd\/5\.2\/SRD_CC_v5\.2\.1\.pdf"/);
+  assert.match(section, /href="https:\/\/creativecommons\.org\/licenses\/by\/4\.0\/legalcode"/);
+});
+
 test('unfinished companion routes render a focused page shell instead of an empty page', () => {
   const previousWindow = globalThis.window;
   try {

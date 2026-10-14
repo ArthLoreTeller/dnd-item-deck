@@ -2,6 +2,7 @@ import React from 'react';
 import { useTheme } from '../theme/useTheme';
 import { THEMES } from '../theme/themes';
 import { useSoundSettings } from '../audio/sound';
+import { SRD_ATTRIBUTION, SRD_SOURCE_URL } from '../data/srd/license';
 
 export function SettingsPage() {
   const theme = useTheme(state => state.theme);
@@ -30,6 +31,14 @@ export function SettingsPage() {
         <button type="button" id="settings-motion" className="journal-button settings-switch" role="switch" aria-checked={reducedMotion} onClick={() => setReducedMotion(!reducedMotion)}>{reducedMotion ? 'Enabled' : 'Disabled'}</button>
       </div>
       <p className="muted settings-hint">Reduced motion softens card and menu animations. Sound effects play when their audio assets are available.</p>
+    </section>
+    <section className="sheet-panel settings-attribution" aria-label="SRD attribution">
+      <h3>SRD attribution</h3>
+      <p>{SRD_ATTRIBUTION}</p>
+      <div className="settings-attribution-links">
+        <a href={SRD_SOURCE_URL}>SRD 5.2.1 source PDF</a>
+        <a href="https://creativecommons.org/licenses/by/4.0/legalcode">CC BY 4.0 license</a>
+      </div>
     </section>
   </main>;
 }
