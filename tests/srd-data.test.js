@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { SRD_SKILLS } from '../src/data/srd/skills.js';
 import { SRD_SPELLS, spellById, findSpellByName, filterSpells } from '../src/data/srd/spells.js';
-import { SRD_EQUIPMENT, filterEquipment } from '../src/data/srd/equipment.js';
+import { SRD_EQUIPMENT, equipmentDetails, filterEquipment } from '../src/data/srd/equipment.js';
 import { SRD_ATTRIBUTION, SRD_VERSION, SRD_SOURCE_URL } from '../src/data/srd/license.js';
 
 test('skills expose all 18 alphabetically ordered skills with abilities and descriptions', () => {
@@ -78,6 +78,27 @@ test('equipment filters search and category case-insensitively together', () => 
   assert.deepEqual(filterEquipment({ query: ' BACKPACK ', category: ' ADVENTURING GEAR ' }).map(item => item.id), ['backpack']);
   assert.deepEqual(filterEquipment({ query: 'backpack', category: 'weapons' }), []);
   assert.equal(filterEquipment().length, SRD_EQUIPMENT.length);
+});
+
+test('shop equipment details expose weapon, armor, and general item rules', () => {
+  const byId = id => SRD_EQUIPMENT.find(item => item.id === id);
+  assert.deepEqual(equipmentDetails(byId('longsword')), [
+    ['Damage', '1d8 Slashing'],
+    ['Properties', 'Versatile (1d10)'],
+    ['Mastery', 'Sap'],
+    ['Weapon type', 'Martial Melee'],
+  ]);
+  assert.deepEqual(equipmentDetails(byId('plate-armor')), [
+    ['Armor Class', '18'],
+    ['Armor type', 'Heavy Armor'],
+    ['Strength', '15'],
+    ['Stealth', 'Disadvantage'],
+  ]);
+  assert.deepEqual(equipmentDetails(byId('torch')), [
+    ['Category', 'Adventuring Gear'],
+    ['Use', 'Consumable'],
+  ]);
+  for (const item of SRD_EQUIPMENT) assert.ok(equipmentDetails(item).length > 0, `${item.name} needs details`);
 });
 
 test('catalog expands the source gaming sets and barding and retains food purchase prices', () => {

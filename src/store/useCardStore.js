@@ -12,6 +12,27 @@ import { purchaseEquipment } from '../data/currency.js';
 import { spellById } from '../data/srd/spells.js';
 const defaultCards = rawDefaultCards.map(normalizeCard);
 
+function refreshBuiltinArtwork(card) {
+  const original = defaultCards.find(item => item.id === card?.id);
+  if (!original) return normalizeCard(card);
+  return normalizeCard({ ...original, ...card, images: structuredClone(original.images) });
+}
+
+function reconcileBuiltinCatalog(state) {
+  const inventory = (state.inventory ?? []).map(refreshBuiltinArtwork);
+  const deck = (state.deck ?? []).map(refreshBuiltinArtwork);
+  const ownedIds = new Set([...deck, ...inventory].map(card => card.id));
+  for (const card of defaultCards) {
+    if (!ownedIds.has(card.id)) deck.push(structuredClone(card));
+  }
+  return {
+    ...state,
+    deck,
+    inventory,
+    activeCard: state.activeCard ? refreshBuiltinArtwork(state.activeCard) : null,
+  };
+}
+
 // Card fields are saved as plain objects/arrays. Equal replacement values
 // should not publish a transaction or dismiss the pending consume Undo.
 function sameCardValue(left, right) {
@@ -372,14 +393,15 @@ export const useCardStore = create(
     {
       name: 'dnd-item-deck-storage', // LocalStorage Key
       storage: createJSONStorage(() => localStorage),
-      version: 4,
+      version: 5,
       migrate: (persisted, version) => {
         const migrated = {
           ...persisted,
           ...migratePlayerData(persisted, { migrateSpells: version < 4 }),
           relicEquipmentCache: Object.fromEntries(Object.entries(persisted.relicEquipmentCache ?? {}).map(([id, entry]) => [id, validateEquipment(entry)])),
         };
-        return version < 3 ? applyGuidelineWeights(migrated) : migrated;
+        const weighted = version < 3 ? applyGuidelineWeights(migrated) : migrated;
+        return version < 5 ? reconcileBuiltinCatalog(weighted) : weighted;
       },
       merge: (persisted, current) => ({
         ...current,

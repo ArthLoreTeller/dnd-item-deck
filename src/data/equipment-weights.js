@@ -9,6 +9,16 @@ const RELIC_WEIGHTS = Object.freeze({
   kunai_03: 1,
   kunai_04: 1,
   kunai_05: 1,
+  bloodletter_pen_001: 0.1,
+  gamblers_coin_001: 0.02,
+  gloves_thievery_001: 0.1,
+  iron_hand_001: 2,
+  nanboku_no_rensa_001: 4,
+  invictus_001: 2,
+  jade_heart_spear_001: 3,
+  wooden_axe_001: 2,
+  potion_invisibility_001: 0.5,
+  potion_poison_001: 0.5,
 });
 
 export function guidelineWeightLb(cardId) {

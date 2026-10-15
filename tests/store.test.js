@@ -453,7 +453,7 @@ test('version three storage upgrades spells and consumables once without changin
   assert.deepEqual(state.equipment[0], { ...entry, consumable: false });
   assert.deepEqual(state.relicEquipmentCache[card.id], { ...entry, consumable: false });
   assert.equal(state.inventory[0].stats.hit, '+9');
-  assert.equal(JSON.parse(localStorage.getItem('dnd-item-deck-storage')).version, 4);
+  assert.equal(JSON.parse(localStorage.getItem('dnd-item-deck-storage')).version, 5);
   store.getState().updateProfile({ sheet: { ...state.profile.sheet, learnedSpellIds: [] } });
   await store.persist.rehydrate();
   assert.deepEqual(store.getState().profile.sheet.learnedSpellIds, []);
@@ -535,18 +535,24 @@ test('draw removes exactly the selected weighted card and keeps previous invento
 test('reset restores defaults, clears built-in edits, and preserves custom cards', () => {
   store.setState({ deck: [], inventory: [{ id: 'cleaver_001', isAttuned: true }, { id: 'custom-kept', rarity: 'rare', stats: { hit: '+7' } }] });
   store.getState().resetDeck();
-  assert.equal(store.getState().deck.length, 11);
+  assert.equal(store.getState().deck.length, defaults.length);
   assert.equal(store.getState().deck.find(c => c.id === 'cleaver_001').isAttuned, false);
   assert.deepEqual(store.getState().inventory.map(c => c.id), ['custom-kept']);
   assert.equal(store.getState().inventory[0].stats.hit, '+7');
 });
-test('rehydrating legacy storage preserves empty decks and edited stats', async () => {
-  localStorage.setItem('dnd-item-deck-storage', JSON.stringify({ state: { deck: [], inventory: [{ id: 'wand_001', currentLevel: 3, stats: { hit: '+9' } }], activeCard: { id: 'wand_001', stats: { hit: '+9' } } }, version: 0 }));
+test('rehydrating an older catalog refreshes artwork paths and adds missing built-in cards', async () => {
+  const wand = defaults.find(card => card.id === 'wand_001');
+  localStorage.setItem('dnd-item-deck-storage', JSON.stringify({ state: { deck: [], inventory: [{ id: 'wand_001', currentLevel: 3, stats: { hit: '+9' }, images: { base: '/assets/Magic/Crimson Wand.png' } }], activeCard: { id: 'wand_001', currentLevel: 3, stats: { hit: '+9' }, images: { base: '/assets/Magic/Crimson Wand.png' } } }, version: 4 }));
   await store.persist.rehydrate();
-  assert.equal(store.getState().deck.length, 0);
-  assert.equal(store.getState().inventory[0].rarity, 'legendary');
-  assert.equal(store.getState().inventory[0].stats.hit, '+9');
-  assert.equal(store.getState().activeCard.rarity, 'legendary');
+  const state = store.getState();
+  assert.equal(state.deck.length, defaults.length - 1);
+  assert.deepEqual(new Set([...state.deck, ...state.inventory].map(card => card.id)), new Set(defaults.map(card => card.id)));
+  assert.equal(state.inventory[0].rarity, 'legendary');
+  assert.equal(state.inventory[0].currentLevel, 3);
+  assert.equal(state.inventory[0].stats.hit, '+9');
+  assert.deepEqual(state.inventory[0].images, wand.images);
+  assert.deepEqual(state.activeCard.images, wand.images);
+  assert.equal(JSON.parse(localStorage.getItem('dnd-item-deck-storage')).version, 5);
 });
 test('discard returns built-in cards unattuned and deletes custom cards without enlarging deck', () => {
   store.setState({ deck: [], inventory: [{ id: 'base', isAttuned: true }, { id: 'custom-delete' }], activeCard: { id: 'base' } });

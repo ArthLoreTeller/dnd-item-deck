@@ -66,6 +66,20 @@ test('Shop exposes equipment controls, price, weight, Buy and existing Currency 
   assert.match(markup, /Coins are excluded from equipment load\./);
 });
 
+test('Shop expands accessible equipment details without hiding purchase controls', () => {
+  fixture();
+  const details = find('button', 'View details for Longsword');
+  assert.equal(details.props['aria-expanded'], false);
+  assert.doesNotMatch(html(), /1d8 Slashing/);
+  details.props.onClick();
+  const markup = html();
+  assert.match(markup, /aria-label="Hide details for Longsword"/);
+  assert.match(markup, /1d8 Slashing/);
+  assert.match(markup, /Versatile \(1d10\)/);
+  assert.match(markup, /Sap/);
+  assert.match(markup, /aria-label="Buy Longsword"/);
+});
+
 // Catches search/category handlers that do not affect the rendered catalog.
 test('Shop search and category combine and have a clear empty result', () => {
   fixture();

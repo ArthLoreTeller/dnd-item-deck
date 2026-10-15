@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useCardStore } from '../store/useCardStore';
-import { filterEquipment, SRD_EQUIPMENT } from '../data/srd/equipment';
+import { equipmentDetails, filterEquipment, SRD_EQUIPMENT } from '../data/srd/equipment';
 import { COINS } from '../data/player';
 import { pounds } from '../data/units';
 import { LoadSummary } from '../components/LoadSummary';
@@ -19,6 +19,7 @@ export function ShopPage() {
   const [coinEdits, setCoinEdits] = useState({});
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
+  const [expandedItemId, setExpandedItemId] = useState(null);
   const draft = { currency: { ...profile.currency, ...coinEdits } };
   const currencyEdited = Object.keys(coinEdits).length > 0;
   const items = filterEquipment({ query, category }).sort((a, b) => a.name.localeCompare(b.name));
@@ -49,11 +50,15 @@ export function ShopPage() {
     </div>
     <p className="muted shop-result-count" role="status">{items.length} {items.length === 1 ? 'item' : 'items'}</p>
     {items.length === 0 ? <p className="muted">No equipment matches your search and category.</p> : <ul className="shop-list" aria-label="Shop equipment">
-      {items.map(item => <li className="shop-row" key={item.id}>
+      {items.map(item => {
+        const expanded = expandedItemId === item.id;
+        const detailsId = `shop-details-${item.id}`;
+        return <li className={`shop-row${expanded ? ' is-expanded' : ''}`} key={item.id}>
         <div className="shop-item"><h3>{item.name}</h3><p className="muted">{item.category}</p></div>
         <div className="shop-facts"><span aria-label={`${item.name} price`}>{price(item.priceCp)}</span><span className="muted">{item.weightLb === null ? 'Weight unknown' : `${pounds(item.weightLb)} lb`}</span></div>
-        <button type="button" className="journal-button" aria-label={`Buy ${item.name}`} disabled={currencyEdited} onClick={() => buy(item)}>Buy</button>
-      </li>)}
+        <div className="shop-actions"><button type="button" className="shop-details-button" aria-expanded={expanded} aria-controls={detailsId} aria-label={`${expanded ? 'Hide' : 'View'} details for ${item.name}`} onClick={() => setExpandedItemId(expanded ? null : item.id)}>{expanded ? 'Hide details' : 'View details'}</button><button type="button" className="journal-button" aria-label={`Buy ${item.name}`} disabled={currencyEdited} onClick={() => buy(item)}>Buy</button></div>
+        {expanded && <div className="shop-details" id={detailsId}><dl>{equipmentDetails(item).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl><p className="muted">Common mundane equipment · 2024 rules</p></div>}
+      </li>})}
     </ul>}
   </main>;
 }

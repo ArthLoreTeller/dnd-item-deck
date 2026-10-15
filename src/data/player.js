@@ -72,7 +72,7 @@ export function validateEquipment(value) {
   return clean;
 }
 export function relicEquipment(card, characterId) {
-  return { id: `relic:${card.id}`, characterId, name: card.name || 'Relic', quantity: 1, unitWeightLb: guidelineWeightLb(card.id), carried: true, consumable: false, category: 'Relic', imageUrl: '', relicCardId: String(card.id), source: null };
+  return { id: `relic:${card.id}`, characterId, name: card.name || 'Relic', quantity: 1, unitWeightLb: guidelineWeightLb(card.id), carried: true, consumable: card.consumable === true, category: 'Relic', imageUrl: '', relicCardId: String(card.id), source: null };
 }
 export function migratePlayerData(savedState, { migrateSpells = !Object.hasOwn(savedState.profile?.sheet ?? {}, 'learnedSpellIds') } = {}) {
   const profile = savedState.profile ? validateProfile({ ...savedState.profile, sheet: migrateSpells ? migrateLearnedSpells(savedState.profile.sheet, findSpellByName) : savedState.profile.sheet }) : createPlayerProfile();
