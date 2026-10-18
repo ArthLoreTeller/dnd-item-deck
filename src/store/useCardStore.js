@@ -1,15 +1,184 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import defaultCards from '../data/defaultCards.json';
+import rawDefaultCards from '../data/defaultCards.json' with { type: 'json' };
+import { normalizeCard, chooseWeightedCard } from '../data/rarity.js';
+import { parseBackup, serializeBackup } from '../data/backup.js';
+import { createPlayerProfile, migratePlayerData, newId, relicEquipment, validateEquipment, validateProfile } from '../data/player.js';
+import { mergeCharacterDraft } from '../data/character-import.js';
+import { applyGuidelineWeights } from '../data/equipment-weights.js';
+import { hasSheetData } from '../data/character-sheet.js';
+import { SRD_EQUIPMENT } from '../data/srd/equipment.js';
+import { purchaseEquipment } from '../data/currency.js';
+import { spellById } from '../data/srd/spells.js';
+const defaultCards = rawDefaultCards.map(normalizeCard);
+
+function refreshBuiltinArtwork(card) {
+  const original = defaultCards.find(item => item.id === card?.id);
+  if (!original) return normalizeCard(card);
+  return normalizeCard({ ...original, ...card, images: structuredClone(original.images) });
+}
+
+function reconcileBuiltinCatalog(state) {
+  const inventory = (state.inventory ?? []).map(refreshBuiltinArtwork);
+  const deck = (state.deck ?? []).map(refreshBuiltinArtwork);
+  const ownedIds = new Set([...deck, ...inventory].map(card => card.id));
+  for (const card of defaultCards) {
+    if (!ownedIds.has(card.id)) deck.push(structuredClone(card));
+  }
+  return {
+    ...state,
+    deck,
+    inventory,
+    activeCard: state.activeCard ? refreshBuiltinArtwork(state.activeCard) : null,
+  };
+}
+
+// Card fields are saved as plain objects/arrays. Equal replacement values
+// should not publish a transaction or dismiss the pending consume Undo.
+function sameCardValue(left, right) {
+  if (Object.is(left, right)) return true;
+  if (!left || !right || typeof left !== 'object' || typeof right !== 'object' || Array.isArray(left) !== Array.isArray(right)) return false;
+  const keys = Object.keys(left);
+  return keys.length === Object.keys(right).length && keys.every(key => Object.hasOwn(right, key) && sameCardValue(left[key], right[key]));
+}
+
+function safeRestore(card, inventory) {
+  return { ...card, isAttuned: Boolean(card.isAttuned) && inventory.filter(item => item.isAttuned).length < 3 };
+}
+
+function hasDeckEdits(card) {
+  const original = defaultCards.find(item => item.id === card.id);
+  if (!original) return true;
+  const fields = ['name', 'type', 'stats', 'specs', 'weaponStats', 'images', 'itemImage', 'description', 'flavorText', 'attunementRules', 'abilities', 'level1Abilities', 'level2Abilities', 'level3Abilities'];
+  return fields.some(key => JSON.stringify(card[key]) !== JSON.stringify(original[key])) || (card.currentLevel || 1) !== (original.currentLevel || 1) || (card.progress?.level1 || 0) !== (original.progress?.level1 || 0) || (card.progress?.level2 || 0) !== (original.progress?.level2 || 0);
+}
 
 export const useCardStore = create(
   persist(
-    (set, get) => ({
+    (rawSet, get) => {
+      // Reconcile every card lifecycle change in the same persisted transaction.
+      const set = update => rawSet(state => {
+        const patch = typeof update === 'function' ? update(state) : update;
+        // Like purchases, later card transactions invalidate the exact consume
+        // snapshot. Restoring it could duplicate ownership, exceed attunement
+        // slots, or replace a preview the player selected after consuming.
+        if ((patch.deck && patch.deck !== state.deck) || (patch.inventory && patch.inventory !== state.inventory) || (state.lastConsumption?.activeCard && Object.hasOwn(patch, 'activeCard') && patch.activeCard !== state.activeCard)) {
+          patch.lastConsumption = null;
+        }
+        if (!patch.inventory) return patch;
+        const profile = patch.profile ?? state.profile;
+        const cache = { ...state.relicEquipmentCache, ...patch.relicEquipmentCache };
+        for (const entry of state.equipment) if (entry.relicCardId) cache[entry.relicCardId] = entry;
+        const candidates = patch.equipment ?? state.equipment;
+        const equipment = candidates.filter(entry => !entry.relicCardId);
+        for (const card of patch.inventory) {
+          const linked = candidates.find(entry => entry.relicCardId === String(card.id)) ?? cache[String(card.id)] ?? relicEquipment(card, profile.id);
+          equipment.push({ ...linked, characterId: profile.id, name: card.name || 'Relic' });
+        }
+        return { ...patch, equipment, relicEquipmentCache: cache };
+      });
+      return ({
+      profile: createPlayerProfile(),
+      equipment: [],
+      relicEquipmentCache: {},
+      lastEquipmentRemoval: null,
+      lastConsumption: null,
+      applyCharacterImport: (draft, selection) => set(state => ({ ...mergeCharacterDraft(state, draft, selection), toastMessage: 'Reviewed character import saved.' })),
+      updateProfile: patch => set(state => ({ profile: validateProfile({ ...state.profile, ...patch }) })),
+      learnSpell: id => {
+        const spell = spellById(id);
+        if (!spell) throw new Error('Spell not found in the SRD Spell Tome.');
+        if (get().profile.sheet.learnedSpellIds.includes(spell.id)) return;
+        set(state => ({ profile: validateProfile({ ...state.profile, sheet: { ...state.profile.sheet, learnedSpellIds: [...state.profile.sheet.learnedSpellIds, spell.id] } }) }));
+      },
+      forgetSpell: id => {
+        const spellId = spellById(id)?.id ?? id;
+        if (!get().profile.sheet.learnedSpellIds.includes(spellId)) return;
+        set(state => ({ profile: { ...state.profile, sheet: { ...state.profile.sheet, learnedSpellIds: state.profile.sheet.learnedSpellIds.filter(knownId => knownId !== spellId) } } }));
+      },
+      purchaseItem: (catalogId, quantity = 1) => {
+        let result;
+        set(state => {
+          try {
+            const catalogItem = SRD_EQUIPMENT.find(item => item.id === catalogId);
+            if (!catalogItem) throw new Error('Item not found in the shop.');
+            const patch = purchaseEquipment({ profile: state.profile, equipment: state.equipment, catalogItem, quantity });
+            result = { ok: true };
+            return { ...patch, lastConsumption: null, toastMessage: `Purchased ${quantity} ${catalogItem.name}.` };
+          } catch (error) {
+            result = { ok: false, error: error.message };
+            return { toastMessage: result.error };
+          }
+        });
+        return result;
+      },
+      addEquipment: value => {
+        const entry = validateEquipment({ ...value, id: newId(), characterId: get().profile.id, relicCardId: null });
+        set(state => ({ equipment: [...state.equipment, entry] }));
+      },
+      updateEquipment: (id, patch) => set(state => ({ equipment: state.equipment.map(entry => entry.id === id ? validateEquipment({ ...entry, ...patch, id: entry.id, characterId: entry.characterId, relicCardId: entry.relicCardId, source: entry.source }) : entry) })),
+      removeEquipment: id => {
+        const entry = get().equipment.find(item => item.id === id);
+        if (!entry) return;
+        if (entry.relicCardId) { get().discardCard(entry.relicCardId); return; }
+        set(state => ({ equipment: state.equipment.filter(item => item.id !== id), lastEquipmentRemoval: entry }));
+      },
+      undoEquipmentRemoval: () => set(state => ({ equipment: state.lastEquipmentRemoval && !state.equipment.some(item => item.id === state.lastEquipmentRemoval.id) ? [...state.equipment, state.lastEquipmentRemoval] : state.equipment, lastEquipmentRemoval: null })),
+      // These actions already update ownership and equipment together. Preserve
+      // their exact records and order instead of rebuilding linked equipment.
+      consumeEquipment: id => rawSet(state => {
+        const index = state.equipment.findIndex(entry => entry.id === id);
+        const entry = state.equipment[index];
+        if (!entry) return { toastMessage: 'Item not found.' };
+        if (!entry.consumable) return { toastMessage: 'Item is not consumable.' };
+        const snapshot = { entry: structuredClone(entry), index };
+        const patch = {
+          equipment: entry.quantity > 1
+            ? state.equipment.map(item => item.id === id ? { ...item, quantity: item.quantity - 1 } : item)
+            : state.equipment.filter(item => item.id !== id),
+          lastConsumption: snapshot,
+          toastMessage: `Consumed one "${entry.name}".`,
+        };
+        if (entry.relicCardId) {
+          const cardIndex = state.inventory.findIndex(card => String(card.id) === entry.relicCardId);
+          if (cardIndex < 0) return { toastMessage: 'Linked relic not found.' };
+          snapshot.card = structuredClone(state.inventory[cardIndex]);
+          snapshot.cardIndex = cardIndex;
+          // Redrawing and editing a relic makes its earlier discard snapshot
+          // obsolete. Only Consume Undo may restore this owned version now.
+          if (String(state.lastDiscard?.id) === entry.relicCardId) patch.lastDiscard = null;
+          patch.relicEquipmentCache = { ...state.relicEquipmentCache, [entry.relicCardId]: snapshot.entry };
+          patch.inventory = state.inventory.filter((_, index) => index !== cardIndex);
+          if (String(state.activeCard?.id) === entry.relicCardId) {
+            snapshot.activeCard = structuredClone(state.activeCard);
+            patch.activeCard = patch.inventory[0] ?? null;
+          }
+        }
+        return patch;
+      }),
+      undoConsume: () => {
+        if (!get().lastConsumption) return;
+        rawSet(state => {
+          const { entry, index, card, cardIndex, activeCard } = state.lastConsumption;
+          const equipment = state.equipment.filter(item => item.id !== entry.id);
+          equipment.splice(index, 0, structuredClone(entry));
+          const patch = { equipment, lastConsumption: null, toastMessage: `Restored "${entry.name}".` };
+          if (card) {
+            patch.relicEquipmentCache = { ...state.relicEquipmentCache, [entry.relicCardId]: structuredClone(entry) };
+            patch.inventory = state.inventory.filter(item => item.id !== card.id);
+            patch.inventory.splice(cardIndex, 0, structuredClone(card));
+            if (activeCard) patch.activeCard = structuredClone(activeCard);
+          }
+          return patch;
+        });
+      },
       // Set basic state properties
       deck: defaultCards || [],
       inventory: [],
       activeCard: null,
       toastMessage: null,
+      discardedCustom: [],
+      lastDiscard: null,
 
       // Set general state update functions
       setActiveCard: (card) => set({ activeCard: card }),
@@ -17,8 +186,18 @@ export const useCardStore = create(
       setToastMessage: (msg) => set({ toastMessage: msg }),
       clearToast: () => set({ toastMessage: null }),
 
+      updateProgress: (id, level, value) => {
+        const card = get().inventory.find(item => item.id === id);
+        if (!card || card.type !== 'progressive' || ![1, 2].includes(level) || !Number.isFinite(value)) return;
+        const max = card.maxProgress || 20;
+        const progress = { level1: 0, level2: 0, ...card.progress, [`level${level}`]: Math.min(max, Math.max(0, Math.trunc(value))) };
+        const currentLevel = progress.level1 >= max ? (progress.level2 >= max ? 3 : 2) : 1;
+        get().updateCard(id, { progress, currentLevel });
+      },
+
       // Add a new card to the inventory, ensuring no duplicates
       addToInventory: (newCard) => {
+        newCard = normalizeCard(newCard);
         const { inventory } = get();
         if (inventory.some((c) => c.id === newCard.id)) {
           set({ toastMessage: `"${newCard.name}" is already in inventory!` });
@@ -37,10 +216,9 @@ export const useCardStore = create(
         const { deck, inventory } = get();
         if (deck.length === 0) return;
 
-        const randomIndex = Math.floor(Math.random() * deck.length);
-        const drawnCard = deck[randomIndex];
+        const drawnCard = chooseWeightedCard(deck);
         //Create a new deck array without the drawn card
-        const updatedDeck = deck.filter((_, i) => i !== randomIndex);
+        const updatedDeck = deck.filter((card) => card.id !== drawnCard.id);
 
         set({
           deck: updatedDeck,
@@ -66,6 +244,7 @@ export const useCardStore = create(
       updateCard: (id, updates) => {
         const { inventory } = get();
         const currentCard = inventory.find((c) => c.id === id);
+        if (!currentCard || Object.entries(updates).every(([key, value]) => sameCardValue(currentCard[key], value))) return;
 
         // Attunement Rule: Limit to maximum 3 attuned items
         if (updates.isAttuned === true && currentCard && !currentCard.isAttuned) {
@@ -90,11 +269,14 @@ export const useCardStore = create(
           return {
             inventory: updatedInventory,
             activeCard: updatedActive,
+            ...(typeof updates.isAttuned === 'boolean' && updates.isAttuned !== currentCard.isAttuned
+              ? { toastMessage: `“${currentCard.name}” ${updates.isAttuned ? 'attuned' : 'unattuned'}.` }
+              : {}),
           };
         });
       },
 
-      // Discard a card from the inventory. Custom cards (id starting with "custom-") are deleted permanently, while standard cards are returned to the deck.
+      // Custom cards go to recovery; built-in cards return to the deck.
       discardCard: (id) => {
         set((state) => {
           const cardToDiscard = state.inventory.find((c) => c.id === id);
@@ -122,11 +304,75 @@ export const useCardStore = create(
             inventory: updatedInventory,
             deck: updatedDeck,
             activeCard: newActive,
+            lastDiscard: cardToDiscard,
+            discardedCustom: isCustom ? [cardToDiscard, ...state.discardedCustom.filter(card => card.id !== id)] : state.discardedCustom,
             toastMessage: isCustom
-              ? `Permanently deleted custom card "${cardToDiscard.name}".`
+              ? `Moved "${cardToDiscard.name}" to recovery.`
               : `Returned "${cardToDiscard.name}" to the deck.`,
           };
         });
+      },
+
+      undoDiscard: () => {
+        const { lastDiscard, inventory } = get();
+        if (!lastDiscard) return;
+        if (inventory.some(card => card.id === lastDiscard.id)) { set({ lastDiscard: null }); return; }
+        const restored = safeRestore(lastDiscard, inventory);
+        set(state => ({ inventory: [restored, ...state.inventory], deck: state.deck.filter(card => card.id !== restored.id), discardedCustom: state.discardedCustom.filter(card => card.id !== restored.id), activeCard: restored, lastDiscard: null, toastMessage: `Restored "${restored.name}"${lastDiscard.isAttuned && !restored.isAttuned ? ' unattuned (3 slots already in use)' : ''}.` }));
+      },
+
+      restoreCustomCard: (id) => {
+        const { discardedCustom, inventory } = get();
+        const card = discardedCustom.find(item => item.id === id);
+        if (!card || inventory.some(item => item.id === id)) return;
+        const restored = safeRestore(card, inventory);
+        set(state => ({ inventory: [restored, ...state.inventory], activeCard: restored, discardedCustom: state.discardedCustom.filter(item => item.id !== id), lastDiscard: state.lastDiscard?.id === id ? null : state.lastDiscard, toastMessage: `Restored "${card.name}"${card.isAttuned && !restored.isAttuned ? ' unattuned (3 slots already in use)' : ''}.` }));
+      },
+
+      exportBackup: () => serializeBackup(get()),
+      importBackup: (text) => {
+        const backup = parseBackup(text);
+        const state = get();
+        const inventory = [...state.inventory];
+        for (const card of backup.inventory) {
+          if (!inventory.some(item => item.id === card.id)) {
+            const recovered = state.discardedCustom.find(item => item.id === card.id);
+            const inDeck = state.deck.find(item => item.id === card.id);
+            const current = recovered || (inDeck && hasDeckEdits(inDeck) ? inDeck : null);
+            inventory.push(safeRestore(current || card, inventory));
+          }
+        }
+        const owned = new Set(inventory.map(card => card.id));
+        const discardedCustom = state.discardedCustom.filter(card => !owned.has(card.id));
+        for (const card of backup.discardedCustom) {
+          if (!owned.has(card.id) && !discardedCustom.some(item => item.id === card.id)) discardedCustom.push(card);
+        }
+        const deck = [...state.deck];
+        for (const card of backup.deck) {
+          const index = deck.findIndex(item => item.id === card.id);
+          if (index < 0) deck.push({ ...card, isAttuned: false });
+          else if (!hasDeckEdits(deck[index])) deck[index] = { ...card, isAttuned: false };
+        }
+        const added = inventory.length - state.inventory.length;
+        const player = {};
+        if (backup.profile) {
+          const merged = { ...state.profile };
+          for (const [key, value] of Object.entries(backup.profile)) {
+            if (['id', 'rulesVersion'].includes(key)) continue;
+            if (['abilities', 'hp', 'currency'].includes(key)) merged[key] = Object.fromEntries(Object.keys(value).map(field => [field, state.profile[key][field] ?? value[field]]));
+            else if (key === 'sheet' && !hasSheetData(state.profile.sheet)) merged[key] = value;
+            else if (state.profile[key] === null || state.profile[key] === '' || (Array.isArray(state.profile[key]) && !state.profile[key].length)) merged[key] = value;
+          }
+          player.profile = validateProfile(merged);
+          player.equipment = [...state.equipment];
+          for (const entry of backup.equipment) if (!player.equipment.some(item => item.id === entry.id || (entry.relicCardId && item.relicCardId === entry.relicCardId))) {
+            const current = entry.relicCardId ? state.relicEquipmentCache[entry.relicCardId] : null;
+            player.equipment.push({ ...(current ?? entry), characterId: player.profile.id });
+          }
+          player.relicEquipmentCache = { ...backup.relicEquipmentCache, ...state.relicEquipmentCache };
+        }
+        set({ ...player, inventory, deck: deck.filter(card => !owned.has(card.id)), discardedCustom, lastDiscard: null, toastMessage: `Backup imported. ${added} ${added === 1 ? 'card' : 'cards'} added; your current edits were kept.` });
+        return { added };
       },
 
       // Reset the deck to its default state, excluding cards currently in the inventory
@@ -139,17 +385,41 @@ export const useCardStore = create(
           deck: defaultCards || [],
           inventory: customCards,
           activeCard: customCards[0] || null,
+          lastDiscard: null,
           toastMessage: 'All standard cards returned to the deck.',
         });
       },
-    }),
+    }); },
     {
       name: 'dnd-item-deck-storage', // LocalStorage Key
       storage: createJSONStorage(() => localStorage),
+      version: 5,
+      migrate: (persisted, version) => {
+        const migrated = {
+          ...persisted,
+          ...migratePlayerData(persisted, { migrateSpells: version < 4 }),
+          relicEquipmentCache: Object.fromEntries(Object.entries(persisted.relicEquipmentCache ?? {}).map(([id, entry]) => [id, validateEquipment(entry)])),
+        };
+        const weighted = version < 3 ? applyGuidelineWeights(migrated) : migrated;
+        return version < 5 ? reconcileBuiltinCatalog(weighted) : weighted;
+      },
+      merge: (persisted, current) => ({
+        ...current,
+        ...persisted,
+        ...migratePlayerData(persisted ?? current),
+        deck: (persisted?.deck || current.deck).map(normalizeCard),
+        inventory: (persisted?.inventory || []).map(normalizeCard),
+        activeCard: persisted?.activeCard ? normalizeCard(persisted.activeCard) : null,
+        discardedCustom: (persisted?.discardedCustom || []).map(normalizeCard),
+      }),
       partialize: (state) => ({
         deck: state.deck,
         inventory: state.inventory,
         activeCard: state.activeCard,
+        discardedCustom: state.discardedCustom,
+        profile: state.profile,
+        equipment: state.equipment,
+        relicEquipmentCache: state.relicEquipmentCache,
       }),
     }
   )

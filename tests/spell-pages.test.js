@@ -1,0 +1,143 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import React from 'react';
+import { mkdtemp, writeFile, rm, readFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { rolldown } from 'rolldown';
+import { createPlayerProfile } from '../src/data/player.js';
+import { parseBackup } from '../src/data/backup.js';
+import { spellById } from '../src/data/srd/spells.js';
+import { THEMES } from '../src/theme/themes.js';
+import postcss from 'postcss';
+
+globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+const { useCardStore } = await import('../src/store/useCardStore.js');
+const storeUrl = pathToFileURL(join(process.cwd(), 'src/store/useCardStore.js')).href;
+const bundle = await rolldown({ input: ['src/pages/SpellsPage.jsx', 'src/pages/SpellTomePage.jsx'], plugins: [{ name: 'spell-test-dependencies', resolveId(id) {
+  if (id.endsWith('/store/useCardStore')) return 'spell-test-store';
+  if (id.startsWith('file:')) return { id, external: true };
+  if (/^(react(?:-dom)?|zustand|lucide-react)(\/|$)/.test(id)) return { id: import.meta.resolve(id), external: true };
+}, load(id) {
+  if (id === 'spell-test-store') return `import { useStore } from 'zustand'; import { useCardStore as store } from '${storeUrl}'; export const useCardStore = selector => useStore({ ...store, getInitialState: store.getState }, selector);`;
+} }] });
+const output = await bundle.generate({ format: 'esm', entryFileNames: '[name].mjs', chunkFileNames: '[name]-[hash].mjs' });
+await bundle.close();
+const directory = await mkdtemp(join(tmpdir(), 'reliquary-spells-render-'));
+let SpellsPage, SpellTomePage, SpellTomeResults;
+try {
+  for (const file of output.output) await writeFile(join(directory, file.fileName), file.code);
+  ({ SpellsPage } = await import(pathToFileURL(join(directory, 'SpellsPage.mjs')).href));
+  ({ SpellTomePage, SpellTomeResults } = await import(pathToFileURL(join(directory, 'SpellTomePage.mjs')).href));
+} finally { await rm(directory, { recursive: true }); }
+const render = (Component, props = {}) => renderToStaticMarkup(React.createElement(Component, props));
+const escapeHtml = text => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#x27;');
+
+// Catches missing derived stats, inaccessible navigation, and lost custom details.
+test('Known Spells renders one stat row, centered tome navigation, ordered groups and details', () => {
+  const profile = createPlayerProfile();
+  profile.classes = [{ name: 'Wizard', level: 5 }];
+  profile.abilities.int = 18;
+  profile.sheet.spellcastingAbility = 'int';
+  profile.sheet.learnedSpellIds = ['shield', 'light', 'fire-bolt'];
+  profile.sheet.spells = [{ name: 'Amber Ward', level: 1, notes: 'Keep <my> notes', prepared: true, concentration: true }];
+  useCardStore.setState({ profile });
+  const html = render(SpellsPage);
+  assert.match(html, /class="spellcasting-stats"/);
+  assert.match(html, /<select[^>]*aria-label="Spellcasting ability"/);
+  assert.match(html, /<option value="int" selected="">INT<\/option>/);
+  for (const [name, value] of [['Modifier', '\\+4'], ['Spell Attack', '\\+7'], ['Save DC', '15']]) assert.match(html, new RegExp(`aria-label="${name}"[^>]*>${value}<`));
+  assert.match(html, /class="spell-tome-link"[^>]*href="#\/spell-tome"[^>]*aria-label="Open Spell Tome"/);
+  assert.match(html, /<svg[^>]*aria-hidden="true"/);
+  assert.ok(html.indexOf('>Cantrip<') < html.indexOf('>Level 1<'));
+  assert.ok(html.indexOf('Fire Bolt') < html.indexOf('Light'));
+  assert.ok(html.indexOf('Amber Ward') < html.indexOf('Shield'));
+  assert.match(html, /<details[^>]*>[\s\S]*<summary/);
+  assert.ok(html.includes(escapeHtml(spellById('shield').description)));
+  assert.match(html, /Keep &lt;my&gt; notes/);
+  assert.match(html, /Custom spell/);
+  assert.match(html, /aria-label="Forget Shield"/);
+  assert.doesNotMatch(html, /Roll|Forget Amber Ward/);
+});
+
+test('imported case variants render one catalog row and retain separate custom notes', () => {
+  const profile = createPlayerProfile();
+  profile.sheet.learnedSpellIds = ['FIREBALL', 'fireball'];
+  profile.sheet.spells = [{ name: 'Moonlit Door', level: 2, prepared: true, concentration: false, notes: 'Keep my homebrew.' }];
+  const imported = parseBackup(JSON.stringify({ format: 'reliquary-backup', version: 3, deck: [], inventory: [], equipment: [], profile }));
+  useCardStore.setState({ profile: imported.profile });
+  const html = render(SpellsPage);
+  assert.equal((html.match(/<summary>Fireball \(Level 3\)<\/summary>/g) ?? []).length, 1);
+  assert.equal((html.match(/aria-label="Forget Fireball"/g) ?? []).length, 1);
+  assert.match(html, /Moonlit Door/);
+  assert.match(html, /Keep my homebrew\./);
+  assert.match(render(SpellTomePage), /aria-label="Fireball learned"[^>]*disabled=""/);
+});
+
+test('blank profiles show unknown stats and an actionable empty learned spell list', () => {
+  useCardStore.setState({ profile: createPlayerProfile() });
+  const html = render(SpellsPage);
+  assert.equal((html.match(/aria-label="(?:Modifier|Spell Attack|Save DC)"[^>]*>—</g) ?? []).length, 3);
+  assert.match(html, /No spells learned yet/);
+  assert.match(html, /href="#\/spell-tome"/);
+  assert.match(html, /<option value="" selected="">Unknown<\/option>/);
+});
+
+// Catches incomplete catalog, missing filters, nonalphabetical rows and stale Learned state.
+test('Spell Tome exposes all SRD spells, labelled filters and Learn/Learned controls', () => {
+  useCardStore.setState({ profile: createPlayerProfile() });
+  useCardStore.getState().learnSpell('light');
+  const html = render(SpellTomePage);
+  assert.equal((html.match(/class="spell-row"/g) ?? []).length, 339);
+  assert.match(html, /<input[^>]*aria-label="Search spells"/);
+  assert.match(html, /<select[^>]*aria-label="Spell level"/);
+  for (const text of ['All', 'Cantrip', 'Level 1', 'Level 9']) assert.ok(html.includes(`>${text}</option>`));
+  assert.match(html, /<button[^>]*aria-label="Light learned"[^>]*disabled=""[^>]*>Learned</);
+  assert.match(html, /<button[^>]*aria-label="Learn Shield"[^>]*>Learn</);
+  assert.ok(html.indexOf('Acid Arrow') < html.indexOf('Acid Splash'));
+  assert.ok(html.includes(escapeHtml(spellById('light').description)));
+  assert.match(html, /href="#\/spells"/);
+});
+
+// Catches filtering only by query or only by level, including Cantrip/0 coercion.
+test('tome results combine case-insensitive search with level selection', () => {
+  useCardStore.setState({ profile: createPlayerProfile() });
+  const cantrips = render(SpellTomeResults, { query: '  LIGHT  ', level: 0 });
+  assert.equal((cantrips.match(/class="spell-row"/g) ?? []).length, 2);
+  assert.match(cantrips, /Dancing Lights \(Cantrip\)/);
+  assert.match(cantrips, /Light \(Cantrip\)/);
+  assert.doesNotMatch(cantrips, /Daylight/);
+  const leveled = render(SpellTomeResults, { query: 'LIGHT', level: 3 });
+  assert.match(leveled, /Daylight \(Level 3\)/);
+  assert.doesNotMatch(leveled, />Light \(Cantrip\)/);
+  assert.match(render(SpellTomeResults, { query: 'unknown spell', level: 9 }), /No spells match/);
+});
+
+// Catches light page tokens leaking into the light panel during global hover/focus.
+test('Mahogany spell list tokens keep hover text and keyboard focus readable on the panel', async () => {
+  const stylesheet = postcss.parse(await readFile(new URL('../src/index.css', import.meta.url), 'utf8'));
+  const tokens = Object.fromEntries(Object.entries(THEMES.woody).map(([key, value]) => [`--env-${key}`, value]));
+  let background;
+  stylesheet.walkRules('.spell-list', rule => {
+    rule.walkDecls(declaration => {
+      if (declaration.prop.startsWith('--')) tokens[declaration.prop] = declaration.value;
+      if (['background', 'background-color'].includes(declaration.prop)) background = declaration.value;
+    });
+  });
+  const resolve = value => value.replace(/var\((--[\w-]+)\)/g, (_, token) => resolve(tokens[token]));
+  const luminance = color => {
+    assert.match(color, /^#[0-9a-f]{6}$/i);
+    const linear = color.slice(1).match(/../g).map(channel => parseInt(channel, 16) / 255).map(channel => channel <= .04045 ? channel / 12.92 : ((channel + .055) / 1.055) ** 2.4);
+    return linear[0] * .2126 + linear[1] * .7152 + linear[2] * .0722;
+  };
+  const contrast = (foreground, surface) => {
+    const values = [luminance(resolve(foreground)), luminance(resolve(surface))].sort((a, b) => b - a);
+    return (values[0] + .05) / (values[1] + .05);
+  };
+  // The shared summary:hover rule consumes env-accent; global focus consumes env-text.
+  assert.ok(contrast('var(--env-accent)', background) >= 4.5, 'hover spell names need readable contrast');
+  assert.ok(contrast('var(--env-text)', background) >= 3, 'keyboard focus outline must remain visible');
+  assert.ok(contrast('var(--env-muted)', background) >= 4.5, 'muted rules text needs readable contrast');
+});

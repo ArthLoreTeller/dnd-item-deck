@@ -3,11 +3,12 @@
     "id": "cleaver_001",
     "type": "standard",
     "name": "Chūkabōchō no Himichi",
+    "icon": "sword",
     "source": "default",
     "isAttuned": false,
     "images": {
-      "base": "/assets/Melee/Fire-Cleaver.PNG",
-      "attuned": "/assets/Melee/Fire-Cleaver-Attune.PNG"
+      "base": "/assets/items/weapons/chukabocho-no-himichi/base.png",
+      "attuned": "/assets/items/weapons/chukabocho-no-himichi/attuned.png"
     },
     "stats": {
       "hit": "+5",
@@ -43,20 +44,22 @@
         "title": "Burning Wound",
         "description": "after each attack, the target must make a Constitution check against your spell save DC. On a fail, the target will receive 1 fire damage each round until the target ends the Constitution check on a success."
       }
-    ]
+    ],
+    "rarity": "epic"
   },
   {
     "id": "wand_001",
     "type": "progressive",
     "name": "The Crimson Wand",
+    "icon": "wand",
     "source": "default",
     "isAttuned": false,
     "currentLevel": 1,
     "images": {
-      "base": "/assets/Magic/Wand-Stage-1.PNG",
-      "attuned": "/assets/Magic/Wand-Stage-1.PNG",
-      "level2": "/assets/Magic/Wand-Stage-2.PNG",
-      "level3": "/assets/Magic/Wand-Stage-3.PNG"
+      "base": "/assets/items/weapons/crimson-wand/level-1.png",
+      "attuned": "/assets/items/weapons/crimson-wand/level-1.png",
+      "level2": "/assets/items/weapons/crimson-wand/level-2.png",
+      "level3": "/assets/items/weapons/crimson-wand/level-3.png"
     },
     "stats": {
       "hit": "+0",
@@ -104,16 +107,19 @@
         "title": "Rejuvenation",
         "description": "If the wielder dies, once per long rest, the phoenix feather will immediately bring the wielder back to life with 5 HP. Only a wish can prevent this trait from functioning."
       }
-    ]
+    ],
+    "rarity": "legendary"
   },
   {
     "id": "protection_001",
     "type": "normal",
     "name": "Protection Talisman I",
+    "icon": "buff",
     "source": "default",
     "isAttuned": false,
+    "consumable": true,
     "images": {
-      "base": "/assets/Normal/rune-1.png"
+      "base": "/assets/items/consumables/protection-talisman-i/base.png"
     },
     "stats": {
       "hit": "N/A",
@@ -134,16 +140,19 @@
         "title": "Consume",
         "description": "You regain 1d4 hit points and ignore the damage that less than 1d4 when you use this talisman as an action."
       }
-    ]
+    ],
+    "rarity": "common"
   },
   {
     "id": "protection_002",
     "type": "normal",
     "name": "Protection Talisman II",
+    "icon": "buff",
     "source": "default",
     "isAttuned": false,
+    "consumable": true,
     "images": {
-      "base": "/assets/Normal/rune-2.png"
+      "base": "/assets/items/consumables/protection-talisman-ii/base.png"
     },
     "stats": {
       "hit": "N/A",
@@ -164,16 +173,19 @@
         "title": "Consume",
         "description": "You regain 1d4+2 hit points and ignore the damage that less than 1d4 when you use this talisman as an action."
       }
-    ]
+    ],
+    "rarity": "uncommon"
   },
   {
     "id": "protection_003",
     "type": "normal",
     "name": "Protection Talisman III",
+    "icon": "buff",
     "source": "default",
     "isAttuned": false,
+    "consumable": true,
     "images": {
-      "base": "/assets/Normal/rune-3.png"
+      "base": "/assets/items/consumables/protection-talisman-iii/base.png"
     },
     "stats": {
       "hit": "N/A",
@@ -194,16 +206,19 @@
         "title": "Consume",
         "description": "You regain 2d4 hit points and ignore the damage that less than 1d4 when you use this talisman as an action."
       }
-    ]
+    ],
+    "rarity": "rare"
   },
   {
     "id": "protection_005",
     "type": "normal",
     "name": "Protection Talisman V",
+    "icon": "buff",
     "source": "default",
     "isAttuned": false,
+    "consumable": true,
     "images": {
-      "base": "/assets/Normal/rune-5.png"
+      "base": "/assets/items/consumables/protection-talisman-v/base.png"
     },
     "stats": {
       "hit": "N/A",
@@ -224,15 +239,17 @@
         "title": "Consume",
         "description": "You regain 2d4+1 hit points and ignore the damage that less than 1d8+1 when you use this talisman as an action."
       }
-    ]
+    ],
+    "rarity": "epic"
   },
   {
     "id": "kunai_01",
     "type": "normal",
     "name": "Kunai",
+    "icon": "dagger",
     "isAttuned": false,
     "images": {
-      "base": "/assets/Normal/kunai.png"
+      "base": "/assets/items/weapons/kunai/base.png"
     },
     "stats": {
       "hit": "N/A",
@@ -257,15 +274,17 @@
         "title": "Thrown",
         "description": "1d4 piercing damage to a target within 60 ft."
       }
-    ]
+    ],
+    "rarity": "common"
   },
   {
     "id": "kunai_02",
     "type": "normal",
     "name": "Aquamarine Kunai",
+    "icon": "dagger",
     "isAttuned": false,
     "images": {
-      "base": "/assets/Normal/kunai-aquamarine.png"
+      "base": "/assets/items/weapons/aquamarine-kunai/base.png"
     },
     "stats": {
       "hit": "+1",
@@ -290,15 +309,17 @@
         "title": "Glacial Shard",
         "description": "Deals 1d4 piercing + 1 cold damage thrown up to 60 ft. On hit, freezing condensation reduces the target's movement speed by 10 ft until the end of their next turn."
       }
-    ]
+    ],
+    "rarity": "uncommon"
   },
   {
     "id": "kunai_03",
     "type": "normal",
     "name": "Obsidian Kunai",
+    "icon": "dagger",
     "isAttuned": false,
     "images": {
-      "base": "/assets/Normal/kunai-obsidian.png"
+      "base": "/assets/items/weapons/obsidian-kunai/base.png"
     },
     "stats": {
       "hit": "+1",
@@ -323,15 +344,17 @@
         "title": "Volcanic Fracture",
         "description": "Deals 1d4 piercing + 1d4 fire damage thrown up to 60 ft. On hit, volcanic glass shards lodge in the wound, dealing 1 fire damage at the start of the target's next turn."
       }
-    ]
+    ],
+    "rarity": "rare"
   },
   {
     "id": "kunai_04",
     "type": "normal",
     "name": "Malachite Kunai",
+    "icon": "dagger",
     "isAttuned": false,
     "images": {
-      "base": "/assets/Normal/kunai-malachite.png"
+      "base": "/assets/items/weapons/malachite-kunai/base.png"
     },
     "stats": {
       "hit": "N/A",
@@ -356,15 +379,17 @@
         "title": "Caustic Dart",
         "description": "Deals 1d4 piercing + 1d4 acid damage thrown up to 60 ft as the copper carbonate reacts upon impact."
       }
-    ]
+    ],
+    "rarity": "uncommon"
   },
   {
     "id": "kunai_05",
     "type": "normal",
     "name": "Ferruginous Kunai",
+    "icon": "dagger",
     "isAttuned": false,
     "images": {
-      "base": "/assets/Normal/kunai-ferruginous-quartz.png"
+      "base": "/assets/items/weapons/ferruginous-kunai/base.png"
     },
     "stats": {
       "hit": "+1",
@@ -389,6 +414,337 @@
         "title": "Piezo Resonance",
         "description": "Deals 1d6 piercing + 1 lightning damage thrown up to 60 ft, discharging the quartz's stored kinetic shockwave upon impact."
       }
-    ]
+    ],
+    "rarity": "rare"
+  },
+  {
+    "id": "bloodletter_pen_001",
+    "type": "normal",
+    "name": "Bloodletter Pen",
+    "icon": "scroll",
+    "source": "default",
+    "isAttuned": false,
+    "images": {
+      "base": "/assets/items/wondrous/bloodletter-pen/base.png"
+    },
+    "stats": {
+      "hit": "N/A",
+      "damage": "1d6 fire",
+      "saveDc": "12"
+    },
+    "specs": {
+      "type": "Wondrous item",
+      "attunement": "None",
+      "properties": "Writing implement",
+      "ranges": "60 ft.",
+      "damage": "1d6",
+      "damageType": "Fire"
+    },
+    "flavorText": "This elegant fountain pen is coated in crimson lacquer and finished with gold accents. Its glass chamber holds wine-red ink with a beautiful, mysterious scent. Words written with the pen do not fade through ordinary wear or age.",
+    "abilities": [
+      {
+        "title": "Ignition Blood",
+        "description": "Once per Short or Long Rest, you can take a Magic action to speak a word currently written by the pen on a surface you can see within 60 feet. The writing erupts. Each creature within 5 feet of it must make a DC 12 Dexterity saving throw, taking 1d6 Fire damage on a failed save or half as much damage on a successful one. The triggered writing then disappears."
+      }
+    ],
+    "rarity": "uncommon"
+  },
+  {
+    "id": "gamblers_coin_001",
+    "type": "normal",
+    "name": "Gambler’s Coin",
+    "icon": "coin",
+    "source": "default",
+    "isAttuned": false,
+    "images": {
+      "base": "/assets/items/wondrous/gamblers-coin/base.png"
+    },
+    "stats": {
+      "hit": "N/A",
+      "damage": "N/A",
+      "saveDc": "N/A"
+    },
+    "specs": {
+      "type": "Wondrous item",
+      "attunement": "None",
+      "properties": "Fortune token",
+      "ranges": "Self",
+      "damage": "N/A",
+      "damageType": "N/A"
+    },
+    "flavorText": "This gold coin sits comfortably in the palm and is slightly larger than ordinary currency. One face depicts Fortuna, goddess of luck. The reverse bears the symbol of Beshaba, lady of doom.",
+    "abilities": [
+      {
+        "title": "Lady Luck",
+        "description": "Twice per Long Rest, when you are about to make a D20 Test without Advantage or Disadvantage, you can flip this coin instead of rolling. Treat heads as if the d20 rolled a 20 and tails as if it rolled a 1."
+      }
+    ],
+    "rarity": "common"
+  },
+  {
+    "id": "gloves_thievery_001",
+    "type": "normal",
+    "name": "Gloves of Thievery",
+    "icon": "glove",
+    "source": "default",
+    "isAttuned": false,
+    "images": {
+      "base": "/assets/items/armor/gloves-of-thievery/base.png"
+    },
+    "stats": {
+      "hit": "N/A",
+      "damage": "N/A",
+      "saveDc": "N/A"
+    },
+    "specs": {
+      "type": "Wondrous item",
+      "attunement": "None",
+      "properties": "Imperceptible while worn",
+      "ranges": "Self",
+      "damage": "N/A",
+      "damageType": "N/A"
+    },
+    "flavorText": "These sheer gloves appear to be woven from invisible silk. Once worn, they become imperceptible.",
+    "abilities": [
+      {
+        "title": "Thievery",
+        "description": "While wearing the gloves, you gain a +5 bonus to Dexterity (Sleight of Hand) checks."
+      }
+    ],
+    "rarity": "uncommon"
+  },
+  {
+    "id": "iron_hand_001",
+    "type": "normal",
+    "name": "Iron Hand",
+    "icon": "glove",
+    "source": "default",
+    "isAttuned": false,
+    "images": {
+      "base": "/assets/items/armor/iron-hand/base.png"
+    },
+    "stats": {
+      "hit": "N/A",
+      "damage": "N/A",
+      "saveDc": "N/A"
+    },
+    "specs": {
+      "type": "Wondrous item (gauntlet)",
+      "attunement": "None",
+      "properties": "Worn, inflexible",
+      "ranges": "Self",
+      "damage": "N/A",
+      "damageType": "N/A"
+    },
+    "flavorText": "This battered iron gauntlet looks salvaged from a junkyard. A protection rune marks its back, though nothing shows whether the rune still holds power. Its rigid joints allow almost no movement at the wrist.",
+    "abilities": [
+      {
+        "title": "Last Resort",
+        "description": "When an attack hits you during the first round of combat before you have taken a turn, you can use your Reaction and roll a d20. On a roll of 16 or higher, the gauntlet reduces the attack’s damage to 0."
+      }
+    ],
+    "rarity": "common"
+  },
+  {
+    "id": "nanboku_no_rensa_001",
+    "type": "normal",
+    "name": "Nanboku no Rensa",
+    "icon": "chain",
+    "source": "default",
+    "isAttuned": false,
+    "images": {
+      "base": "/assets/items/weapons/nanboku-no-rensa/base.png"
+    },
+    "stats": {
+      "hit": "+0",
+      "damage": "1d6 bludgeoning",
+      "saveDc": "13"
+    },
+    "specs": {
+      "type": "Martial melee weapon (kusari-fundo)",
+      "attunement": "None",
+      "properties": "Finesse, Reach, Two-Handed",
+      "ranges": "10 ft.",
+      "damage": "1d6",
+      "damageType": "Bludgeoning"
+    },
+    "flavorText": "This kusari-fundo bears opposing inscriptions: north on one end and south on the other. Tiny handmade magnets set along the chain amplify their attraction and repulsion.",
+    "abilities": [
+      {
+        "title": "Embrace",
+        "description": "Once on each of your turns when you hit with this weapon, you can align matching poles against the target. Roll the weapon’s damage die twice for that attack."
+      },
+      {
+        "title": "Depart",
+        "description": "As a Magic action, choose one creature you can see within 60 feet. The target must succeed on a DC 13 Strength saving throw or be pulled up to 20 feet toward you."
+      }
+    ],
+    "rarity": "uncommon"
+  },
+  {
+    "id": "invictus_001",
+    "type": "normal",
+    "name": "Invictus",
+    "icon": "bow",
+    "source": "default",
+    "isAttuned": false,
+    "images": {
+      "base": "/assets/items/weapons/invictus/base.png"
+    },
+    "stats": {
+      "hit": "DEX + proficiency",
+      "damage": "1d8 piercing",
+      "saveDc": "N/A"
+    },
+    "specs": {
+      "type": "Martial ranged weapon (longbow)",
+      "attunement": "None",
+      "properties": "Ammunition, Heavy, Two-Handed; Slow mastery",
+      "ranges": "150/600 ft.",
+      "damage": "1d8",
+      "damageType": "Piercing"
+    },
+    "flavorText": "Invictus resembles an old wooden recurve bow. An ancient enchantment allows only a suitable bearer to string and fire it. At the end of every seventh day, the bow unstrings itself.",
+    "abilities": [
+      {
+        "title": "I’m Just a Man",
+        "description": "To string Invictus, roll a d20 without adding a modifier; the attempt succeeds only on a 20. Once strung, an attack made with Invictus hits only if the attack roll is a natural 20. On that hit, the attack deals 3d20 Piercing damage instead of the longbow’s normal damage. Invictus uses Dexterity for its attack and damage rolls."
+      }
+    ],
+    "rarity": "rare"
+  },
+  {
+    "id": "jade_heart_spear_001",
+    "type": "normal",
+    "name": "Jade Heart Spear",
+    "icon": "spear",
+    "source": "default",
+    "isAttuned": false,
+    "images": {
+      "base": "/assets/items/weapons/jade-heart-spear/base.png"
+    },
+    "stats": {
+      "hit": "STR + proficiency",
+      "damage": "1d6/1d8 piercing",
+      "saveDc": "N/A"
+    },
+    "specs": {
+      "type": "Simple melee weapon (spear)",
+      "attunement": "None",
+      "properties": "Thrown, Versatile (1d8); Sap mastery",
+      "ranges": "20/60 ft.",
+      "damage": "1d6 (1d8 two-handed)",
+      "damageType": "Piercing"
+    },
+    "flavorText": "This spear comes from an unknown source. Its heart-shaped jade head is lashed to a dry oak shaft with worn cord. Many stories claim to explain its origin and power, but none has proved true.",
+    "abilities": [
+      {
+        "title": "Undeath Nullify",
+        "description": "An Undead creature killed by this spear can’t regain Hit Points or return to undeath unless a Wish spell restores it."
+      },
+      {
+        "title": "Sap Mastery",
+        "description": "If you have a feature that lets you use this weapon’s mastery property, a creature you hit with the spear has Disadvantage on its next attack roll before the start of your next turn."
+      }
+    ],
+    "rarity": "uncommon"
+  },
+  {
+    "id": "wooden_axe_001",
+    "type": "normal",
+    "name": "Wooden Axe",
+    "icon": "axe",
+    "source": "default",
+    "isAttuned": false,
+    "images": {
+      "base": "/assets/items/weapons/wooden-axe/base.png"
+    },
+    "stats": {
+      "hit": "STR + proficiency",
+      "damage": "1d6 slashing",
+      "saveDc": "N/A"
+    },
+    "specs": {
+      "type": "Simple melee weapon (handaxe)",
+      "attunement": "None",
+      "properties": "Light, Thrown; Vex mastery",
+      "ranges": "20/60 ft.",
+      "damage": "1d6",
+      "damageType": "Slashing"
+    },
+    "flavorText": "A practical handaxe with a wooden haft and an ordinary iron head. Woodsfolk and adventurers carry it as both a tool and a weapon.",
+    "abilities": [
+      {
+        "title": "Vex Mastery",
+        "description": "If you have a feature that lets you use this weapon’s mastery property, hitting a creature with the axe gives you Advantage on your next attack roll against that creature before the end of your next turn."
+      }
+    ],
+    "rarity": "common"
+  },
+  {
+    "id": "potion_invisibility_001",
+    "type": "normal",
+    "name": "Potion of Invisibility",
+    "icon": "potion",
+    "source": "default",
+    "isAttuned": false,
+    "consumable": true,
+    "images": {
+      "base": "/assets/items/consumables/potion-of-invisibility/base.png"
+    },
+    "stats": {
+      "hit": "N/A",
+      "damage": "N/A",
+      "saveDc": "N/A"
+    },
+    "specs": {
+      "type": "Potion",
+      "attunement": "None",
+      "properties": "Consumable",
+      "ranges": "Self",
+      "damage": "N/A",
+      "damageType": "N/A"
+    },
+    "flavorText": "This potion looks empty, but the container feels heavy and liquid sloshes inside it.",
+    "abilities": [
+      {
+        "title": "Invisibility",
+        "description": "As a Bonus Action, you can drink the potion to gain the Invisible condition for 10 minutes. The effect ends early immediately after you make an attack roll, deal damage, or cast a spell."
+      }
+    ],
+    "rarity": "rare"
+  },
+  {
+    "id": "potion_poison_001",
+    "type": "normal",
+    "name": "Potion of Poison",
+    "icon": "potion",
+    "source": "default",
+    "isAttuned": false,
+    "consumable": true,
+    "images": {
+      "base": "/assets/items/consumables/potion-of-poison/base.png"
+    },
+    "stats": {
+      "hit": "N/A",
+      "damage": "1d4 poison per round",
+      "saveDc": "13"
+    },
+    "specs": {
+      "type": "Potion",
+      "attunement": "None",
+      "properties": "Consumable, poison",
+      "ranges": "Self",
+      "damage": "1d4 per round",
+      "damageType": "Poison"
+    },
+    "flavorText": "This liquid resembles a beneficial potion at first glance, but a bitter chemical scent clings to the stopper.",
+    "abilities": [
+      {
+        "title": "Toxic Draught",
+        "description": "A creature that drinks the potion takes 1d4 Poison damage at the start of each of its turns for up to 30 minutes. At the end of each of those turns, it can make a DC 13 Constitution saving throw, ending the effect on a success."
+      }
+    ],
+    "rarity": "common"
   }
 ]

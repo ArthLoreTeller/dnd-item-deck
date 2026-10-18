@@ -1,0 +1,40 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { createPlayerProfile, validateEquipment } from '../src/data/player.js';
+import { mergeCharacterDraft } from '../src/data/character-import.js';
+import { normalizePdfFields } from '../src/import/pdf-fields.js';
+test('PDF form fields preserve unknown values, parse class levels and equipment', () => {
+  const draft = normalizePdfFields({ CharacterName: 'Aria', ClassLevel: 'Wizard 3 / Fighter 2', STR: '10', AC: '15', Equipment: 'Rope\nTorch', GP: '25' });
+  assert.equal(draft.profile.name, 'Aria');
+  assert.deepEqual(draft.profile.classes, [{ name: 'Wizard', level: 3 }, { name: 'Fighter', level: 2 }]);
+  assert.equal(draft.profile.abilities.dex, null);
+  assert.equal(draft.equipment[0].unitWeightLb, null);
+  assert.equal(draft.profile.currency.gp, 25);
+  assert.ok(draft.warnings.length);
+});
+test('unsupported PDFs and malformed fields cannot become successful empty imports', () => {
+  assert.throws(() => normalizePdfFields({ Random: 'unrelated form' }));
+  const draft = normalizePdfFields({ CharacterName: 'Aria', STR: '999', Equipment: 'Rope' });
+  assert.equal(draft.profile.abilities.str, null);
+  assert.ok(draft.warnings.some(warning => warning.includes('STR')));
+});
+test('review merges only selected values, namespaces equipment and keeps relics', () => {
+  const profile = { ...createPlayerProfile(), name: 'My manual name' };
+  const relic = validateEquipment({ id: 'relic:wand', characterId: profile.id, name: 'Wand', quantity: 1, unitWeightLb: 4, carried: true, relicCardId: 'wand' });
+  const draft = normalizePdfFields({ CharacterName: 'Aria', STR: '10', Equipment: 'Rope' });
+  const selection = { profileFields: ['abilities'], equipmentIds: draft.equipment.map(e => e.id), replaceSourceEquipment: false };
+  const first = mergeCharacterDraft({ profile, equipment: [relic] }, draft, selection);
+  assert.equal(first.profile.name, 'My manual name');
+  assert.equal(first.profile.abilities.str, 10);
+  assert.deepEqual(first.equipment[0], relic);
+  assert.equal(first.equipment[1].unitWeightLb, null);
+  const edited = { ...first, equipment: first.equipment.map(e => e.relicCardId ? e : { ...e, unitWeightLb: 3 }) };
+  const untouched = mergeCharacterDraft(edited, draft, { ...selection, equipmentIds: [] });
+  assert.equal(untouched.equipment[1].unitWeightLb, 3);
+  const repeated = mergeCharacterDraft(edited, draft, selection);
+  assert.equal(repeated.equipment.length, 2);
+  const other = normalizePdfFields({ CharacterName: 'Bran', Equipment: 'Rope' });
+  assert.equal(mergeCharacterDraft(first, other, { ...selection, equipmentIds: other.equipment.map(e => e.id) }).equipment.length, 3);
+  assert.throws(() => mergeCharacterDraft(first, { ...draft, equipment: [{ ...draft.equipment[0], quantity: -1 }] }, selection));
+  assert.equal(first.equipment.length, 2);
+});
