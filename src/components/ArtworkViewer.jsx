@@ -4,7 +4,7 @@ import { X } from 'lucide-react';
 import { RARITIES, normalizeCard } from '../data/rarity';
 import { RarityBadge } from './RarityBadge';
 
-export function ArtworkViewer({ src, card, onClose }) {
+export function ArtworkViewer({ src, card, onClose, onError }) {
   const [isClosing, setIsClosing] = useState(false);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const closeRef = useRef(null);
@@ -51,7 +51,7 @@ export function ArtworkViewer({ src, card, onClose }) {
           <div className="artwork-depth" style={{ transform: `rotateX(${-tilt.y * 9}deg) rotateY(${tilt.x * 12}deg)`, '--light-x': `${50 + tilt.x * 35}%`, '--light-y': `${50 + tilt.y * 35}%` }}>
             <div className="artwork-runes" aria-hidden="true">✧ · ✦ · ✧</div>
             <div className="artwork-aura" />
-            <img className="artwork-layer" src={src} alt={card.name} style={{ transform: `translate3d(${tilt.x * 15}px, ${tilt.y * 12}px, 65px)` }} />
+            <img className="artwork-layer" src={src} alt={card.name} referrerPolicy="no-referrer" onError={onError} style={{ transform: `translate3d(${tilt.x * 15}px, ${tilt.y * 12}px, 65px)` }} />
             <div className="artwork-shine" />
             <div className="artwork-frame" />
           </div>

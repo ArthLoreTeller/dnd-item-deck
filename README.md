@@ -20,9 +20,9 @@ npm run preview
 
 ## Version 1.1
 
-- Reset Deck restores the eleven built-in items and shows the card back. Custom inventory cards are preserved.
+- Confirming Reset Deck restores the eleven built-in items and shows the card back. Custom inventory cards are preserved.
 - Each remaining card has a draw weight: Common 60, Uncommon 25, Rare 10, Epic 4, Legendary 1. Actual odds depend on the remaining deck; search selects an item directly.
-- Rarity badges and magical reveal effects accompany draws. A short lift leads into the reveal; Continue keeps the item and turns back to the deck, while Discard returns built-in items or deletes custom cards. Outgoing artwork remains visible until the reverse flip finishes.
+- Rarity badges and magical reveal effects accompany draws. A short lift leads into the reveal; Continue keeps the item and turns back to the deck, Return to deck restores a built-in item, and Delete card asks before permanently removing a custom item. Outgoing artwork remains visible until the reverse flip finishes.
 - Synthesized button, draw, reveal, and attunement chimes require no remote assets. The sound toggle saves your preference.
 - Click artwork for a layered 2.5D inspection view with pointer/touch tilt and moving highlights. Reduced-motion settings disable movement. Existing artwork is a single image layer, with separate aura, runes, frame, and shine layers.
 - A fantasy interface emphasizes drawing and inventory, with desktop and mobile controls. The Atmosphere selector saves Midnight, Evergreen, Love, Woody, or Warm environment palettes.

@@ -67,7 +67,7 @@
       "saveDc": "0"
     },
     "specs": {
-      "type": "Wand, rare",
+      "type": "Wand",
       "attunement": "requires attunement",
       "properties": "Grants 1 free level 1 spell slot",
       "ranges": "N/A",
@@ -126,8 +126,8 @@
       "saveDc": "N/A"
     },
     "specs": {
-      "type": "Talisman, common",
-      "attunement": "requires attunement",
+      "type": "Talisman",
+      "attunement": "None",
       "properties": "Grants minor resistance to a normal damage type",
       "ranges": "N/A",
       "damage": "1d4",
@@ -158,8 +158,8 @@
       "saveDc": "N/A"
     },
     "specs": {
-      "type": "Talisman, common",
-      "attunement": "requires attunement",
+      "type": "Talisman",
+      "attunement": "None",
       "properties": "Grants minor resistance to a normal damage type",
       "ranges": "N/A",
       "damage": "1d4",
@@ -190,8 +190,8 @@
       "saveDc": "N/A"
     },
     "specs": {
-      "type": "Talisman, common",
-      "attunement": "requires attunement",
+      "type": "Talisman",
+      "attunement": "None",
       "properties": "Grants minor resistance to a normal damage type",
       "ranges": "N/A",
       "damage": "1d4",
@@ -222,8 +222,8 @@
       "saveDc": "N/A"
     },
     "specs": {
-      "type": "Talisman, common",
-      "attunement": "requires attunement",
+      "type": "Talisman",
+      "attunement": "None",
       "properties": "Grants minor resistance to a normal damage type",
       "ranges": "N/A",
       "damage": "1d4",

@@ -75,7 +75,6 @@ button:focus-visible, select:focus-visible, summary:focus-visible, input:focus-v
 .artwork-shine { position: absolute; inset: 0; border-radius: 18px; background: radial-gradient(circle at var(--light-x) var(--light-y), #fff8, #ffe5bb12 30%, transparent 60%); opacity: .3; mix-blend-mode: screen; transform: translateZ(90px); pointer-events: none; }
 .artwork-hint { color: #aea498; font-size: 12px; line-height: 1.5; }
 @media (max-width: 767px) { .reliquary-heading { padding-top: 5px; } .artwork-dialog { padding: 22px 16px; } .artwork-stage { width: min(85%, 300px); margin: 18px auto; } .artwork-dialog h2 { font-size: 23px; } }
-@media (max-width: 359px) { .perspective-deck { width: 288px; height: 450px; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } .artwork-depth, .artwork-layer { transform: none !important; } }
 
 /* One motion rhythm: anticipate, reveal, then settle. */
@@ -380,7 +379,10 @@ html[data-theme="optic"] .reliquary button.continue-action.continue-action.conti
   .inventory-panel > div:last-child { max-height: calc(100dvh - 280px); }
   .deck-footer, .draw-prompt { width: 358px; }
 }
-@media (max-width: 359px) { .card-display, .card-scale { width: 288px; height: 450px; } }
+@media (max-width: 359px) {
+  .card-display { width: 288px; height: 450px; }
+  .card-scale { transform: scale(.9); transform-origin: top left; }
+}
 @media (prefers-reduced-motion: reduce) { .rarity-draw-effect { animation: none; display: none; } }
 @media (min-width: 1024px) {
   .reliquary > header { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px 28px; }

@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useId } from "react";
+import { createPortal } from "react-dom";
+import { useDialogFocus } from "../hooks/useDialogFocus";
 import { useCardStore } from "../store/useCardStore";
 import { ArtworkViewer } from "./ArtworkViewer";
 import { playSound } from "../audio/sound";
@@ -14,6 +16,20 @@ function StatInput({
   topPosition,
   textClass = "text-[12px]",
 }) {
+  const [draft, setDraft] = useState(null);
+  const [failed, setFailed] = useState(false);
+  const revision = useRef(0);
+
+  const save = async (value) => {
+    const request = ++revision.current;
+    setDraft(value);
+    setFailed(false);
+    const saved = await updateCard(id, { stats: { [statKey]: value } });
+    if (request !== revision.current) return;
+    if (saved) setDraft(null);
+    else setFailed(true);
+  };
+
   return (
     <div
       className="absolute right-[20px] w-[30px] flex flex-col items-center"
@@ -23,12 +39,9 @@ function StatInput({
         <input
           type="text"
           aria-label={label}
-          value={stats?.[statKey] || ""}
-          onChange={(e) =>
-            updateCard(id, {
-              stats: { ...(stats || {}), [statKey]: e.target.value },
-            })
-          }
+          value={draft ?? stats?.[statKey] ?? ""}
+          onChange={(event) => save(event.target.value)}
+          aria-invalid={failed || undefined}
           onClick={(e) => e.stopPropagation()}
           spellCheck="false"
           placeholder="0"
@@ -38,7 +51,53 @@ function StatInput({
       <span className="font-serif text-[8px] font-bold text-amber-950 leading-none mt-1 whitespace-nowrap">
         {label}
       </span>
+      {failed && (
+        <button type="button" onClick={() => save(draft)} aria-label={`Retry saving ${label}`}
+          className="rounded bg-amber-100 px-1 text-[10px] font-bold text-red-900">
+          Retry
+        </button>
+      )}
     </div>
+  );
+}
+
+function TextDetail({ title, text, onClose }) {
+  const overlay = useRef(null);
+  const titleId = useId();
+  useDialogFocus(overlay, true, onClose);
+  return createPortal(
+    <div ref={overlay} className="fixed inset-0 z-[220] flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
+      <section role="dialog" aria-modal="true" aria-labelledby={titleId}
+        className="max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-xl border-2 border-[#AA7826] bg-[#e8d5b7] p-5 text-amber-950 shadow-2xl"
+        onClick={(event) => event.stopPropagation()}>
+        <div className="mb-3 flex items-center justify-between gap-3 border-b border-[#AA7826] pb-2">
+          <h2 id={titleId} className="font-serif text-lg font-bold">{title}</h2>
+          <button type="button" aria-label="Close item details" onClick={onClose} className="p-2">✕</button>
+        </div>
+        <p className="whitespace-pre-wrap break-words text-base leading-relaxed">{text}</p>
+      </section>
+    </div>, document.body,
+  );
+}
+
+// Keying this component by URL resets loading and failure when the card changes art.
+function CardArtwork({ src, card, attuned, fallback }) {
+  const [status, setStatus] = useState("loading");
+  const [open, setOpen] = useState(false);
+  const close = useCallback(() => setOpen(false), []);
+  if (status === "failed") return fallback;
+  return (
+    <>
+      <button type="button" disabled={status !== "ready"} aria-label={`Inspect artwork for ${card.name}`}
+        aria-haspopup="dialog" onClick={() => setOpen(true)}
+        className="group relative mt-1 flex h-[190px] w-[190px] items-center justify-center enabled:cursor-pointer enabled:hover:scale-105 transition-transform">
+        {attuned && <span aria-hidden="true" className="absolute inset-0 rounded-full bg-amber-400/20 blur-xl group-hover:bg-amber-400/50" />}
+        <img src={src} alt={card.name} referrerPolicy="no-referrer"
+          onLoad={() => setStatus("ready")} onError={() => setStatus("failed")}
+          className="relative z-10 max-h-full max-w-full object-contain drop-shadow-md" />
+      </button>
+      {open && <ArtworkViewer src={src} card={card} onClose={close} onError={() => setStatus("failed")} />}
+    </>
   );
 }
 
@@ -49,9 +108,9 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
   const [isFlipped, setIsFlipped] = useState(initialFlipped);
   const [flipAnim, setFlipAnim] = useState("");
   const [popoverText, setPopoverText] = useState(null);
-  const [expandedImage, setExpandedImage] = useState(null);
-  const closeArtwork = useCallback(() => setExpandedImage(null), []);
 
+  const flipTimers = useRef([]);
+  useEffect(() => () => flipTimers.current.forEach(clearTimeout), []);
   const dragStartX = useRef(null);
   const previousCardRef = useRef(card);
   const [outgoingCard, setOutgoingCard] = useState(null);
@@ -112,34 +171,29 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
   if (!card) return null;
 
   const handleProgress = (levelIndex, val) => {
-    const currentProgress = progress || { level1: 0, level2: 0 };
-    const newProgress = { ...currentProgress, [`level${levelIndex}`]: val };
-
-    let newLevel = 1;
-    if (newProgress.level1 >= 20) newLevel = 2;
-    if (newProgress.level1 >= 20 && newProgress.level2 >= 20) newLevel = 3;
-
-    updateCard(id, { progress: newProgress, currentLevel: newLevel });
+    updateCard(id, { progress: { [`level${levelIndex}`]: val } });
   };
 
   const handleFlip = () => {
     if (flipAnim || isEnhancing) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setIsFlipped((previous) => !previous);
+      return;
+    }
     setFlipAnim("out");
-    setTimeout(() => {
+    flipTimers.current = [setTimeout(() => {
       setIsFlipped((prev) => !prev);
       setFlipAnim("in");
-    }, 250);
-    setTimeout(() => {
+    }, 250), setTimeout(() => {
       setFlipAnim("");
-    }, 500);
+    }, 500)];
   };
 
-  const handleToggleAttune = (e) => {
-    e?.stopPropagation();
+  const handleToggleAttune = async (event) => {
+    event.stopPropagation();
     if (!isAttunable || isEnhancing || flipAnim || snapshot) return;
-    updateCard(id, { isAttuned: !isAttuned });
-    const updated = useCardStore.getState().inventory.find((item) => item.id === id);
-    if (updated?.isAttuned === !isAttuned) playSound(isAttuned ? "discard" : "attune");
+    const saved = await updateCard(id, { isAttuned: !isAttuned });
+    if (saved) playSound(isAttuned ? "discard" : "attune");
   };
 
   const getArtworkSrc = () => {
@@ -185,221 +239,46 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
     </div>
   );
 
-  const renderUnattunedShelf1 = () => (
-    <div
-      className="overflow-y-auto no-scrollbar pb-2 cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
-      onClick={() =>
-        setPopoverText({ title: "Item Lore", text: flavorText || description })
-      }
-    >
-      <p className="italic font-serif leading-tight text-justify">
-        {flavorText || description}
-      </p>
+  const lore = flavorText || description;
+  const abilitiesByShelf = isProgressive
+    ? [level1Abilities, currentLevel >= 2 && level2Abilities, currentLevel >= 3 && level3Abilities]
+    : isStandard ? [abilities?.slice(0, 2), abilities?.slice(2, 4), abilities?.slice(4)] : [];
+
+  const renderAbilities = (list, reserveControlSpace = false) => list && (
+    <div className={`min-h-0 overflow-y-auto no-scrollbar ${reserveControlSpace ? "pb-[35px]" : "pb-2"}`}>
+      {list.map((ability, index) => (
+        <button type="button" key={index} aria-haspopup="dialog"
+          onClick={() => setPopoverText({ title: ability.title || "Item ability", text: ability.description })}
+          className="mb-1 block w-full rounded px-1 text-left hover:bg-amber-900/10">
+          {ability.title && <span className="font-serif font-bold">{ability.title}: </span>}
+          <span className="italic">{ability.description}</span>
+        </button>
+      ))}
     </div>
   );
 
-  const renderUnattunedShelf2 = () => {
-    if (isNormal) {
-      return (
-        <div className="overflow-y-auto no-scrollbar space-y-1 pb-2">
-          {abilities?.map((abi, idx) => (
-            <div
-              key={`nml-${idx}`}
-              className="mb-1 cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
-              onClick={() =>
-                setPopoverText({ title: abi.title, text: abi.description })
-              }
-            >
-              <span className="font-bold font-serif">{abi.title}: </span>
-              <span className="italic">{abi.description}</span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    return (
-      <div
-        className="overflow-y-auto no-scrollbar space-y-1 pb-[35px] cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
-        onClick={() => {
-          let statsContent = `Attunement: ${attunementRules || "None"}`;
-          if (weaponStats) {
-            statsContent += `\nWeapon Stat: ${
-              weaponStats.weaponStat || ""
-            }\nAttack Bonus: ${weaponStats.attackBonus || ""}\nDamage Bonus: ${
-              weaponStats.damageBonus || ""
-            }\nSave DC: ${weaponStats.saveDc || ""}`;
-          }
-          setPopoverText({
-            title: "Attunement Criteria & Stats",
-            text: statsContent,
-          });
-        }}
-      >
-        <p>
-          <span className="font-bold">Attunement:</span> {attunementRules}
-        </p>
-        {weaponStats && (
-          <>
-            <p>
-              <span className="font-bold">Weapon Stat:</span>{" "}
-              {weaponStats.weaponStat}
-            </p>
-            <p>
-              <span className="font-bold">Attack Bonus:</span>{" "}
-              {weaponStats.attackBonus}
-            </p>
-            <p>
-              <span className="font-bold">Damage Bonus:</span>{" "}
-              {weaponStats.damageBonus}
-            </p>
-            <p>
-              <span className="font-bold">Save DC:</span> {weaponStats.saveDc}
-            </p>
-          </>
-        )}
-      </div>
-    );
-  };
+  const specRows = [
+    ["Type", specs?.type], ["Attunement", !isNormal && specs?.attunement],
+    ["Properties", specs?.properties], ["Ranges", specs?.ranges],
+    ["Damage", specs?.damage], ["Damage Type", specs?.damageType],
+  ].filter(([, value]) => value);
+  const ruleRows = [
+    ["Attunement", attunementRules], ["Weapon Stat", weaponStats?.weaponStat],
+    ["Attack Bonus", weaponStats?.attackBonus], ["Damage Bonus", weaponStats?.damageBonus],
+    ["Save DC", weaponStats?.saveDc],
+  ].filter(([, value]) => value);
 
-  const renderAttunedShelf1 = () => {
-    if (isProgressive) {
-      return (
-        <div className={`flex flex-col h-full ${getFadeClass("delay-200")}`}>
-          <div className="overflow-y-auto no-scrollbar pb-3">
-            {level1Abilities?.map((abi, idx) => (
-              <div
-                key={`l1-${idx}`}
-                className="mb-1 cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
-                onClick={() =>
-                  setPopoverText({ title: abi.title, text: abi.description })
-                }
-              >
-                <span className="font-bold font-serif">{abi.title}: </span>
-                <span className="italic">{abi.description}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-    if (isStandard) {
-      return (
-        <div
-          className={`overflow-y-auto no-scrollbar flex flex-col h-full ${getFadeClass(
-            "delay-200"
-          )}`}
-        >
-          {abilities?.slice(0, 2).map((abi, idx) => (
-            <div
-              key={`std1-${idx}`}
-              className="mb-1 cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
-              onClick={() =>
-                setPopoverText({ title: abi.title, text: abi.description })
-              }
-            >
-              <span className="font-bold font-serif">{abi.title}: </span>
-              <span className="italic">{abi.description}</span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const renderAttunedShelf2 = () => {
-    if (isProgressive) {
-      return (
-        <div className={`flex flex-col h-full ${getFadeClass("delay-300")}`}>
-          <div className="overflow-y-auto no-scrollbar pb-3">
-            {currentLevel >= 2 &&
-              level2Abilities?.map((abi, idx) => (
-                <div
-                  key={`l2-${idx}`}
-                  className="mb-1 cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
-                  onClick={() =>
-                    setPopoverText({ title: abi.title, text: abi.description })
-                  }
-                >
-                  <span className="font-bold font-serif">{abi.title}: </span>
-                  <span className="italic">{abi.description}</span>
-                </div>
-              ))}
-          </div>
-        </div>
-      );
-    }
-    if (isStandard) {
-      return (
-        <div
-          className={`overflow-y-auto no-scrollbar flex flex-col h-full ${getFadeClass(
-            "delay-300"
-          )}`}
-        >
-          {abilities?.slice(2, 4).map((abi, idx) => (
-            <div
-              key={`std2-${idx}`}
-              className="mb-1 cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
-              onClick={() =>
-                setPopoverText({ title: abi.title, text: abi.description })
-              }
-            >
-              <span className="font-bold font-serif">{abi.title}: </span>
-              <span className="italic">{abi.description}</span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const renderAttunedShelf3 = () => {
-    if (isProgressive) {
-      return (
-        <div className={`flex flex-col h-full ${getFadeClass("delay-400")}`}>
-          <div className="overflow-y-auto no-scrollbar pb-[35px]">
-            {currentLevel >= 3 &&
-              level3Abilities?.map((abi, idx) => (
-                <div
-                  key={`l3-${idx}`}
-                  className="mb-1 cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
-                  onClick={() =>
-                    setPopoverText({ title: abi.title, text: abi.description })
-                  }
-                >
-                  <span className="font-bold font-serif">{abi.title}: </span>
-                  <span className="italic">{abi.description}</span>
-                </div>
-              ))}
-          </div>
-        </div>
-      );
-    }
-    if (isStandard) {
-      return (
-        <div
-          className={`overflow-y-auto no-scrollbar flex flex-col h-full pb-[35px] ${getFadeClass(
-            "delay-400"
-          )}`}
-        >
-          {abilities?.slice(4).map((abi, idx) => (
-            <div
-              key={`std3-${idx}`}
-              className="mb-1 cursor-pointer hover:bg-amber-900/10 rounded px-1 transition-colors"
-              onClick={() =>
-                setPopoverText({ title: abi.title, text: abi.description })
-              }
-            >
-              <span className="font-bold font-serif">{abi.title}: </span>
-              <span className="italic">{abi.description}</span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
+  const detailButton = (title, rows, className) => rows.length > 0 && (
+    <button type="button" aria-label={`Read ${title}`} aria-haspopup="dialog" className={className}
+      onClick={() => setPopoverText({ title, text: rows.map(([label, value]) => `${label}: ${value}`).join("\n") })}>
+      {rows.map(([label, value]) => (
+        <span key={label} className="block"><strong>{label}: </strong>{value}</span>
+      ))}
+    </button>
+  );
+  const artFallback = (description || flavorText) && (
+    <p className="max-h-[160px] w-full overflow-y-auto px-6 pt-2 text-justify text-[11px] leading-snug">{description || flavorText}</p>
+  );
 
   const artworkSrc = getArtworkSrc();
 
@@ -527,88 +406,11 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
           </div>
 
           <div className="absolute top-[50px] inset-x-0 mx-auto w-full h-[175px] flex flex-col items-center justify-start pt-1 transition-all duration-500">
-            {artworkSrc ? (
-              <button
-                type="button"
-                aria-label={`Inspect artwork for ${name}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setExpandedImage(artworkSrc);
-                }}
-                title="Click to expand artwork"
-                className={`w-[190px] h-[190px] mt-1 flex items-center justify-center relative transition-transform duration-300 ${
-                  isAttunable && displayAttuned
-                    ? "cursor-pointer hover:scale-105 active:scale-95 group"
-                    : "cursor-pointer hover:scale-105"
-                }`}
-              >
-                <div
-                  className={`absolute inset-0 bg-amber-400/20 blur-xl rounded-full transition-all duration-500 ${
-                    isAttunable && displayAttuned
-                      ? "opacity-100 group-hover:bg-amber-400/50 group-hover:blur-2xl"
-                      : "opacity-0"
-                  }`}
-                />
-                <img
-                  src={artworkSrc}
-                  alt={name}
-                  className="max-w-full max-h-full object-contain drop-shadow-md relative z-10 pointer-events-none"
-                />
-              </button>
-            ) : (
-              <div
-                onClick={
-                  isAttunable && displayAttuned ? handleToggleAttune : undefined
-                }
-                title={isAttunable && displayAttuned ? "Click to Unattune" : ""}
-                className={`text-[11px] leading-snug text-amber-950 pt-2 px-6 w-full text-justify overflow-y-auto no-scrollbar max-h-[160px] ${getFadeClass(
-                  "delay-100"
-                )} ${
-                  isAttunable && displayAttuned
-                    ? "cursor-pointer hover:text-amber-700"
-                    : ""
-                }`}
-              >
-                <p>{description || flavorText}</p>
-              </div>
-            )}
-            {isAttunable && displayAttuned && specs && (
-              <div
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setPopoverText({
-                    title: "Item Specifications",
-                    text: `Type: ${specs.type || ""}\nAttunement: ${
-                      specs.attunement || ""
-                    }\nProperties: ${specs.properties || ""}\nRanges: ${
-                      specs.ranges || ""
-                    }\nDamage: ${specs.damage || ""}\nDamage Type: ${
-                      specs.damageType || ""
-                    }`,
-                  });
-                }}
-                className={`absolute bottom-[-15px] left-[10px] w-[140px] text-[5px] leading-tight text-amber-950 text-left cursor-pointer hover:bg-amber-900/10 rounded px-1 py-0.5 transition-colors z-20 ${getFadeClass(
-                  "delay-200"
-                )}`}
-              >
-                <p className="italic">{specs.type}</p>
-                <p className="italic">{specs.attunement}</p>
-                <p>
-                  <span className="font-bold">Properties:</span>{" "}
-                  {specs.properties}
-                </p>
-                <p>
-                  <span className="font-bold">Ranges:</span> {specs.ranges}
-                </p>
-                <p>
-                  <span className="font-bold">Damage:</span> {specs.damage}
-                </p>
-                <p>
-                  <span className="font-bold">Damage Type:</span>{" "}
-                  {specs.damageType}
-                </p>
-              </div>
-            )}
+            {artworkSrc
+              ? <CardArtwork key={artworkSrc} src={artworkSrc} card={card} attuned={displayAttuned} fallback={artFallback} />
+              : artFallback}
+            {(isNormal || displayAttuned) && detailButton("Item Specifications", specRows,
+              "absolute bottom-[-15px] left-[10px] z-20 w-[140px] rounded px-1 py-0.5 text-left text-[6px] leading-tight hover:bg-amber-900/10")}
           </div>
 
           {isAttunable && displayAttuned && (
@@ -648,30 +450,37 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
                 onMouseDown={(e) => e.stopPropagation()}
                 onTouchStart={(e) => e.stopPropagation()}
               >
-                {renderAttunedShelf1()}
+                {renderAbilities(abilitiesByShelf[0])}
               </div>
               <div
                 className="absolute top-[325px] left-[8px] right-[22px] h-[62px] flex flex-col text-[7.5px] leading-snug text-amber-950 pr-1"
                 onMouseDown={(e) => e.stopPropagation()}
                 onTouchStart={(e) => e.stopPropagation()}
               >
-                {renderAttunedShelf2()}
+                {renderAbilities(abilitiesByShelf[1])}
               </div>
               <div
                 className="absolute top-[406px] left-[8px] right-[22px] h-[60px] flex flex-col text-[7.5px] leading-snug text-amber-950 pr-1"
                 onMouseDown={(e) => e.stopPropagation()}
                 onTouchStart={(e) => e.stopPropagation()}
               >
-                {renderAttunedShelf3()}
+                {renderAbilities(abilitiesByShelf[2], true)}
               </div>
             </>
           ) : (
             <>
               <div className="absolute top-[248px] left-[10px] right-[22px] h-[72px] flex flex-col text-[8px] leading-snug text-amber-950 pr-1">
-                {renderUnattunedShelf1()}
+                {lore && (
+                  <button type="button" aria-label="Read Item Lore" aria-haspopup="dialog"
+                    className="overflow-y-auto no-scrollbar rounded px-1 pb-2 text-justify font-serif italic leading-tight hover:bg-amber-900/10"
+                    onClick={() => setPopoverText({ title: "Item Lore", text: lore })}>
+                    {lore}
+                  </button>
+                )}
               </div>
               <div className="absolute top-[350px] left-[12px] right-[22px] h-[110px] flex flex-col text-[7px] leading-snug text-amber-950 pr-1">
-                {renderUnattunedShelf2()}
+                {isNormal ? renderAbilities(abilities) : detailButton("Attunement Criteria & Stats", ruleRows,
+                  "overflow-y-auto no-scrollbar rounded px-1 pb-[35px] text-left hover:bg-amber-900/10")}
               </div>
             </>
           )}
@@ -704,41 +513,11 @@ export function Card({ card, snapshot = false, initialFlipped = false }) {
             </div>
           )}
 
-          {popoverText && (
-            <div
-              className="absolute inset-0 z-[100] flex items-center justify-center p-4"
-              onClick={(e) => {
-                e.stopPropagation();
-                setPopoverText(null);
-              }}
-            >
-              <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px] pointer-events-none [-webkit-mask-image:radial-gradient(circle_at_center,black_65%,transparent_100%)] [mask-image:radial-gradient(circle_at_center,black_65%,transparent_100%)]" />
-              <div
-                className="relative bg-[#e8d5b7] p-4 rounded-xl shadow-[0_15px_40px_rgba(0,0,0,0.6)] w-full max-h-full overflow-y-auto border-2 border-[#AA7826]"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex justify-between items-center mb-3 border-b border-[#AA7826]/30 pb-2">
-                  <strong className="font-serif text-amber-950 font-bold">
-                    {popoverText.title}
-                  </strong>
-                  <button
-                    onClick={() => setPopoverText(null)}
-                    className="text-amber-950 font-bold hover:text-red-700"
-                  >
-                    ✕
-                  </button>
-                </div>
-                <p className="italic text-[12px] text-amber-950 text-justify whitespace-pre-wrap">
-                  {popoverText.text}
-                </p>
-              </div>
-            </div>
-          )}
+          {popoverText && <TextDetail {...popoverText} onClose={() => setPopoverText(null)} />}
         </div>
       </div>
       {!snapshot && outgoingCard && <div className="attunement-outgoing" inert aria-hidden="true"><Card card={outgoingCard.card} snapshot initialFlipped={outgoingCard.flipped} /></div>}
       {!snapshot && isEnhancing && <div className="attunement-aura" aria-hidden="true" />}
-      {expandedImage && <ArtworkViewer src={expandedImage} card={card} onClose={closeArtwork} />}
     </div>
   );
 }

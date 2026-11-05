@@ -36,3 +36,38 @@ test('progressive cards expose named keyboard-operable progression buttons', () 
   assert.match(html, /<button[^>]*aria-label="Level 1 progress 1 of 20"/);
   assert.match(html, /aria-pressed="false"/);
 });
+
+test('normal items expose their own populated specifications and readable rules', () => {
+  const kunai = defaultCards.find(card => card.id === 'kunai_01');
+  const custom = { id: 'custom-rope', name: 'Climbing rope', type: 'normal', specs: { ranges: '50 feet' } };
+  for (const card of [kunai, custom]) {
+    const html = renderToStaticMarkup(React.createElement(Card, { card }));
+    assert.match(html, /<button[^>]+aria-label="Read Item Specifications"[^>]+aria-haspopup="dialog"/);
+    assert.ok(html.includes(card.specs.ranges));
+    assert.doesNotMatch(html, /Unattune Item|title="Attune Item"/);
+  }
+  const html = renderToStaticMarkup(React.createElement(Card, { card: kunai }));
+  assert.match(html, /<button[^>]+aria-label="Read Item Lore"/);
+  assert.match(html, /<button[^>]+aria-haspopup="dialog"[^>]*><span[^>]*>Slash/);
+});
+
+test('missing and pending art cannot open inspection or change attunement', () => {
+  const wand = defaultCards.find(card => card.id === 'wand_001');
+  const render = (card) => renderToStaticMarkup(React.createElement(Card, { card }));
+  const html = render({ ...wand, isAttuned: true });
+  assert.doesNotMatch(html, /Wand, rare/);
+  assert.match(html, /<button[^>]+disabled=""[^>]+aria-label="Inspect artwork/);
+  assert.match(html, /referrerPolicy="no-referrer"/i);
+  const noArt = render({ ...wand, images: {}, isAttuned: true });
+  assert.doesNotMatch(noArt, /Inspect artwork|Click to Unattune/);
+  assert.match(noArt, /title="Unattune Item"/);
+});
+
+test('repair only previously shipped catalogue descriptions in existing saves', async () => {
+  const { normalizeCatalogSpecs } = await import('../src/data/catalogSpecs.js');
+  const talisman = { id: 'protection_002', specs: { type: 'Talisman, common', damage: '+9', attunement: 'requires attunement' } };
+  assert.deepEqual(normalizeCatalogSpecs(talisman).specs, { type: 'Talisman', damage: '+9', attunement: 'None' });
+  const editedWand = { id: 'wand_001', specs: { type: 'Cursed wand' } };
+  assert.equal(normalizeCatalogSpecs(editedWand), editedWand);
+  assert.equal(normalizeCatalogSpecs({ id: 'wand_001', specs: { type: 'Wand, rare' } }).specs.type, 'Wand');
+});

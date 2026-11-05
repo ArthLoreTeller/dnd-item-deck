@@ -7,7 +7,7 @@ export const RARITIES = {
 };
 const defaults = { cleaver_001: 'epic', wand_001: 'legendary', protection_001: 'common', protection_002: 'uncommon', protection_003: 'rare', protection_005: 'epic', kunai_01: 'common', kunai_02: 'uncommon', kunai_03: 'rare', kunai_04: 'uncommon', kunai_05: 'rare' };
 export function normalizeCard(card) {
-  return { ...card, rarity: RARITIES[card.rarity] ? card.rarity : defaults[card.id] || 'common' };
+  return { ...card, rarity: Object.hasOwn(RARITIES, card.rarity) ? card.rarity : Object.hasOwn(defaults, card.id) ? defaults[card.id] : 'common' };
 }
 export function chooseWeightedCard(deck, random = Math.random()) {
   if (!deck.length) return null;

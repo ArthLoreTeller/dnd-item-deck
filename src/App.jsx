@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import {
   DndContext,
   useDraggable,
@@ -22,6 +22,8 @@ import { Card } from "./components/Card";
 import { ItemSearchModal } from "./components/ItemSearchModal";
 import { CustomCardModal } from "./components/CustomCardModal";
 import { getLucideIcon } from "./components/Icon"; // Assumes you created this file
+
+const isCustomCard = (id) => String(id).startsWith("custom-");
 
 // Draggable Inventory Item
 function DraggableInventoryCard({
@@ -78,14 +80,14 @@ function DraggableInventoryCard({
 
         <button
           data-silent
-          aria-label={`Discard ${item.name}`}
+          aria-label={isCustomCard(item.id) ? `Delete ${item.name}` : `Return ${item.name} to deck`}
           onClick={(e) => {
             e.stopPropagation();
             onDiscard(item.id);
           }}
           className="close-control text-slate-500 hover:text-red-400 p-1 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 focus-visible:opacity-100 transition-opacity cursor-pointer"
         >
-          ✕
+          {isCustomCard(item.id) ? "Delete" : "Return"}
         </button>
       </div>
 
@@ -112,9 +114,7 @@ function TrashZone({ activeCardItem }) {
     id: "trash-zone",
   });
 
-  const isCustom = activeCardItem?.id
-    ? String(activeCardItem.id).startsWith("custom-")
-    : false;
+  const isCustom = isCustomCard(activeCardItem?.id);
 
   let labelText = "Drag inventory card here to discard";
   if (isOver) {
@@ -169,13 +169,13 @@ export default function App() {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
 
-  const activeCard = useCardStore((state) => state.activeCard);
   const inventory = useCardStore((state) => state.inventory);
   const deck = useCardStore((state) => state.deck);
   const drawRandomCard = useCardStore((state) => state.drawRandomCard);
   const discardCard = useCardStore((state) => state.discardCard);
   const setActiveCard = useCardStore((state) => state.setActiveCard);
   const resetDeck = useCardStore((state) => state.resetDeck);
+  const storageNotice = useCardStore((state) => state.storageNotice);
   const toastMessage = useCardStore((state) => state.toastMessage);
   const clearToast = useCardStore((state) => state.clearToast);
 
@@ -185,16 +185,6 @@ export default function App() {
       activationConstraint: { delay: 200, tolerance: 6 },
     }),
   );
-
-  useEffect(() => {
-    const cardBackImg = new Image();
-    cardBackImg.src = "/assets/card-back.png";
-
-    deck.forEach((card) => {
-      const artwork = [...Object.values(card.images || {}), card.itemImage].filter(Boolean);
-      artwork.forEach((src) => { const img = new Image(); img.src = src; });
-    });
-  }, [deck]);
 
   useEffect(() => {
     if (toastMessage) {
@@ -249,10 +239,14 @@ export default function App() {
     }
   }, [inventory, sortBy]);
 
-  const handleDiscardInventoryItem = (id) => {
-    discardMotion(id);
-    playSound("discard");
-    discardCard(id);
+  const handleDiscardInventoryItem = async (id) => {
+    const item = inventory.find((card) => card.id === id);
+    if (!item) return;
+    if (isCustomCard(id) && !window.confirm(`Permanently delete “${item.name}” from your inventory?`)) return;
+    if (await discardCard(id)) {
+      discardMotion(id);
+      playSound("discard");
+    }
   };
 
   const handleDragStart = (event) => {
@@ -271,35 +265,40 @@ export default function App() {
     setActiveDragId(null);
   };
 
-  const displayedCard = motion.card && activeCard?.id === motion.card.id ? activeCard : motion.card;
+  const ownedCard = motion.card && inventory.find((item) => item.id === motion.card.id);
+  const displayedCard = ownedCard || motion.card;
 
   useEffect(() => {
-    if (!activeCard && motion.face === "front") returnToDeck();
-  }, [activeCard, motion.face, returnToDeck]);
+    if (!ownedCard && motion.face === "front") returnToDeck();
+  }, [ownedCard, motion.face, returnToDeck]);
 
-  const handleDrawCard = () => {
-    if (deck.length === 0 || isRevealing) return;
-    playSound("draw");
-    drawRandomCard();
-    reveal(useCardStore.getState().activeCard);
+  const drawing = useRef(false);
+  const handleDrawCard = async () => {
+    if (!deck.length || isRevealing || drawing.current) return;
+    drawing.current = true;
+    try {
+      const card = await drawRandomCard();
+      if (card) {
+        playSound("draw");
+        reveal(card);
+      }
+    } finally {
+      drawing.current = false;
+    }
   };
 
-  const handleResetDeck = () => {
-    playSound("reset");
-    returnToDeck();
-    resetDeck();
-    setActiveDragId(null);
+  const handleResetDeck = async () => {
+    if (!window.confirm("Restore all built-in cards to the deck and clear their stats, progress and attunements? Custom cards will stay in your inventory.")) return;
+    if (await resetDeck()) {
+      playSound("reset");
+      returnToDeck();
+      setActiveDragId(null);
+    }
   };
 
   const handleContinue = () => {
     playSound("continue");
     returnToDeck();
-  };
-
-  const handleReturnToDeck = () => {
-    playSound("discard");
-    returnToDeck();
-    if (displayedCard) discardCard(displayedCard.id);
   };
 
   const handleSelectInventoryItem = (card) => {
@@ -330,6 +329,8 @@ export default function App() {
             </button>
           </div>, document.body
         )}
+
+        {storageNotice && <p role="alert" className="w-full max-w-5xl rounded-lg border border-amber-500 p-3">{storageNotice}</p>}
 
         <header className="w-full max-w-5xl mx-auto flex flex-col items-center gap-4 mb-2">
           <div className="reliquary-heading">
@@ -505,9 +506,8 @@ export default function App() {
                 </div>
               ) : (
                 <div className="controls-enter w-full">
-                  <p className="inspection-tip text-center">Tap the artwork to explore its enchantment.</p>
                   <div className="bg-slate-800/90 border border-slate-700 p-2 rounded-xl shadow-lg flex items-center justify-between gap-2 mt-3">
-                    <button data-silent disabled={isRevealing} onClick={handleReturnToDeck} className="discard-action flex-1 px-3 py-2.5 bg-red-950/30 hover:bg-red-900/50 text-red-400 border border-red-900/50 rounded-lg text-xs font-bold uppercase transition-colors cursor-pointer">Discard</button>
+                    <button data-silent disabled={isRevealing} onClick={() => handleDiscardInventoryItem(displayedCard.id)} className="discard-action flex-1 px-3 py-2.5 bg-red-950/30 hover:bg-red-900/50 text-red-400 border border-red-900/50 rounded-lg text-xs font-bold uppercase transition-colors cursor-pointer">{isCustomCard(displayedCard?.id) ? "Delete card" : "Return to deck"}</button>
                     <button data-silent disabled={isRevealing} onClick={handleContinue} className="continue-action flex-1 px-3 py-2.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-200 border border-amber-500/40 rounded-lg text-xs font-bold uppercase transition-colors cursor-pointer">Continue</button>
                   </div>
                   <p className="inspection-tip text-center">Continue keeps this item in your inventory.</p>
@@ -549,7 +549,7 @@ export default function App() {
                   <DraggableInventoryCard
                     key={item.id}
                     item={item}
-                    isActive={activeCard?.id === item.id}
+                    isActive={isDrawn && displayedCard?.id === item.id}
                     onSelect={handleSelectInventoryItem}
                     onDiscard={handleDiscardInventoryItem}
                     disabled={isMobile}
@@ -564,14 +564,11 @@ export default function App() {
           </div>
         </div>
 
-        <ItemSearchModal
+        {isSearchModalOpen && <ItemSearchModal
           isOpen={isSearchModalOpen}
           onClose={() => setIsSearchModalOpen(false)}
-          onCardAdded={(card) => {
-            setActiveCard(card);
-            select(card);
-          }}
-        />
+          onCardAdded={select}
+        />}
 
         <CustomCardModal
           isOpen={isCustomModalOpen}

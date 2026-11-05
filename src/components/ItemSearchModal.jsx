@@ -9,6 +9,8 @@ export function ItemSearchModal({ isOpen, onClose, onCardAdded }) {
   const overlayRef = useRef(null);
   useDialogFocus(overlayRef, isOpen, onClose);
   const [searchTerm, setSearchTerm] = useState('');
+  const pending = useRef(false);
+  const [error, setError] = useState('');
   const deck = useCardStore((state) => state.deck);
   const drawCardById = useCardStore((state) => state.drawCardById);
 
@@ -31,10 +33,20 @@ export function ItemSearchModal({ isOpen, onClose, onCardAdded }) {
 
   if (!isOpen) return null;
 
-  const handleSelectCard = (item) => {
-    drawCardById(item.id);
-    if (onCardAdded) onCardAdded(item);
-    onClose();
+  const handleSelectCard = async (item) => {
+    if (pending.current) return;
+    pending.current = true;
+    try {
+      const card = await drawCardById(item.id);
+      if (!card) {
+        setError(useCardStore.getState().storageNotice || 'This item is no longer in the deck. Choose another relic.');
+        return;
+      }
+      onCardAdded?.(card);
+      onClose();
+    } finally {
+      pending.current = false;
+    }
   };
 
   return (
@@ -71,7 +83,7 @@ export function ItemSearchModal({ isOpen, onClose, onCardAdded }) {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by name or type..."
-            autoFocus
+            aria-label="Search by name or type"
             className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-amber-100 placeholder:text-slate-500 focus:outline-none focus:border-amber-500 transition-colors"
           />
           {searchTerm && (
@@ -83,6 +95,8 @@ export function ItemSearchModal({ isOpen, onClose, onCardAdded }) {
             </button>
           )}
         </div>
+
+        {error && <p role="alert">{error}</p>}
 
         {/* Results List */}
         <div className="flex flex-col gap-2 min-h-0 max-h-[320px] overflow-y-auto pr-1">

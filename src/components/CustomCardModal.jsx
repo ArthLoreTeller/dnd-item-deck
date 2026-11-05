@@ -1,39 +1,26 @@
 import { useDialogFocus } from "../hooks/useDialogFocus";
-import React, { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { ABILITY_GROUPS, abilityGroups, freshDraft, prepareCustomCard } from '../data/customCard';
 import { RARITIES } from '../data/rarity';
 import { useCardStore } from '../store/useCardStore';
 
 export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
+  return isOpen ? <CustomCardForm onClose={onClose} onCardAdded={onCardAdded} /> : null;
+}
+
+function CustomCardForm({ onClose, onCardAdded }) {
   const overlayRef = useRef(null);
-  useDialogFocus(overlayRef, isOpen, onClose);
+  const pending = useRef(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const close = () => { if (!pending.current) onClose(); };
+  useDialogFocus(overlayRef, true, close);
   const addToInventory = useCardStore((state) => state.addToInventory);
   const [activeTab, setActiveTab] = useState('general');
-
-  const [formData, setFormData] = useState({
-    name: '',
-    rarity: 'common',
-    icon: '💠', 
-    type: 'standard',
-    itemImage: '',
-    flavorText: '',
-    description: '',
-    attunementRules: 'Requires Attunement by a Spellcaster',
-    stats: { hit: '+0', damage: '1d8', saveDc: '14' },
-    specs: {
-      type: 'Weapon (Longsword)',
-      attunement: 'Attunement Required',
-      properties: 'Versatile',
-      ranges: '5 ft.',
-      damage: '1d8 Slashing',
-      damageType: 'Slashing / Radiant',
-    },
-    abilities: [{ title: 'Passive Aura', description: 'Emits dim light in a 10ft radius.' }],
-    level1Abilities: [{ title: 'Awakened Strike', description: 'Deals an extra 1d4 radiant damage.' }],
-    level2Abilities: [{ title: 'Radiant Flare', description: 'Blinds target on critical hits.' }],
-    level3Abilities: [{ title: 'Solar Cataclysm', description: 'Unleashes a 30ft sunburst burst DC 16.' }],
-  });
-
-  if (!isOpen) return null;
+  const [formData, setFormData] = useState(freshDraft);
+  useEffect(() => {
+    if (error?.field) overlayRef.current?.querySelector('[name="' + error.field + '"]')?.focus();
+  }, [error]);
 
   const isNormal = formData.type === 'normal';
 
@@ -70,40 +57,36 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
     }));
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
-      e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (pending.current) return;
+    const result = prepareCustomCard(formData);
+    if (result.error) {
+      setActiveTab(result.error.tab);
+      setError(result.error);
+      return;
     }
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!formData.name.trim()) return;
-
-    const newCard = {
-      id: `custom-${Date.now()}`,
-      name: formData.name.trim(),
-      icon: formData.icon.trim() || '💠',
-      type: formData.type,
-      rarity: formData.rarity,
-      itemImage: formData.itemImage.trim() || '',
-      flavorText: formData.flavorText.trim(),
-      description: formData.description.trim() || formData.flavorText.trim(),
-      isAttuned: false,
-      attunementRules: isNormal ? '' : formData.attunementRules,
-      stats: isNormal ? { hit: '', damage: '', saveDc: '' } : formData.stats,
-      specs: formData.specs,
-      abilities: formData.abilities.filter((a) => a.title.trim() || a.description.trim()),
-      level1Abilities: formData.level1Abilities.filter((a) => a.title.trim()),
-      level2Abilities: formData.level2Abilities.filter((a) => a.title.trim()),
-      level3Abilities: formData.level3Abilities.filter((a) => a.title.trim()),
-      progress: { level1: 0, level2: 0 },
-      currentLevel: 1,
-      maxProgress: 20,
-    };
-
-    addToInventory(newCard);
-    onCardAdded?.(newCard);
+    pending.current = true;
+    setSaving(true);
+    setError(null);
+    let saved;
+    try {
+      // getRandomValues is also available on local HTTP game tables.
+      const bytes = crypto.getRandomValues(new Uint8Array(16));
+      const id = 'custom-' + Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+      saved = await addToInventory({ ...result.card, id });
+    } catch {
+      // The draft stays mounted so a failed save can be retried.
+    } finally {
+      pending.current = false;
+      setSaving(false);
+    }
+    if (!saved) {
+      const reason = useCardStore.getState().storageNotice || 'Could not save this card to your inventory.';
+      setError({ message: reason + ' Your draft is still here.' });
+      return;
+    }
+    onCardAdded?.(saved);
     onClose();
   };
 
@@ -111,7 +94,7 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
     <div
       ref={overlayRef}
       className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
-      onClick={onClose}
+      onClick={close}
     >
       <div
         role="dialog" aria-modal="true" aria-labelledby="custom-card-title"
@@ -123,7 +106,7 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
             <h3 id="custom-card-title" className="font-serif font-bold text-amber-200 text-lg">Create Custom Item Card</h3>
             <p className="text-[11px] text-slate-400">Configure item statistics, rules, and ability slots</p>
           </div>
-          <button onClick={onClose} className="close-control text-slate-400 hover:text-white text-sm font-semibold cursor-pointer">✕</button>
+          <button aria-label="Close custom card" disabled={saving} onClick={close} className="close-control text-slate-400 hover:text-white text-sm font-semibold cursor-pointer">✕</button>
         </div>
 
         <div className="flex border-b border-slate-800 gap-2 text-xs">
@@ -141,14 +124,15 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
           ))}
         </div>
 
-        <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="flex flex-col flex-1 overflow-hidden gap-4 text-xs">
-          <div className="overflow-y-auto no-scrollbar pr-1 space-y-4 max-h-[420px]">
+        <form noValidate onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden gap-4 text-xs">
+          <fieldset disabled={saving} className="overflow-y-auto no-scrollbar pr-1 space-y-4 max-h-[420px]">
             {activeTab === 'general' && (
               <div className="space-y-3">
                 <div>
-                  <label className="text-slate-300 font-semibold mb-1 block">Item Name *</label>
-                  <input
+                  <label htmlFor="card-item-name" className="text-slate-300 font-semibold mb-1 block">Item Name *</label>
+                  <input id="card-item-name"
                     type="text"
+                    name="name"
                     required
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
@@ -162,10 +146,9 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                   <select id="custom-rarity" value={formData.rarity} onChange={(e) => handleInputChange("rarity", e.target.value)} className="w-full bg-slate-950 border border-slate-600 rounded-lg px-3 py-2 text-amber-100 mb-3">
                     {Object.entries(RARITIES).map(([key, rarity]) => <option key={key} value={key}>{rarity.label}</option>)}
                   </select>
-                  <label className="text-slate-300 font-semibold mb-1 block">Item Icon (Emoji)</label>
-                  <input
+                  <label htmlFor="card-item-icon-emoji" className="text-slate-300 font-semibold mb-1 block">Item Icon (Emoji)</label>
+                  <input id="card-item-icon-emoji"
                     type="text"
-                    maxLength={2}
                     value={formData.icon}
                     onChange={(e) => handleInputChange('icon', e.target.value)}
                     placeholder="e.g., ⚔️"
@@ -175,8 +158,8 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-slate-300 font-semibold mb-1 block">Card Type</label>
-                    <select
+                    <label htmlFor="card-card-type" className="text-slate-300 font-semibold mb-1 block">Card Type</label>
+                  <select id="card-card-type"
                       value={formData.type}
                       onChange={(e) => handleInputChange('type', e.target.value)}
                       className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-amber-100 focus:border-amber-500 outline-none"
@@ -187,8 +170,9 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                     </select>
                   </div>
                   <div>
-                    <label className="text-slate-300 font-semibold mb-1 block">Artwork Image URL</label>
-                    <input
+                    <label htmlFor="card-artwork-image-url" className="text-slate-300 font-semibold mb-1 block">Artwork Image URL</label>
+                  <input id="card-artwork-image-url"
+                      name="itemImage"
                       type="url"
                       value={formData.itemImage}
                       onChange={(e) => handleInputChange('itemImage', e.target.value)}
@@ -201,27 +185,30 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                 {!isNormal && (
                   <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <label className="text-slate-300 font-semibold mb-1 block">Hit Stat</label>
-                      <input
+                      <label htmlFor="card-hit-stat" className="text-slate-300 font-semibold mb-1 block">Hit Stat</label>
+                  <input id="card-hit-stat"
                         type="text"
+                        placeholder="e.g. +0"
                         value={formData.stats.hit}
                         onChange={(e) => handleNestedChange('stats', 'hit', e.target.value)}
                         className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-center text-amber-100"
                       />
                     </div>
                     <div>
-                      <label className="text-slate-300 font-semibold mb-1 block">Damage Stat</label>
-                      <input
+                      <label htmlFor="card-damage-stat" className="text-slate-300 font-semibold mb-1 block">Damage Stat</label>
+                  <input id="card-damage-stat"
                         type="text"
+                        placeholder="e.g. 1d8"
                         value={formData.stats.damage}
                         onChange={(e) => handleNestedChange('stats', 'damage', e.target.value)}
                         className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-center text-amber-100"
                       />
                     </div>
                     <div>
-                      <label className="text-slate-300 font-semibold mb-1 block">Save DC</label>
-                      <input
+                      <label htmlFor="card-save-dc" className="text-slate-300 font-semibold mb-1 block">Save DC</label>
+                  <input id="card-save-dc"
                         type="text"
+                        placeholder="e.g. 14"
                         value={formData.stats.saveDc}
                         onChange={(e) => handleNestedChange('stats', 'saveDc', e.target.value)}
                         className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-center text-amber-100"
@@ -231,8 +218,8 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                 )}
 
                 <div>
-                  <label className="text-slate-300 font-semibold mb-1 block">Flavor / Lore Text</label>
-                  <textarea
+                  <label htmlFor="card-flavor-lore-text" className="text-slate-300 font-semibold mb-1 block">Flavor / Lore Text</label>
+                  <textarea id="card-flavor-lore-text"
                     rows={2}
                     value={formData.flavorText}
                     onChange={(e) => handleInputChange('flavorText', e.target.value)}
@@ -243,9 +230,10 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
 
                 {!isNormal && (
                   <div>
-                    <label className="text-slate-300 font-semibold mb-1 block">Attunement Rules</label>
-                    <input
+                    <label htmlFor="card-attunement-rules" className="text-slate-300 font-semibold mb-1 block">Attunement Rules</label>
+                  <input id="card-attunement-rules"
                       type="text"
+                      placeholder="e.g. Requires attunement by a spellcaster"
                       value={formData.attunementRules}
                       onChange={(e) => handleInputChange('attunementRules', e.target.value)}
                       className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-amber-100 focus:border-amber-500 outline-none"
@@ -257,121 +245,30 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
 
             {activeTab === 'abilities' && (
               <div className="space-y-4">
-                {formData.type === 'progressive' ? (
-                  <>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <label className="text-amber-200 font-semibold">Level 1 Abilities (Base Attuned)</label>
-                        <button type="button" onClick={() => addAbilityRow('level1Abilities')} className="text-[11px] text-amber-400 underline">+ Add</button>
-                      </div>
-                      {formData.level1Abilities.map((ability, idx) => (
-                        <div key={idx} className="flex gap-2 items-start bg-slate-950/60 p-2 rounded-lg border border-slate-800">
-                          <div className="flex-1 space-y-1">
-                            <input
-                              type="text"
-                              placeholder="Ability Title"
-                              value={ability.title}
-                              onChange={(e) => handleAbilityChange('level1Abilities', idx, 'title', e.target.value)}
-                              className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-amber-100 text-xs"
-                            />
-                            <textarea
-                              rows={2}
-                              placeholder="Ability Description"
-                              value={ability.description}
-                              onChange={(e) => handleAbilityChange('level1Abilities', idx, 'description', e.target.value)}
-                              className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 text-xs no-scrollbar"
-                            />
-                          </div>
-                          <button type="button" onClick={() => removeAbilityRow('level1Abilities', idx)} className="close-control text-red-400 font-bold px-1.5 py-1">✕</button>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <label className="text-amber-200 font-semibold">Level 2 Abilities (Progress 20+)</label>
-                        <button type="button" onClick={() => addAbilityRow('level2Abilities')} className="text-[11px] text-amber-400 underline">+ Add</button>
-                      </div>
-                      {formData.level2Abilities.map((ability, idx) => (
-                        <div key={idx} className="flex gap-2 items-start bg-slate-950/60 p-2 rounded-lg border border-slate-800">
-                          <div className="flex-1 space-y-1">
-                            <input
-                              type="text"
-                              placeholder="Ability Title"
-                              value={ability.title}
-                              onChange={(e) => handleAbilityChange('level2Abilities', idx, 'title', e.target.value)}
-                              className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-amber-100 text-xs"
-                            />
-                            <textarea
-                              rows={2}
-                              placeholder="Ability Description"
-                              value={ability.description}
-                              onChange={(e) => handleAbilityChange('level2Abilities', idx, 'description', e.target.value)}
-                              className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 text-xs no-scrollbar"
-                            />
-                          </div>
-                          <button type="button" onClick={() => removeAbilityRow('level2Abilities', idx)} className="close-control text-red-400 font-bold px-1.5 py-1">✕</button>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <label className="text-amber-200 font-semibold">Level 3 Abilities (Progress 40+)</label>
-                        <button type="button" onClick={() => addAbilityRow('level3Abilities')} className="text-[11px] text-amber-400 underline">+ Add</button>
-                      </div>
-                      {formData.level3Abilities.map((ability, idx) => (
-                        <div key={idx} className="flex gap-2 items-start bg-slate-950/60 p-2 rounded-lg border border-slate-800">
-                          <div className="flex-1 space-y-1">
-                            <input
-                              type="text"
-                              placeholder="Ability Title"
-                              value={ability.title}
-                              onChange={(e) => handleAbilityChange('level3Abilities', idx, 'title', e.target.value)}
-                              className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-amber-100 text-xs"
-                            />
-                            <textarea
-                              rows={2}
-                              placeholder="Ability Description"
-                              value={ability.description}
-                              onChange={(e) => handleAbilityChange('level3Abilities', idx, 'description', e.target.value)}
-                              className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 text-xs no-scrollbar"
-                            />
-                          </div>
-                          <button type="button" onClick={() => removeAbilityRow('level3Abilities', idx)} className="close-control text-red-400 font-bold px-1.5 py-1">✕</button>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <div className="space-y-2">
+                {abilityGroups(formData.type).map(group => (
+                  <div className="space-y-2" key={group}>
                     <div className="flex justify-between items-center">
-                      <label className="text-amber-200 font-semibold">{isNormal ? 'Item Abilities' : 'Card Abilities (Shelves 1 to 3)'}</label>
-                      <button type="button" onClick={() => addAbilityRow('abilities')} className="text-[11px] text-amber-400 underline">+ Add Ability</button>
+                      <span className="text-amber-200 font-semibold">{ABILITY_GROUPS[group]}</span>
+                      <button type="button" onClick={() => addAbilityRow(group)} className="text-[11px] text-amber-400 underline">+ Add ability</button>
                     </div>
-                    {formData.abilities.map((ability, idx) => (
-                      <div key={idx} className="flex gap-2 items-start bg-slate-950/60 p-2 rounded-lg border border-slate-800">
+                    {formData[group].map((ability, index) => (
+                      <div key={index} className="flex gap-2 items-start bg-slate-950/60 p-2 rounded-lg border border-slate-800">
                         <div className="flex-1 space-y-1">
-                          <input
-                            type="text"
-                            placeholder="Ability Title (e.g. Searing Light)"
-                            value={ability.title}
-                            onChange={(e) => handleAbilityChange('abilities', idx, 'title', e.target.value)}
-                            className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-amber-100 text-xs"
-                          />
-                          <textarea
-                            rows={2}
-                            placeholder="Ability Description"
-                            value={ability.description}
-                            onChange={(e) => handleAbilityChange('abilities', idx, 'description', e.target.value)}
-                            className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 text-xs no-scrollbar"
-                          />
+                          <input name={group + '-' + index} aria-label={ABILITY_GROUPS[group] + ' title ' + (index + 1)}
+                            placeholder="Ability title (e.g. Searing Light)" value={ability.title}
+                            onChange={(event) => handleAbilityChange(group, index, 'title', event.target.value)}
+                            className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-amber-100 text-xs" />
+                          <textarea rows={2} aria-label={ABILITY_GROUPS[group] + ' description ' + (index + 1)}
+                            placeholder="Ability description (optional)" value={ability.description}
+                            onChange={(event) => handleAbilityChange(group, index, 'description', event.target.value)}
+                            className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 text-xs no-scrollbar" />
                         </div>
-                        <button type="button" onClick={() => removeAbilityRow('abilities', idx)} className="close-control text-red-400 font-bold px-1.5 py-1">✕</button>
+                        <button type="button" aria-label={'Remove ' + ABILITY_GROUPS[group] + ' row ' + (index + 1)}
+                          onClick={() => removeAbilityRow(group, index)} className="close-control text-red-400 font-bold px-1.5 py-1">✕</button>
                       </div>
                     ))}
                   </div>
-                )}
+                ))}
               </div>
             )}
 
@@ -379,8 +276,8 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-slate-300 font-semibold mb-1 block">Item Category</label>
-                    <input
+                    <label htmlFor="card-item-category" className="text-slate-300 font-semibold mb-1 block">Item Category</label>
+                  <input id="card-item-category"
                       type="text"
                       value={formData.specs.type}
                       onChange={(e) => handleNestedChange('specs', 'type', e.target.value)}
@@ -389,8 +286,8 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                     />
                   </div>
                   <div>
-                    <label className="text-slate-300 font-semibold mb-1 block">Properties</label>
-                    <input
+                    <label htmlFor="card-properties" className="text-slate-300 font-semibold mb-1 block">Properties</label>
+                  <input id="card-properties"
                       type="text"
                       value={formData.specs.properties}
                       onChange={(e) => handleNestedChange('specs', 'properties', e.target.value)}
@@ -402,8 +299,8 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
 
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="text-slate-300 font-semibold mb-1 block">Ranges</label>
-                    <input
+                    <label htmlFor="card-ranges" className="text-slate-300 font-semibold mb-1 block">Ranges</label>
+                  <input id="card-ranges"
                       type="text"
                       value={formData.specs.ranges}
                       onChange={(e) => handleNestedChange('specs', 'ranges', e.target.value)}
@@ -412,8 +309,8 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                     />
                   </div>
                   <div>
-                    <label className="text-slate-300 font-semibold mb-1 block">Base Damage</label>
-                    <input
+                    <label htmlFor="card-base-damage" className="text-slate-300 font-semibold mb-1 block">Base Damage</label>
+                  <input id="card-base-damage"
                       type="text"
                       value={formData.specs.damage}
                       onChange={(e) => handleNestedChange('specs', 'damage', e.target.value)}
@@ -422,8 +319,8 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                     />
                   </div>
                   <div>
-                    <label className="text-slate-300 font-semibold mb-1 block">Damage Type</label>
-                    <input
+                    <label htmlFor="card-damage-type" className="text-slate-300 font-semibold mb-1 block">Damage Type</label>
+                  <input id="card-damage-type"
                       type="text"
                       value={formData.specs.damageType}
                       onChange={(e) => handleNestedChange('specs', 'damageType', e.target.value)}
@@ -434,23 +331,25 @@ export function CustomCardModal({ isOpen, onClose, onCardAdded }) {
                 </div>
               </div>
             )}
-          </div>
+          </fieldset>
+          {error && <p role="alert" className="text-red-400">{error.message}</p>}
 
           <div className="flex justify-between items-center pt-3 border-t border-slate-800">
             <span className="text-[11px] text-slate-500">Ready to append to your inventory</span>
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={onClose}
+                disabled={saving}
+                onClick={close}
                 className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-semibold cursor-pointer"
               >
                 Cancel
               </button>
               <button
-                type="submit"
+                type="submit" disabled={saving}
                 className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-semibold shadow cursor-pointer transition-all active:scale-95"
               >
-                Create Card
+                {saving ? 'Saving…' : 'Create Card'}
               </button>
             </div>
           </div>
